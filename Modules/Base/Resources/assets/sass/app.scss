@@ -1,0 +1,11 @@
+.overflow-custom-fixer {
+    overflow: visible !important;
+    overflow-anchor: none;
+    -ms-overflow-style: none;
+    touch-action: auto;
+    -ms-touch-action: auto;
+}
+
+textarea.form-control {
+    resize: none;
+}

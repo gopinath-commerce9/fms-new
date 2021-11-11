@@ -1,0 +1,23 @@
+{
+    "name": "commerce9/cashier",
+    "description": "",
+    "authors": [
+        {
+            "name": "Commerce9",
+            "email": "info@commerce9.io"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Cashier\\": ""
+        }
+    }
+}

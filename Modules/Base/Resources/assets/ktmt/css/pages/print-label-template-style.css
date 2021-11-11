@@ -1,0 +1,74 @@
+table#main-print-label-table {
+    width: 100%;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td.bordered-table-data {
+    border: 1px solid #000000;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td.bordered-table-data-left {
+    border: 1px solid #000000;
+    border-right: unset;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td.bordered-table-data-right {
+    border: 1px solid #000000;
+    border-left: unset;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td table,
+table#main-print-label-table tbody#main-print-label-table-body tr td table tr td {
+    width: 100%;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td div,
+table#main-print-label-table tbody#main-print-label-table-body tr td table tr td div {
+    text-align: center;
+}
+table#main-print-label-table tbody#main-print-label-table-body tr td div label,
+table#main-print-label-table tbody#main-print-label-table-body tr td table tr td div label {
+    font-size: larger;
+    font-style: normal;
+    font-weight: normal;
+}
+div.table-data-left-padded label {
+    padding-left: 10% !important;
+    text-align: left !important;
+}
+div.table-data-right-padded label {
+    padding-right: 10% !important;
+    text-align: right !important;
+}
+label.highlight-info-label {
+    font-size: larger;
+    font-style: normal;
+    font-weight: bold;
+}
+.info-data-wrapword {
+    white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    white-space: pre-wrap;       /* css-3 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    white-space: -webkit-pre-wrap; /* Newer versions of Chrome/Safari*/
+    word-break: break-all;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+.address-area-style {
+    /*max-height: 50px;*/
+    /*overflow-wrap: break-word;*/
+    word-wrap: break-word;
+    /*overflow-y: hidden;
+    overflow-x: hidden;
+    width: 100%;*/
+}
+.address-location-left-panel {
+    width: 25%;
+}
+.address-location-right-panel {
+    width: 75%;
+}
+.address-location-left-panel div label {
+    float: right !important;
+    text-align: right !important;
+}
+.address-location-right-panel div label {
+    float: left !important;
+    text-align: left !important;
+}
