@@ -17,5 +17,9 @@
     "/css/picker.css": "/css/picker.css",
     "/js/picker.js": "/js/picker.js",
     "/css/supervisor.css": "/css/supervisor.css",
-    "/js/supervisor.js": "/js/supervisor.js"
+    "/js/supervisor.js": "/js/supervisor.js",
+    "/css/sales.css": "/css/sales.css",
+    "/js/sales.js": "/js/sales.js",
+    "/js/role-pickers.js": "/js/role-pickers.js",
+    "/js/role-drivers.js": "/js/role-drivers.js"
 }

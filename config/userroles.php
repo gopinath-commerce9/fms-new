@@ -19,26 +19,7 @@ return [
          * is_active = Set the Active status of the User Role ( 1 => Active, 0 => Inactive)
          *
          */
-        'roles' => [
-            'supervisor' => [
-                'code' => 'supervisor',
-                'display_name' => 'Supervisor',
-                'description' => 'The User who monitors and supervises the system.',
-                'is_active' => 1,
-            ],
-            'picker' => [
-                'code' => 'picker',
-                'display_name' => 'Picker',
-                'description' => 'The user who picks up the customer order items and setting packages.',
-                'is_active' => 1,
-            ],
-            'driver' => [
-                'code' => 'driver',
-                'display_name' => 'Driver',
-                'description' => 'The user who delivers the order packages to the corresponding customers.',
-                'is_active' => 1,
-            ]
-        ],
+        'roles' => [],
 
         /*
          * A default Administrator for the System.
@@ -73,6 +54,17 @@ return [
          */
         'permissions' => [],
 
+    ],
+
+    /*
+     * List of Database Migration Seeders to be run in the order.
+     *
+     */
+    'seeders' => [
+        \Modules\Supervisor\Database\Seeders\GenerateSupervisorRoleSeeder::class,
+        \Modules\Picker\Database\Seeders\GeneratePickerRoleSeeder::class,
+        \Modules\Driver\Database\Seeders\GenerateDriverRoleSeeder::class,
+        \Modules\Cashier\Database\Seeders\GenerateCashierRoleSeeder::class,
     ],
 
 ];

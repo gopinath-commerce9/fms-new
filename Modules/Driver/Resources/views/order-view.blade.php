@@ -13,7 +13,7 @@
                 <div class="card-header flex-wrap py-3">
                     <div class="card-toolbar">
                         <div class="col text-left">
-                            <a href="{{ url('/driver/dashboard') }}" class="btn btn-outline-primary">
+                            <a href="{{ url()->previous() }}" class="btn btn-outline-primary">
                                 <i class="flaticon2-back"></i> Back
                             </a>
                         </div>

@@ -1,212 +1,37 @@
 <?php
 
-namespace Modules\Sales\Jobs;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
-use \Exception;
-use Illuminate\Support\Facades\Log;
+namespace Modules\Sales\Entities;
+
 use Modules\Base\Entities\RestApiService;
+use DB;
+use \Exception;
+use Modules\Base\Entities\BaseServiceHelper;
 use App\Models\User;
-use Modules\Sales\Entities\SaleCustomer;
-use Modules\Sales\Entities\SaleOrder;
-use Modules\Sales\Entities\SaleOrderItem;
-use Modules\Sales\Entities\SaleOrderAddress;
-use Modules\Sales\Entities\SaleOrderPayment;
-use Modules\Sales\Entities\SaleOrderStatusHistory;
-use Modules\Sales\Entities\SaleOrderProcessHistory;
 
-class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessing
+class SalesServiceHelper
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /**
-     * The number of seconds the job can run before timing out.
-     *
-     * @var int
-     */
-    public $timeout = 900;
-
-    /**
-     * The number of seconds after which the job's unique lock will be released.
-     *
-     * @var int
-     */
-    public $uniqueFor = 300;
 
     private $restApiService = null;
+    private $baseService = null;
 
-    private $restApiChannel = '';
-
-    private $fromDate = null;
-
-    private $toDate = null;
-
-    private $processUser = null;
-
-    private $dateDifference = 14;
-
-    private $allowedSaleOrderStatuses = [
-        'pending',
-        'processing',
-        'being_prepared',
-        'ready_to_dispatch',
-        'out_for_delivery'
-    ];
-
-    /**
-     * Create a new job instance.
-     *
-     * @param string $channel
-     * @param string $fromDateString
-     * @param string $toDateString
-     * @param int|null $processUser
-     */
-    public function __construct($channel = '', $fromDateString = '', $toDateString = '', $processUser = 0)
+    public function __construct($channel = '')
     {
-        $this->onQueue('saleOrderImport');
+        $this->baseService = new BaseServiceHelper();
         $this->restApiService = new RestApiService();
         $this->setApiChannel($channel);
-        $this->restApiChannel = $this->restApiService->getCurrentApiChannel();
-        $givenFromDate = (is_string($fromDateString) && (trim($fromDateString) != ''))
-            ? date('Y-m-d', strtotime($fromDateString)) : date('Y-m-d');
-        $givenToDate = (is_string($toDateString) && (trim($toDateString) != ''))
-            ? date('Y-m-d', strtotime($toDateString)) : date('Y-m-d', strtotime('+' . $this->dateDifference . ' days'));
-        if ($givenToDate > $givenFromDate) {
-            $this->fromDate = $givenFromDate;
-            $this->toDate = $givenToDate;
-        } else {
-            $this->fromDate = $givenToDate;
-            $this->toDate = $givenFromDate;
-        }
-        if (!is_null($processUser) && is_numeric($processUser) && ((int)$processUser > 0)) {
-            $targetUser = User::find((int)$processUser);
-            if ($targetUser) {
-                $this->processUser = $targetUser;
-            }
-        }
+    }
+
+    public function getApiEnvironment() {
+        return $this->restApiService->getApiEnvironment();
     }
 
     /**
-     * The unique ID of the job.
-     *
+     * Get the current RESTFul API Channel.
      * @return string
      */
-    public function uniqueId()
-    {
-        return 'SaleOrderChannelImport_' . strtolower(str_replace(' ', '-', trim($this->restApiChannel)))  . '_' . $this->fromDate . '_' . $this->toDate;
-    }
-
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-
-        Log::info($this->uniqueId() . ': Started the Job Process.');
-
-        $orderIdApiResponse = $this->getOrderIdsBetweenDates();
-        if (is_array($orderIdApiResponse) && (count($orderIdApiResponse) > 0)) {
-            if (
-                array_key_exists('items', $orderIdApiResponse)
-                && is_array($orderIdApiResponse['items'])
-                && (count($orderIdApiResponse['items']) > 0)
-            ) {
-
-                $currentApiEnv = $this->restApiService->getApiEnvironment();
-                $currentApiChannel = $this->restApiService->getCurrentApiChannel();
-
-                foreach ($orderIdApiResponse['items'] as $saleOrderIdEl) {
-
-                    $saleOrderId = $saleOrderIdEl['entity_id'];
-                    $saleOrderEl = $this->getOrderDetailsById($saleOrderId);
-                    if (is_array($saleOrderEl) && (count($saleOrderEl) > 0)) {
-
-                        $customerResponse = $this->processSaleCustomer($currentApiEnv, $currentApiChannel, $saleOrderEl);
-                        if ($customerResponse['status']) {
-
-                            $customerObj = $customerResponse['customerObj'];
-
-                            $saleResponse = $this->processSaleOrder($currentApiEnv, $currentApiChannel, $saleOrderEl, $customerObj);
-                            if ($saleResponse['status']) {
-
-                                $saleOrderObj = $saleResponse['saleOrderObj'];
-                                $orderAlreadyCreated = $saleResponse['orderAlreadyCreated'];
-
-                                if(is_array($saleOrderEl['items']) && (count($saleOrderEl['items']) > 0)) {
-                                    foreach ($saleOrderEl['items'] as $orderItemEl) {
-                                        $orderItemResponse = $this->processSaleOrderItem($orderItemEl, $saleOrderObj);
-                                        if(!$orderItemResponse['status']) {
-                                            Log::error($this->uniqueId() . ': Could not process Order Item #' . $orderItemEl['item_id'] . ' for Sale Order #' . $saleOrderId . '. '  . $orderItemResponse['message']);
-                                        }
-                                    }
-                                } else {
-                                    Log::error($this->uniqueId() . ': There is no Order Item for Sale Order #' . $saleOrderId . '.');
-                                }
-
-                                $billingResponse = $this->processSaleOrderBillingAddress($saleOrderEl, $saleOrderObj);
-                                if (!$billingResponse['status']) {
-                                    Log::error($this->uniqueId() . ': Could not process Billing Address data for Sale Order #' . $saleOrderId . '. ' . $billingResponse['message']);
-                                }
-
-                                $shippingResponse = $this->processSaleOrderShippingAddress($saleOrderEl, $saleOrderObj);
-                                if (!$shippingResponse['status']) {
-                                    Log::error($this->uniqueId() . ': Could not process Shipping Address data for Sale Order #' . $saleOrderId . '. ' . $shippingResponse['message']);
-                                }
-
-                                $paymentResponse = $this->processSaleOrderPayments($saleOrderEl, $saleOrderObj);
-                                if (!$paymentResponse['status']) {
-                                    Log::error($this->uniqueId() . ': Could not process Payment data for Sale Order #' . $saleOrderId . '. ' . $paymentResponse['message']);
-                                }
-
-                                if(is_array($saleOrderEl['status_histories']) && (count($saleOrderEl['status_histories']) > 0)) {
-                                    foreach ($saleOrderEl['status_histories'] as $historyEl) {
-                                        $historyResponse = $this->processSaleOrderStatusHistory($historyEl, $saleOrderObj);
-                                        if(!$historyResponse['status']) {
-                                            Log::error($this->uniqueId() . ': Could not process Status History #' . $historyEl['entity_id'] . ' for Sale Order #' . $saleOrderId . '. '  . $historyResponse['message']);
-                                        }
-                                    }
-                                } else {
-                                    Log::error($this->uniqueId() . ': There is no Status History data for Sale Order #' . $saleOrderId . '.');
-                                }
-
-                                $processResponse = $this->recordOrderStatusProcess($saleOrderObj, $orderAlreadyCreated);
-                                if (!$processResponse['status']) {
-                                    Log::error($this->uniqueId() . ': Could not record the processing of Sale Order #' . $saleOrderId . '. ' . $processResponse['message']);
-                                }
-
-                                Log::info($this->uniqueId() . ': Finished processing Sale Order #' . $saleOrderId . '.');
-
-                            } else {
-                                Log::error($this->uniqueId() . ': Could not process Sale Order data for Sale Order #' . $saleOrderId . '. ' . $saleResponse['message']);
-                            }
-
-                        } else {
-                            Log::error($this->uniqueId() . ': Could not process Customer data for Sale Order #' . $saleOrderId . '. ' . $customerResponse['message']);
-                        }
-
-                    } else {
-                        Log::error($this->uniqueId() . ': Could not fetch the data for Sale Order #' . $saleOrderId . '.');
-                    }
-
-                }
-
-            } else {
-                Log::error($this->uniqueId() . ': No Sale Orders to fetch.');
-            }
-        } else {
-            Log::error($this->uniqueId() . ': Could not fetch the Sale Order List.');
-        }
-
-        Log::info($this->uniqueId() . ': Finished the Job Process.');
-
+    public function getApiChannel() {
+        return $this->restApiService->getCurrentApiChannel();
     }
 
     /**
@@ -221,24 +46,174 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
     }
 
     /**
-     * Fetch the list of Sale Order Ids from the API Channel using the filters.
+     * Get the list of all the available API Channels.
      *
      * @return array
      */
-    private function getOrderIdsBetweenDates() {
+    public function getAllAvailableChannels() {
+        return $this->restApiService->getAllAvailableApiChannels();
+    }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'orders';
+    /**
+     * Get the given DateTime string in the given DateTime format
+     *
+     * @param string $dateTimeString
+     * @param string $format
+     *
+     * @return string
+     */
+    public function getFormattedTime($dateTimeString = '', $format = '') {
+
+        if (is_null($dateTimeString) || (trim($dateTimeString) == '')) {
+            return '';
+        }
+
+        if (is_null($format) || (trim($format) == '')) {
+            $format = \DateTime::ISO8601;
+        }
+
+        $appTimeZone = config('app.timezone');
+        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $zoneList = timezone_identifiers_list();
+        $cleanZone = (in_array(trim($channelTimeZone), $zoneList)) ? trim($channelTimeZone) : $appTimeZone;
+
+        try {
+            $dtObj = new \DateTime($dateTimeString, new \DateTimeZone($appTimeZone));
+            $dtObj->setTimezone(new \DateTimeZone($cleanZone));
+            return $dtObj->format($format);
+        } catch (\Exception $e) {
+            return '';
+        }
+
+    }
+
+    public function getAvailableStatuses() {
+        $statusList = config('fms.order_statuses');
+        $statusListClean = [];
+        if(!is_null($statusList) && is_array($statusList) && (count($statusList) > 0)) {
+            foreach ($statusList as $statusKey => $loopStatus) {
+                $statusListClean[$statusKey] = $loopStatus;
+            }
+        }
+        return $statusListClean;
+    }
+
+    public function getDeliveryTimeSlots() {
+        $statusList = $this->getAvailableStatuses();
+        $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->groupBy('delivery_time_slot')
+            ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
+            ->get();
+        $timeSlotArray = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                $timeSlotArray[] = $orderEl->delivery_time_slot;
+            }
+        }
+        return $timeSlotArray;
+    }
+
+    public function getSaleOrders($region = '', $apiChannel = '', $status = '', $deliveryDate = '', $timeSlot = '') {
+
+        $orderRequest = SaleOrder::select('*');
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $availableStatuses = $this->getAvailableStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        if (!is_null($deliveryDate) && (trim($deliveryDate) != '')) {
+            $orderRequest->where('delivery_date', date('Y-m-d', strtotime(trim($deliveryDate))));
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $orderRequest->orderBy('delivery_date', 'asc');
+
+        return $orderRequest->get();
+
+    }
+
+    public function getAvailablePosOrderSources() {
+        $returnData = [];
+        $orderSources = config('fms.pos_system.order_sources');
+        foreach ($orderSources as $osKey => $orderSource) {
+            $returnData[$osKey] = [
+                'code' => $orderSource['code'],
+                'source' => $orderSource['source'],
+                'charge' => $orderSource['charge']
+            ];
+        }
+        return $returnData;
+    }
+
+    public function getAvailablePosPaymentMethods() {
+        $returnData = [];
+        $paymentMethods = config('fms.pos_system.payment_methods');
+        foreach ($paymentMethods as $pmKey => $paymentMethod) {
+            $returnData[$pmKey] = [
+                'method' => $paymentMethod['method'],
+                'title' => $paymentMethod['title']
+            ];
+        }
+        return $returnData;
+    }
+
+    public function getAvailableRegionsList($countryId = '') {
+
+        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
+            $countryId = $this->restApiService->getApiDefaultCountry();
+        }
+
+        $uri = $this->restApiService->getRestApiUrl() . 'directory/countries/' . $countryId;
+        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
+    public function getAvailableCityList($countryId = '') {
+
+        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
+            $countryId = $this->restApiService->getApiDefaultCountry();
+        }
+
+        $uri = $this->restApiService->getRestApiUrl() . 'directory/areas/' . $countryId;
+        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
+    public function getProductData($productBarCode = '') {
+
+        if (is_null($productBarCode) || (trim($productBarCode) == '')) {
+            return [];
+        }
+
+        $uri = $this->restApiService->getRestApiUrl() . 'products';
         $qParams = [
-            'searchCriteria[filter_groups][0][filters][0][field]' => 'status',
-            'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'in',
-            'searchCriteria[filter_groups][0][filters][0][value]' => implode(',', $this->allowedSaleOrderStatuses),
-            'searchCriteria[filter_groups][1][filters][0][field]' => 'delivery_date',
-            'searchCriteria[filter_groups][1][filters][0][condition_type]' => 'gteq',
-            'searchCriteria[filter_groups][1][filters][0][value]' => $this->fromDate,
-            'searchCriteria[filter_groups][2][filters][0][field]' => 'delivery_date',
-            'searchCriteria[filter_groups][2][filters][0][condition_type]' => 'lteq',
-            'searchCriteria[filter_groups][2][filters][0][value]' => $this->toDate,
-            'fields' => 'items[entity_id]'
+            'searchCriteria[filter_groups][0][filters][0][field]' => 'barcode',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
+            'searchCriteria[filter_groups][0][filters][0][value]' => $productBarCode,
         ];
         $apiResult = $this->restApiService->processGetApi($uri, $qParams);
 
@@ -246,32 +221,147 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Fetch the Order details from the API Channel.
-     *
-     * @param string $orderId
-     *
-     * @return array
-     */
-    private function getOrderDetailsById($orderId = '') {
+    public function placePosOrder($orderData = [], $channelId = '', $placingUser = 0) {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
-        $apiResult = $this->restApiService->processGetApi($uri);
+        if (is_null($orderData) || !is_array($orderData) || (count($orderData) == 0)) {
+            return [
+                'success' => false,
+                'message' => 'Order Data is empty'
+            ];
+        }
 
-        return ($apiResult['status']) ? $apiResult['response'] : [];
+        $uri = $this->restApiService->getRestApiUrl() . 'sales/createorder';
+        $headers = [];
+        if (!is_null($channelId) && is_string($channelId) && (trim($channelId) != '')) {
+            $headers['Channel-Id'] = trim($channelId);
+        }
+        $apiResult = $this->restApiService->processPostApi($uri, $orderData, $headers);
+        if (!$apiResult['status']) {
+            return [
+                'success' => false,
+                'message' => $apiResult['message'],
+            ];
+        }
+
+        return [
+            'success' => true,
+            'response' => $apiResult['response'],
+        ];
 
     }
 
-    /**
-     * Set and Insert the Sale Customer Data.
-     *
-     * @param string $currentApiEnv
-     * @param string $currentApiChannel
-     * @param array $saleOrderEl
-     *
-     * @return array
-     */
-    private function processSaleCustomer($currentApiEnv = '', $currentApiChannel = '', $saleOrderEl = []) {
+    public function saveOrderToDatabase($channel = '', $orderId = '', $placingUser = 0, $mode = 'pos') {
+
+        $processUser = null;
+        if (!is_null($placingUser) && is_numeric($placingUser) && ((int)$placingUser > 0)) {
+            $targetUser = User::find((int)$processUser);
+            if ($targetUser) {
+                $processUser = $targetUser;
+            }
+        }
+        $availableModes = ['pos', 'sync'];
+        $modeClean = (!is_null($mode) && is_string($mode) && in_array(trim($mode), $availableModes))
+            ? trim($mode) : 'pos';
+
+        $this->restApiService = new RestApiService();
+        $this->setApiChannel($channel);
+        $this->restApiChannel = $this->restApiService->getCurrentApiChannel();
+
+        $uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
+        $apiResult = $this->restApiService->processGetApi($uri);
+        if (!$apiResult['status']) {
+            return [
+                'success' => false,
+                'message' => $apiResult['message'],
+            ];
+        }
+
+        $currentApiEnv = $this->restApiService->getApiEnvironment();
+        $currentApiChannel = $this->restApiService->getCurrentApiChannel();
+
+        $saleOrderEl = $apiResult['response'];
+        if (!is_array($saleOrderEl) || (count($saleOrderEl) == 0)) {
+            return [
+                'success' => false,
+                'message' => 'Could not fetch the data for Sale Order #' . $orderId . '.'
+            ];
+        }
+
+        if(!is_array($saleOrderEl['items']) || (count($saleOrderEl['items']) == 0)) {
+            return [
+                'success' => false,
+                'message' => 'There is no Order Item for Sale Order #' . $orderId . '.'
+            ];
+        }
+
+        $customerResponse = $this->processNewSaleCustomer($currentApiEnv, $currentApiChannel, $saleOrderEl);
+        if (!$customerResponse['status']) {
+            return [
+                'success' => false,
+                'message' => $customerResponse['message'],
+            ];
+        }
+
+        $customerObj = $customerResponse['customerObj'];
+        $saleResponse = $this->processNewSaleOrder($currentApiEnv, $currentApiChannel, $saleOrderEl, $customerObj);
+        if (!$saleResponse['status']) {
+            return [
+                'success' => false,
+                'message' => $saleResponse['message'],
+            ];
+        }
+
+        $saleOrderObj = $saleResponse['saleOrderObj'];
+        $orderAlreadyCreated = $saleResponse['orderAlreadyCreated'];
+        $orderSaveErrors = [];
+
+        foreach ($saleOrderEl['items'] as $orderItemEl) {
+            $orderItemResponse = $this->processNewSaleOrderItem($orderItemEl, $saleOrderObj);
+            if(!$orderItemResponse['status']) {
+                $orderSaveErrors[] = 'Could not process Order Item #' . $orderItemEl['item_id'] . ' for Sale Order #' . $orderId . '. '  . $orderItemResponse['message'];
+            }
+        }
+
+        $billingResponse = $this->processNewSaleOrderBillingAddress($saleOrderEl, $saleOrderObj);
+        if (!$billingResponse['status']) {
+            $orderSaveErrors[] =  'Could not process Billing Address data for Sale Order #' . $orderId . '. ' . $billingResponse['message'];
+        }
+
+        $shippingResponse = $this->processNewSaleOrderShippingAddress($saleOrderEl, $saleOrderObj);
+        if (!$shippingResponse['status']) {
+            $orderSaveErrors[] =  'Could not process Shipping Address data for Sale Order #' . $orderId . '. ' . $shippingResponse['message'];
+        }
+
+        $paymentResponse = $this->processNewSaleOrderPayments($saleOrderEl, $saleOrderObj);
+        if (!$paymentResponse['status']) {
+            $orderSaveErrors[] =  'Could not process Payment data for Sale Order #' . $orderId . '. ' . $paymentResponse['message'];
+        }
+
+        if(!is_array($saleOrderEl['status_histories']) || (count($saleOrderEl['status_histories']) == 0)) {
+            $orderSaveErrors[] =  'There is no Status History data for Sale Order #' . $orderId . '.';
+        } else {
+            foreach ($saleOrderEl['status_histories'] as $historyEl) {
+                $historyResponse = $this->processNewSaleOrderStatusHistory($historyEl, $saleOrderObj);
+                if(!$historyResponse['status']) {
+                    $orderSaveErrors[] =  'Could not process Status History #' . $historyEl['entity_id'] . ' for Sale Order #' . $orderId . '. '  . $historyResponse['message'];
+                }
+            }
+        }
+
+        $processResponse = $this->recordOrderStatusProcess($saleOrderObj, $orderAlreadyCreated, $processUser, $modeClean);
+        if (!$processResponse['status']) {
+            $orderSaveErrors[] =  'Could not record the processing of Sale Order #' . $orderId . '. ' . $processResponse['message'];
+        }
+
+        return [
+            'success' => true,
+            'saleOrder' => $saleOrderObj,
+            'errors' => $orderSaveErrors
+        ];
+
+    }
+
+    private function processNewSaleCustomer($currentApiEnv = '', $currentApiChannel = '', $saleOrderEl = []) {
 
         try {
 
@@ -304,17 +394,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Data.
-     *
-     * @param string $currentApiEnv
-     * @param string $currentApiChannel
-     * @param array $saleOrderEl
-     * @param SaleCustomer|null $customerObj
-     *
-     * @return array
-     */
-    private function processSaleOrder($currentApiEnv = '', $currentApiChannel = '', $saleOrderEl = [], SaleCustomer $customerObj = null) {
+    private function processNewSaleOrder($currentApiEnv = '', $currentApiChannel = '', $saleOrderEl = [], SaleCustomer $customerObj = null) {
 
         try {
 
@@ -385,15 +465,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Item Data.
-     *
-     * @param array $orderItemEl
-     * @param SaleOrder|null $saleOrderObj
-     *
-     * @return array
-     */
-    private function processSaleOrderItem($orderItemEl = [], SaleOrder $saleOrderObj = null) {
+    private function processNewSaleOrderItem($orderItemEl = [], SaleOrder $saleOrderObj = null) {
 
         try {
 
@@ -454,15 +526,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Billing Address Data.
-     *
-     * @param array $saleOrderEl
-     * @param SaleOrder|null $saleOrderObj
-     *
-     * @return array
-     */
-    private function processSaleOrderBillingAddress($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
+    private function processNewSaleOrderBillingAddress($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
 
         try {
 
@@ -503,15 +567,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Shipping Address Data.
-     *
-     * @param array $saleOrderEl
-     * @param SaleOrder|null $saleOrderObj
-     *
-     * @return array
-     */
-    private function processSaleOrderShippingAddress($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
+    private function processNewSaleOrderShippingAddress($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
 
         try {
 
@@ -554,15 +610,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Payments Data.
-     *
-     * @param array $saleOrderEl
-     * @param SaleOrder|null $saleOrderObj
-     *
-     * @return array
-     */
-    private function processSaleOrderPayments($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
+    private function processNewSaleOrderPayments($saleOrderEl = [], SaleOrder $saleOrderObj = null) {
 
         try {
 
@@ -599,15 +647,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Set and Insert the Sale Order Status History Data.
-     *
-     * @param array $historyEl
-     * @param SaleOrder|null $saleOrderObj
-     *
-     * @return array
-     */
-    private function processSaleOrderStatusHistory($historyEl = [], SaleOrder $saleOrderObj = null) {
+    private function processNewSaleOrderStatusHistory($historyEl = [], SaleOrder $saleOrderObj = null) {
 
         try {
 
@@ -640,29 +680,29 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
-    /**
-     * Record the Processing of Sale Order.
-     *
-     * @param SaleOrder|null $saleOrderObj
-     * @param bool $orderAlreadyCreated
-     *
-     * @return array
-     */
-    private function recordOrderStatusProcess(SaleOrder $saleOrderObj = null, $orderAlreadyCreated = true) {
+    private function recordOrderStatusProcess(SaleOrder $saleOrderObj = null, $orderAlreadyCreated = true, User $processUser = null, $mode = 'pos') {
 
         try {
 
-            if (!$orderAlreadyCreated || ($orderAlreadyCreated && $this->processUser)) {
-                $givenAction = ($orderAlreadyCreated)
-                    ? SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_REIMPORT
-                    : SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_IMPORT;
+            if (!$orderAlreadyCreated || ($orderAlreadyCreated && $processUser)) {
+                $availableModes = ['pos', 'sync'];
+                $modeClean = (!is_null($mode) && is_string($mode) && in_array(trim($mode), $availableModes))
+                    ? trim($mode) : 'pos';
+                $givenAction = SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CREATED;
+                if ($modeClean == 'pos') {
+                    $givenAction = SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CREATED;
+                } elseif ($modeClean == 'sync') {
+                    $givenAction = ($orderAlreadyCreated)
+                        ? SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_REIMPORT
+                        : SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_IMPORT;
+                }
                 $saleOrderProcessHistoryObj = (new SaleOrderProcessHistory())->create([
                     'order_id' => $saleOrderObj->id,
                     'action' => $givenAction,
                     'status' => 1,
                     'comments' => 'The Sale Order Id #' . $saleOrderObj->order_id . ' is ' . (($orderAlreadyCreated) ? 're-imported' : 'imported') . '.',
                     'extra_info' => null,
-                    'done_by' => ($this->processUser) ? $this->processUser->id : null,
+                    'done_by' => ($processUser) ? $processUser->id : null,
                     'done_at' => date('Y-m-d H:i:s'),
                 ]);
             }
@@ -679,6 +719,14 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
             ];
         }
 
+    }
+
+    public function getFileUrl($path = '') {
+        return $this->baseService->getFileUrl($path);
+    }
+
+    public function getUserImageUrl($path = '') {
+        return $this->baseService->getFileUrl('media/images/users/' . $path);
     }
 
 }

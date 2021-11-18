@@ -125,6 +125,7 @@ return [
         'complete' => 'Complete',
         'fraud' => 'Suspected Fraud',
         'holded' => 'On Hold',
+        'order_updated' => 'Order Updated',
         'out_for_delivery' => 'Out For Delivery',
         'ready_to_dispatch' => 'Ready To Dispatch',
         'payment_review'  => 'Payment Review',
@@ -148,6 +149,7 @@ return [
             'processing',
             'being_prepared',
             'holded',
+            'order_updated',
             'ready_to_dispatch',
             'out_for_delivery',
             'delivered',
@@ -159,6 +161,44 @@ return [
             'ready_to_dispatch',
             'out_for_delivery',
         ],
+    ],
+
+    'delivery_time_slots' => [
+        '10:00 AM - 4:00 PM',
+        '4:00 PM - 10:00 PM',
+        '1:00 PM - 7:00 PM',
+    ],
+
+    'pos_system' => [
+
+        'order_sources' => [
+            'ELGROCER' => [
+                'code' => 'ELGROCER',
+                'source' => 'ELGROCER',
+                'charge' => '5.00'
+            ],
+            'INSTORE' => [
+                'code' => 'INSTORE',
+                'source' => 'In Store',
+                'charge' => '0.00'
+            ],
+        ],
+
+        'payment_methods' => [
+            'cashondelivery' => [
+                'method' => 'cashondelivery',
+                'title' => 'Cash On Delivery'
+            ],
+            'banktransfer' => [
+                'method' => 'banktransfer',
+                'title' => 'Credit Card On Delivery'
+            ],
+        ],
+
+    ],
+
+    'fulfillment' => [
+        'done_by' => 'Commerce9'
     ],
 
 ];

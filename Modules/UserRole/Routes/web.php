@@ -63,4 +63,14 @@ Route::prefix('userrole')->group(function() {
         ->name('permissions.delete')
         ->middleware([AuthUserPermissionResolver::class . ':user-role-permissions.delete']);
 
+    Route::get('/pickers', 'UserRoleController@pickersList')
+        ->name('roles.pickersList');
+    Route::get('/pickers/view/{pickerId}', 'UserRoleController@pickerView')
+        ->name('roles.pickerView');
+
+    Route::get('/drivers', 'UserRoleController@driversList')
+        ->name('roles.driversList');
+    Route::get('/drivers/view/{driverId}', 'UserRoleController@driverView')
+        ->name('roles.driverView');
+
 });

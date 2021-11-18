@@ -11,6 +11,15 @@
 |
 */
 
-Route::prefix('cashier')->group(function() {
-    Route::get('/', 'CashierController@index');
+use Modules\Base\Http\Middleware\BlockInvalidUserMiddleware;
+use Modules\UserRole\Http\Middleware\AuthUserRolePathResolver;
+
+Route::prefix('cashier')->middleware([
+    BlockInvalidUserMiddleware::class . ':auth-user',
+    AuthUserRolePathResolver::class . ':auth-user',
+])->group(function() {
+    Route::get('/', 'CashierController@index')
+        ->name('cashier.index');
+    Route::get('/dashboard', 'CashierController@dashboard')
+        ->name('cashier.dashboard');
 });

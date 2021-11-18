@@ -456,7 +456,7 @@
         <td id="fulfilled-by-label-td" colspan="2">
             <div id="fulfilled-by-label-div" class="table-div-left-padded" style="text-align: center;">
                 <label id="fulfilled-by-label-label" style="font-size: larger; font-style: normal; font-weight: normal;">
-                    Fulfilled by : Good Basket
+                    Fulfilled by : {{ $fulfilledBy }}
                 </label>
             </div>
         </td>

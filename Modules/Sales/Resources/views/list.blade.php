@@ -10,7 +10,7 @@
 
             <div class="col-md-12">
                 <div class="card card-custom">
-                    <form name="searchorder" action="{{ url('/supervisor/find-order') }}" method="POST">
+                    <form name="searchorder" action="{{ url('/sales/find-order') }}" method="POST">
                         @csrf
                         <div class="card-body">
                             <div class="form-group mb-8">
@@ -55,7 +55,7 @@
 
                             <div class="col-md-12">
 
-                                <form name="filter_supervisor_order_form" id="filter_supervisor_order_form" action="{{ url('/supervisor/filter-order') }}" method="POST">
+                                <form name="filter_sales_order_form" id="filter_sales_order_form" action="{{ url('/sales/filter-order') }}" method="POST">
                                     @csrf
 
                                     <div class="form-group row">
@@ -98,10 +98,10 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-                                            <button type="button" id="filter_supervisor_order_filter_btn" class="btn btn-primary btn-lg mr-2">
+                                            <button type="button" id="filter_sales_order_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>
-                                            <button type="button" id="filter_supervisor_order_reset_btn" class="btn btn-primary btn-lg mr-2">
+                                            <button type="button" id="filter_sales_order_reset_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-close"></i>Reset</span>
                                             </button>
                                         </div>
@@ -117,24 +117,24 @@
 
                             <div class="col-md-12">
 
-                                <div class="table-responsive text-center" id="supervisor_order_filter_table_area">
-                                    <table class="table table-bordered" id="supervisor_order_filter_table">
+                                <div class="table-responsive text-center" id="sales_order_filter_table_area">
+                                    <table class="table table-bordered" id="sales_order_filter_table">
 
                                         <thead>
-                                            <tr>
-                                                <th># Order Id</th>
-                                                <th>Channel</th>
-                                                <th>Emirates</th>
-                                                <th>Customer Name</th>
-                                                <th>Delivery Date</th>
-                                                <th>Delivery Schedule Interval</th>
-                                                <th>Picker</th>
-                                                <th>Picked At</th>
-                                                <th>Driver</th>
-                                                <th>Delivered At</th>
-                                                <th>Status</th>
-                                                <th>Action</th>
-                                            </tr>
+                                        <tr>
+                                            <th># Order Id</th>
+                                            <th>Channel</th>
+                                            <th>Emirates</th>
+                                            <th>Customer Name</th>
+                                            <th>Delivery Date</th>
+                                            <th>Delivery Schedule Interval</th>
+                                            <th>Picker</th>
+                                            <th>Picked At</th>
+                                            <th>Driver</th>
+                                            <th>Delivered At</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
                                         </thead>
 
                                     </table>
@@ -157,10 +157,10 @@
 
 @section('custom-js-section')
 
-    <script src="{{ asset('js/supervisor.js') }}"></script>
+    <script src="{{ asset('js/sales.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            SupervisorCustomJsBlocks.dashboardPage('{{ url('/') }}');
+            SalesCustomJsBlocks.listPage('{{ url('/') }}');
         });
     </script>
 
