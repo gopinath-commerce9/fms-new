@@ -11,7 +11,9 @@ use Modules\UserRole\Entities\UserRoleMap;
 use Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Routing\Controller;
+use App\Models\User;
 use Modules\UserRole\Entities\UserRole;
+use Modules\UserRole\Entities\UserRoleServiceHelper;
 
 class UserRoleController extends Controller
 {
@@ -320,4 +322,145 @@ class UserRoleController extends Controller
         }
 
     }
+
+    public function pickersList() {
+
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Pickers';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        return view('userrole::pickers.list', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'serviceHelper',
+            'pickers'
+        ));
+
+    }
+
+    public function pickerView($pickerId) {
+
+        if (is_null($pickerId) || !is_numeric($pickerId) || ((int)$pickerId <= 0)) {
+            return back()
+                ->with('error', 'The Picker Id input is invalid!');
+        }
+
+        $pickerObject = User::find($pickerId);
+        if (!$pickerObject) {
+            return back()
+                ->with('error', 'The Picker does not exist!');
+        }
+
+        if (is_null($pickerObject->mappedRole) || (count($pickerObject->mappedRole) == 0)) {
+            return back()
+                ->with('error', 'The given User is not a Picker!');
+        }
+
+        $mappedRole = $pickerObject->mappedRole[0];
+        if (!$mappedRole->isPicker()) {
+            return back()
+                ->with('error', 'The given User is not a Picker!');
+        }
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Picker: ' . $pickerObject->name;
+        $givenUserData = $pickerObject;
+        $serviceHelper = new UserRoleServiceHelper();
+        $emirates = config('fms.emirates');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        return view('userrole::pickers.view', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'givenUserData',
+            'serviceHelper',
+            'emirates',
+            'availableApiChannels',
+            'availableStatuses',
+            'currentRole'
+        ));
+
+    }
+
+    public function driversList() {
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Drivers';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        return view('userrole::drivers.list', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'serviceHelper',
+            'drivers'
+        ));
+
+    }
+
+    public function driverView($driverId) {
+
+        if (is_null($driverId) || !is_numeric($driverId) || ((int)$driverId <= 0)) {
+            return back()
+                ->with('error', 'The Driver Id input is invalid!');
+        }
+
+        $driverObject = User::find($driverId);
+        if (!$driverObject) {
+            return back()
+                ->with('error', 'The Driver does not exist!');
+        }
+
+        if (is_null($driverObject->mappedRole) || (count($driverObject->mappedRole) == 0)) {
+            return back()
+                ->with('error', 'The given User is not a Driver!');
+        }
+
+        $mappedRole = $driverObject->mappedRole[0];
+        if (!$mappedRole->isDriver()) {
+            return back()
+                ->with('error', 'The given User is not a Driver!');
+        }
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Driver: ' . $driverObject->name;
+        $givenUserData = $driverObject;
+        $serviceHelper = new UserRoleServiceHelper();
+        $emirates = config('fms.emirates');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        return view('userrole::drivers.view', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'givenUserData',
+            'serviceHelper',
+            'emirates',
+            'availableApiChannels',
+            'availableStatuses',
+            'currentRole'
+        ));
+
+    }
+
 }

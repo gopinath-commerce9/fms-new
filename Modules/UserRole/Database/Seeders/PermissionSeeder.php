@@ -50,12 +50,19 @@ class PermissionSeeder extends Seeder
         }
 
         if (count($availablePermissions) > 0) {
-            Schema::disableForeignKeyConstraints();
-            Permission::query()->truncate();
+            /* Schema::disableForeignKeyConstraints();
+            Permission::query()->truncate();*/
             foreach ($availablePermissions as $permissionEl) {
-                (new Permission())->create($permissionEl);
+                $insertedUserPermission = Permission::firstOrCreate([
+                    'code' => $permissionEl['code']
+                ], [
+                    'display_name' => $permissionEl['display_name'],
+                    'description' => $permissionEl['description'],
+                    'is_active' => $permissionEl['is_active']
+                ]);
             }
-            Schema::enableForeignKeyConstraints();
+            /*Schema::enableForeignKeyConstraints();*/
+            $this->command->info('Seeded the Default User Permissions!');
         }
 
         $adminRole = UserRole::firstWhere('code', 'admin');
@@ -72,8 +79,15 @@ class PermissionSeeder extends Seeder
             }
             if (count($permissionMapList) > 0) {
                 foreach ($permissionMapList as $permissionEl) {
-                    (new PermissionMap())->create($permissionEl);
+                    $insertedUserPermissionMap = PermissionMap::updateOrCreate([
+                        'role_id' => $permissionEl['role_id'],
+                        'permission_id' => $permissionEl['permission_id'],
+                    ], [
+                        'permitted' => $permissionEl['permitted'],
+                        'is_active' => $permissionEl['is_active']
+                    ]);
                 }
+                $this->command->info('Seeded the Default User Permission Maps!');
             }
 
         }

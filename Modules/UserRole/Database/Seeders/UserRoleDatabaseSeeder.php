@@ -16,12 +16,32 @@ class UserRoleDatabaseSeeder extends Seeder
     {
         Model::unguard();
 
-        // $this->call("OthersTableSeeder");
+        $seedersArray = [
+            UserRoleSeeder::class,
+            PermissionSeeder::class
+        ];
 
-        $this->call(UserRoleSeeder::class);
-        $this->command->info('Seeded the Default User Roles!');
+        $otherSeederList = $this->getOtherSeederClasses();
+        if (!is_null($otherSeederList) && is_array($otherSeederList) && (count($otherSeederList) > 0)) {
+            foreach ($otherSeederList as $seederClass) {
+                if (
+                    !is_null($seederClass)
+                    && is_string($seederClass)
+                    && (trim($seederClass) != '')
+                    && class_exists(trim($seederClass))
+                    && is_subclass_of(trim($seederClass), Seeder::class)
+                ) {
+                    $seedersArray[] = $seederClass;
+                }
+            }
+        }
 
-        $this->call(PermissionSeeder::class);
-        $this->command->info('Seeded the Default User Permissions!');
+        $this->call($seedersArray);
+
     }
+
+    private function getOtherSeederClasses() {
+        return config('userroles.seeders');
+    }
+
 }

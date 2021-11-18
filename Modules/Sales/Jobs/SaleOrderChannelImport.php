@@ -653,9 +653,12 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         try {
 
             if (!$orderAlreadyCreated || ($orderAlreadyCreated && $this->processUser)) {
+                $givenAction = ($orderAlreadyCreated)
+                    ? SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_REIMPORT
+                    : SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_IMPORT;
                 $saleOrderProcessHistoryObj = (new SaleOrderProcessHistory())->create([
                     'order_id' => $saleOrderObj->id,
-                    'action' => (($orderAlreadyCreated) ? 're-import' : 'import'),
+                    'action' => $givenAction,
                     'status' => 1,
                     'comments' => 'The Sale Order Id #' . $saleOrderObj->order_id . ' is ' . (($orderAlreadyCreated) ? 're-imported' : 'imported') . '.',
                     'extra_info' => null,

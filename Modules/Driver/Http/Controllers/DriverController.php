@@ -402,12 +402,14 @@ class DriverController extends Controller
             }
             $orderData = $saleOrderObj->toArray();
 
-            $path = public_path('ktmt/media/logos/logo_goodbasket.png');
+            $path = public_path('ktmt/media/logos/c9_logo_long.svg');
             $type = pathinfo($path, PATHINFO_EXTENSION);
             $data = file_get_contents($path);
             $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);
 
-            $pdfContent = view('driver::print-label', compact('orderData', 'logoEncoded'))->render();
+            $fulfilledBy = config('fms.fulfillment.done_by');
+
+            $pdfContent = view('driver::print-label', compact('orderData', 'logoEncoded', 'fulfilledBy'))->render();
 
             $pdfName = "print-label-order-" . $saleOrderObj->increment_id . ".pdf";
             $outputMode = 'D';

@@ -17,7 +17,7 @@
                     <!--begin::Card Toolbar-->
                     <div class="card-toolbar">
                         <div class="col text-left">
-                            <a href="{{ url('/supervisor/dashboard') }}" class="btn btn-outline-primary">
+                            <a href="{{ url()->previous() }}" class="btn btn-outline-primary">
                                 <i class="flaticon2-back"></i> Back
                             </a>
                         </div>
@@ -31,13 +31,13 @@
                         <ul class="nav nav-light-info nav-bold nav-pills">
 
                             <li class="nav-item">
-                                <a class="nav-link active" data-toggle="tab" href="#driver_view_info_tab">
+                                <a class="nav-link active" data-toggle="tab" href="#picker_view_info_tab">
                                     <span class="nav-text">Info</span>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link" data-toggle="tab" href="#driver_view_orders_tab">
+                                <a class="nav-link" data-toggle="tab" href="#picker_view_orders_tab">
                                     <span class="nav-text">Sale Orders</span>
                                 </a>
                             </li>
@@ -57,7 +57,7 @@
                     <!--begin::Card Tab Content-->
                     <div class="tab-content">
 
-                        <div class="tab-pane fade show active" id="driver_view_info_tab" role="tabpanel" aria-labelledby="driver_view_info_tab">
+                        <div class="tab-pane fade show active" id="picker_view_info_tab" role="tabpanel" aria-labelledby="picker_view_info_tab">
 
                             <div class="row">
 
@@ -72,20 +72,20 @@
                                         <div class="flex-shrink-0 mr-7">
                                             <div class="symbol symbol-50 symbol-lg-120">
                                                 <?php
-                                                    $userDisplayName = $givenUserData->name;
-                                                    $userEmail = $givenUserData->email;
-                                                    $userContact = $givenUserData->contact;
-                                                    $userInitials = '';
-                                                    $profilePicUrl = '';
-                                                    if (!is_null($givenUserData->profile_picture) && ($givenUserData->profile_picture != '')) {
-                                                        $dpData = json_decode($givenUserData->profile_picture, true);
-                                                        $profilePicUrlPath = $dpData['path'];
-                                                        $profilePicUrl = $serviceHelper->getUserImageUrl($profilePicUrlPath);
-                                                    }
-                                                    $userDisplayNameSplitter = explode(' ', $userDisplayName);
-                                                    foreach ($userDisplayNameSplitter as $userNameWord) {
-                                                        $userInitials .= substr($userNameWord, 0, 1);
-                                                    }
+                                                $userDisplayName = $givenUserData->name;
+                                                $userEmail = $givenUserData->email;
+                                                $userContact = $givenUserData->contact;
+                                                $userInitials = '';
+                                                $profilePicUrl = '';
+                                                if (!is_null($givenUserData->profile_picture) && ($givenUserData->profile_picture != '')) {
+                                                    $dpData = json_decode($givenUserData->profile_picture, true);
+                                                    $profilePicUrlPath = $dpData['path'];
+                                                    $profilePicUrl = $serviceHelper->getUserImageUrl($profilePicUrlPath);
+                                                }
+                                                $userDisplayNameSplitter = explode(' ', $userDisplayName);
+                                                foreach ($userDisplayNameSplitter as $userNameWord) {
+                                                    $userInitials .= substr($userNameWord, 0, 1);
+                                                }
                                                 ?>
                                                 @if ($profilePicUrl != '')
                                                     <img class="" src="{{ $profilePicUrl }}" alt="{{ $userDisplayName }}">
@@ -127,7 +127,7 @@
 
                         </div>
 
-                        <div class="tab-pane fade" id="driver_view_orders_tab" role="tabpanel" aria-labelledby="driver_view_orders_tab">
+                        <div class="tab-pane fade" id="picker_view_orders_tab" role="tabpanel" aria-labelledby="picker_view_orders_tab">
 
                             <div class="form-group row my-2">
 
@@ -141,66 +141,66 @@
                                 @if($givenUserData->saleOrderProcessHistory && (count($givenUserData->saleOrderProcessHistory) > 0))
 
                                     <?php
-                                        $saleOrders = [];
-                                        foreach($givenUserData->saleOrderProcessHistory as $processHistory) {
-                                            $saleOrders[$processHistory->saleOrder->id] = $processHistory->saleOrder;
-                                        }
+                                    $saleOrders = [];
+                                    foreach($givenUserData->saleOrderProcessHistory as $processHistory) {
+                                        $saleOrders[$processHistory->saleOrder->id] = $processHistory->saleOrder;
+                                    }
                                     ?>
 
                                     <div class="col col-12 text-center">
 
                                         <div  class="table-responsive">
-                                            <table class="table table-bordered table-checkable" id="driver_view_orders_table">
+                                            <table class="table table-bordered table-checkable" id="picker_view_orders_table">
 
                                                 <thead>
-                                                    <tr>
-                                                        <th># Order Id</th>
-                                                        <th>Channel</th>
-                                                        <th>Emirates</th>
-                                                        <th>Customer Name</th>
-                                                        <th>Delivery Date</th>
-                                                        <th>Delivery Schedule Interval</th>
-                                                        <th>Picker</th>
-                                                        <th>Picked At</th>
-                                                        <th>Driver</th>
-                                                        <th>Delivered At</th>
-                                                        <th>Status</th>
-                                                        <th>Action</th>
-                                                    </tr>
+                                                <tr>
+                                                    <th># Order Id</th>
+                                                    <th>Channel</th>
+                                                    <th>Emirates</th>
+                                                    <th>Customer Name</th>
+                                                    <th>Delivery Date</th>
+                                                    <th>Delivery Schedule Interval</th>
+                                                    <th>Picker</th>
+                                                    <th>Picked At</th>
+                                                    <th>Driver</th>
+                                                    <th>Delivered At</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
                                                 </thead>
 
                                                 <tbody>
 
                                                 @foreach($saleOrders as $orderEl)
                                                     <?php
-                                                        $apiChannelId = $orderEl->channel;
-                                                        $emirateId = $orderEl->region_code;
-                                                        $shipAddress = $orderEl->shippingAddress;
-                                                        $orderStatusId = $orderEl->order_status;
-                                                        $pickerName = '';
-                                                        $orderPickerId = 0;
-                                                        $pickedAt = '';
-                                                        $driverName = '';
-                                                        $orderDriverId = 0;
-                                                        $deliveredAt = '';
-                                                        $deliveryPickerData = $orderEl->pickupData;
-                                                        $deliveryDriverData = $orderEl->deliveryData;
-                                                        if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
-                                                            $pickerDetail = $deliveryPickerData[(count($deliveryPickerData) - 1)];
-                                                            $pickedAt = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
-                                                            if ($pickerDetail->actionDoer) {
-                                                                $orderPickerId = $pickerDetail->actionDoer->id;
-                                                                $pickerName = $pickerDetail->actionDoer->name;
-                                                            }
+                                                    $apiChannelId = $orderEl->channel;
+                                                    $emirateId = $orderEl->region_code;
+                                                    $shipAddress = $orderEl->shippingAddress;
+                                                    $orderStatusId = $orderEl->order_status;
+                                                    $pickerName = '';
+                                                    $orderPickerId = 0;
+                                                    $pickedAt = '';
+                                                    $driverName = '';
+                                                    $orderDriverId = 0;
+                                                    $deliveredAt = '';
+                                                    $deliveryPickerData = $orderEl->pickupData;
+                                                    $deliveryDriverData = $orderEl->deliveryData;
+                                                    if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
+                                                        $pickerDetail = $deliveryPickerData[(count($deliveryPickerData) - 1)];
+                                                        $pickedAt = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
+                                                        if ($pickerDetail->actionDoer) {
+                                                            $orderPickerId = $pickerDetail->actionDoer->id;
+                                                            $pickerName = $pickerDetail->actionDoer->name;
                                                         }
-                                                        if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
-                                                            $driverDetail = $deliveryDriverData[(count($deliveryDriverData) - 1)];
-                                                            $deliveredAt = $serviceHelper->getFormattedTime($driverDetail->done_at, 'F d, Y, h:i:s A');
-                                                            if ($driverDetail->actionDoer) {
-                                                                $orderDriverId = $driverDetail->actionDoer->id;
-                                                                $driverName = $driverDetail->actionDoer->name;
-                                                            }
+                                                    }
+                                                    if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                                                        $driverDetail = $deliveryDriverData[(count($deliveryDriverData) - 1)];
+                                                        $deliveredAt = $serviceHelper->getFormattedTime($driverDetail->done_at, 'F d, Y, h:i:s A');
+                                                        if ($driverDetail->actionDoer) {
+                                                            $orderDriverId = $driverDetail->actionDoer->id;
+                                                            $driverName = $driverDetail->actionDoer->name;
                                                         }
+                                                    }
                                                     ?>
                                                     <tr>
                                                         <td>{{ $orderEl->increment_id }}</td>
@@ -213,7 +213,7 @@
                                                             @if(($orderPickerId == 0) || ($orderPickerId == $givenUserData->id))
                                                                 {{ $pickerName }}
                                                             @else
-                                                                <a href="{{ url('/supervisor/picker-view/' . $orderPickerId) }}" class="btn btn-primary btn-clean mr-2" title="View Picker">
+                                                                <a href="{{ url('/userrole/pickers/view/' . $orderPickerId) }}" class="btn btn-primary btn-clean mr-2" title="View Picker">
                                                                     <span>{{ $pickerName }}</span>
                                                                 </a>
                                                             @endif
@@ -223,7 +223,7 @@
                                                             @if(($orderDriverId == 0) || ($orderDriverId == $givenUserData->id))
                                                                 {{ $driverName }}
                                                             @else
-                                                                <a href="{{ url('/supervisor/driver-view/' . $orderDriverId) }}" class="btn btn-primary btn-clean mr-2" title="View Driver">
+                                                                <a href="{{ url('/userrole/drivers/view/' . $orderDriverId) }}" class="btn btn-primary btn-clean mr-2" title="View Driver">
                                                                     <span>{{ $driverName }}</span>
                                                                 </a>
                                                             @endif
@@ -235,7 +235,15 @@
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <a href="{{ url('/supervisor/order-view/' . $orderEl->id) }}" target="_blank">View Order</a>
+                                                            @if(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_ADMIN))
+                                                                <a href="{{ url('/admin/order-view/' . $orderEl->id) }}" target="_blank">View Order</a>
+                                                            @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_SUPERVISOR))
+                                                                <a href="{{ url('/supervisor/order-view/' . $orderEl->id) }}" target="_blank">View Order</a>
+                                                            @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_PICKER))
+                                                                <a href="{{ url('/picker/order-view/' . $orderEl->id) }}" target="_blank">View Order</a>
+                                                            @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_DRIVER))
+                                                                <a href="{{ url('/driver/order-view/' . $orderEl->id) }}" target="_blank">View Order</a>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -278,10 +286,10 @@
 
 @section('custom-js-section')
 
-    <script src="{{ asset('js/supervisor.js') }}"></script>
+    <script src="{{ asset('js/role-pickers.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            SupervisorCustomJsBlocks.driverViewPage('{{ url('/') }}');
+            RolePickersCustomJsBlocks.viewPage('{{ url('/') }}');
         });
     </script>
 

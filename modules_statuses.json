@@ -11,5 +11,6 @@
     "Supervisor": true,
     "Picker": true,
     "Driver": true,
-    "Cashier": true
+    "Cashier": true,
+    "API": true
 }

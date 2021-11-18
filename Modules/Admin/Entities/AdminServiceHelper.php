@@ -83,6 +83,35 @@ class AdminServiceHelper
 
     }
 
+    public function getAdminAllowedStatuses() {
+        $statusList = config('fms.order_statuses');
+        $allowedStatusList = SaleOrder::AVAILABLE_ORDER_STATUSES;
+        $statusListClean = [];
+        if(!is_null($allowedStatusList) && is_array($allowedStatusList) && (count($allowedStatusList) > 0)) {
+            foreach ($allowedStatusList as $loopStatus) {
+                $statusKey = strtolower(str_replace(' ', '_', trim($loopStatus)));
+                $statusValue = ucwords(str_replace('_', ' ', trim($statusKey)));
+                $statusListClean[$statusKey] = (array_key_exists($statusKey, $statusList) ? $statusList[$statusKey] : $statusValue);
+            }
+        }
+        return $statusListClean;
+    }
+
+    public function getDeliveryTimeSlots() {
+        $statusList = $this->getAdminAllowedStatuses();
+        $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->groupBy('delivery_time_slot')
+            ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
+            ->get();
+        $timeSlotArray = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                $timeSlotArray[] = $orderEl->delivery_time_slot;
+            }
+        }
+        return $timeSlotArray;
+    }
+
     public function getOrdersCountByRegion($region = '') {
 
         if (is_null($region) || (trim($region) == '')) {
@@ -224,6 +253,180 @@ class AdminServiceHelper
             ->get();
 
         return ($orderItems) ? $orderItems->toArray() : [];
+
+    }
+
+    public function getAdminSaleOrders($region = '', $apiChannel = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $orderRequest = SaleOrder::select('*');
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $availableStatuses = $this->getAdminAllowedStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $orderRequest->orderBy('delivery_date', 'asc');
+
+        return $orderRequest->get();
+
+    }
+
+    public function getSaleOrderSalesChartData($apiChannel = '', $region = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $returnData = [];
+
+        $orderRequest = SaleOrder::select('delivery_date', 'order_currency', DB::raw('sum(order_total) as total_sum'));
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableStatuses = $this->getAdminAllowedStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $queryResult = $orderRequest
+            ->groupBy('delivery_date', 'order_currency')
+            ->orderBy('delivery_date', 'asc')
+            ->orderBy('order_currency', 'asc')
+            ->get();
+
+        if($queryResult && (count($queryResult) > 0)) {
+            foreach ($queryResult as $currentRow) {
+                $returnData[$currentRow['delivery_date']][$currentRow['order_currency']] = $currentRow;
+            }
+        }
+
+        return $returnData;
+
+    }
+
+    public function getSaleOrderStatusChartData($apiChannel = '', $region = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $returnData = [];
+
+        $orderRequest = SaleOrder::select('delivery_date', 'order_status', 'order_status_label', DB::raw('count(*) as total_orders'));
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableStatuses = $this->getAdminAllowedStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $queryResult = $orderRequest
+            ->groupBy('delivery_date', 'order_status')
+            ->orderBy('delivery_date', 'asc')
+            ->orderBy('order_status', 'asc')
+            ->get();
+
+        if($queryResult && (count($queryResult) > 0)) {
+            foreach ($queryResult as $currentRow) {
+                $returnData[$currentRow['delivery_date']][$currentRow['order_status']] = $currentRow;
+            }
+        }
+
+        return $returnData;
 
     }
 

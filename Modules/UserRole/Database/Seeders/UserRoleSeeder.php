@@ -64,21 +64,30 @@ class UserRoleSeeder extends Seeder
         }
 
         if (count($availableRoles) > 0) {
-            Schema::disableForeignKeyConstraints();
-            UserRole::query()->truncate();
+            /*Schema::disableForeignKeyConstraints();
+            UserRole::query()->truncate();*/
             foreach ($availableRoles as $roleEl) {
-                (new UserRole())->create($roleEl);
+                $insertedUserRole = UserRole::firstOrCreate([
+                    'code' => $roleEl['code']
+                ], [
+                    'display_name' => $roleEl['display_name'],
+                    'description' => $roleEl['description'],
+                    'is_active' => $roleEl['is_active']
+                ]);
             }
-            Schema::enableForeignKeyConstraints();
+            /*Schema::enableForeignKeyConstraints();*/
+            $this->command->info('Seeded the Default User Roles!');
         }
 
         if ($defAdmin && UserRole::firstWhere('code', 'admin')) {
             $admRole = UserRole::firstWhere('code', 'admin');
-            (new UserRoleMap())->create([
+            $insertedUserRoleMap = UserRoleMap::updateOrCreate([
                 'user_id' => $defAdmin->id,
                 'role_id' => $admRole->id,
-                'is_active' => 1
+            ], [
+                'is_active' => $roleEl['is_active']
             ]);
+            $this->command->info('Seeded the Default User Role Maps!');
         }
 
     }

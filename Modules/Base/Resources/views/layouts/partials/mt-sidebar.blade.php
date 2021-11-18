@@ -47,11 +47,29 @@
             @if(
                 ($menuItemData['active'])
                 && (
-                    is_null($menuItemData['permission'])
-                    || (
-                        is_string($menuItemData['permission'])
-                        && (trim($menuItemData['permission']) != '')
-                        && \Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted(trim($menuItemData['permission']))
+                    is_null($menuItemData['permission_type'])
+                    ||
+                    (
+                        (
+                            (trim($menuItemData['permission_type']) == 'permission')
+                            && (
+                                !is_null($menuItemData['permission'])
+                                && is_string($menuItemData['permission'])
+                                && (trim($menuItemData['permission']) != '')
+                                && \Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted(trim($menuItemData['permission']))
+                            )
+                        )
+                        || (
+                            (trim($menuItemData['permission_type']) == 'role')
+                            && (
+                                !is_null($menuItemData['permission'])
+                                && !is_null($currentRole)
+                                && is_string($currentRole)
+                                && is_array($menuItemData['permission'])
+                                && (count($menuItemData['permission']) > 0)
+                                && in_array(strtolower(str_replace(' ', '_', trim($currentRole))), $menuItemData['permission'])
+                            )
+                        )
                     )
                 )
             )
@@ -75,11 +93,29 @@
                                 @if(
                                     ($menuChildData['active'])
                                     && (
-                                        is_null($menuChildData['permission'])
-                                        || (
-                                            is_string($menuChildData['permission'])
-                                            && (trim($menuChildData['permission']) != '')
-                                            && \Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted(trim($menuChildData['permission']))
+                                        is_null($menuChildData['permission_type'])
+                                        ||
+                                        (
+                                            (
+                                                (trim($menuChildData['permission_type']) == 'permission')
+                                                && (
+                                                    !is_null($menuChildData['permission'])
+                                                    && is_string($menuChildData['permission'])
+                                                    && (trim($menuChildData['permission']) != '')
+                                                    && \Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted(trim($menuChildData['permission']))
+                                                )
+                                            )
+                                            || (
+                                                (trim($menuChildData['permission_type']) == 'role')
+                                                && (
+                                                    !is_null($menuChildData['permission'])
+                                                    && !is_null($currentRole)
+                                                    && is_string($currentRole)
+                                                    && is_array($menuChildData['permission'])
+                                                    && (count($menuChildData['permission']) > 0)
+                                                    && in_array(strtolower(str_replace(' ', '_', trim($currentRole))), $menuChildData['permission'])
+                                                )
+                                            )
                                         )
                                     )
                                 )

@@ -26,10 +26,6 @@ Route::prefix('supervisor')->middleware([
         ->name('supervisor.searchOrderByIncrementId');
     Route::post('/filter-order', 'SupervisorController@searchOrderByFilters')
         ->name('supervisor.searchOrderByFilters');
-    Route::get('/picker-view/{pickerId}', 'SupervisorController@viewPicker')
-        ->name('supervisor.viewPicker');
-    Route::get('/driver-view/{driverId}', 'SupervisorController@viewDriver')
-        ->name('supervisor.viewDriver');
     Route::get('/order-view/{orderId}', 'SupervisorController@viewOrder')
         ->name('supervisor.viewOrder');
     Route::post('/order-status-change/{orderId}', 'SupervisorController@orderStatusChange')
