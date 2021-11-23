@@ -101,6 +101,13 @@ class SupervisorController extends Controller
 
         $serviceHelper = new SupervisorServiceHelper();
 
+        $availableActions = ['datatable', 'status_chart', 'sales_chart'];
+        $methodAction = (
+            $request->has('action')
+            && (trim($request->input('action')) != '')
+            && in_array(trim($request->input('action')), $availableActions)
+        ) ? trim($request->input('action')) : 'datatable';
+
         $dtDraw = (
             $request->has('draw')
             && (trim($request->input('draw')) != '')
@@ -137,76 +144,169 @@ class SupervisorController extends Controller
             && array_key_exists(trim($request->input('order_status_filter')), $availableStatuses)
         ) ? trim($request->input('order_status_filter')) : '';
 
-        $deliveryDate = (
-            $request->has('delivery_date_filter')
-            && (trim($request->input('delivery_date_filter')) != '')
-        ) ? trim($request->input('delivery_date_filter')) : '';
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
 
         $deliverySlot = (
             $request->has('delivery_slot_filter')
             && (trim($request->input('delivery_slot_filter')) != '')
         ) ? trim($request->input('delivery_slot_filter')) : '';
 
-        $filteredOrders = $serviceHelper->getSupervisorOrders($region, $apiChannel, $orderStatus, $deliveryDate, $deliverySlot);
-        if (!$filteredOrders) {
-            return response()->json([], 200);
-        }
+        $returnData = [];
+        if ($methodAction == 'datatable') {
+            $filteredOrders = $serviceHelper->getSupervisorOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
+            if ($filteredOrders) {
 
-        $filteredOrderData = [];
-        $totalRec = 0;
-        $collectRecStart = $dtStart;
-        $collectRecEnd = $collectRecStart + $dtPageLength;
-        $currentRec = -1;
-        foreach ($filteredOrders as $record) {
-            $totalRec++;
-            $currentRec++;
-            if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
-                continue;
+                $filteredOrderData = [];
+                $totalRec = 0;
+                $collectRecStart = $dtStart;
+                $collectRecEnd = $collectRecStart + $dtPageLength;
+                $currentRec = -1;
+                foreach ($filteredOrders as $record) {
+                    $totalRec++;
+                    $currentRec++;
+                    if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                        continue;
+                    }
+                    $tempRecord = [];
+                    $tempRecord['recordId'] = $record->id;
+                    $tempRecord['orderId'] = $record->order_id;
+                    $tempRecord['incrementId'] = $record->increment_id;
+                    $apiChannelId = $record->channel;
+                    $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
+                    $emirateId = $record->region_code;
+                    $tempRecord['region'] = $emirates[$emirateId];
+                    $shipAddress = $record->shippingAddress;
+                    $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
+                    $tempRecord['deliveryDate'] = $record->delivery_date;
+                    $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
+                    $tempRecord['deliveryPicker'] = '';
+                    $tempRecord['deliveryPickerTime'] = '';
+                    $tempRecord['deliveryDriver'] = '';
+                    $tempRecord['deliveryDriverTime'] = '';
+                    $orderStatusId = $record->order_status;
+                    $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
+                    $deliveryPickerData = $record->pickupData;
+                    $deliveryDriverData = $record->deliveryData;
+                    $tempRecord['actions'] = url('/supervisor/order-view/' . $record->id);
+                    if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
+                        $pickerDetail = $deliveryPickerData[0];
+                        $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
+                        if ($pickerDetail->actionDoer) {
+                            $tempRecord['deliveryPicker'] = $pickerDetail->actionDoer->name;
+                        }
+                    }
+                    if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                        $driverDetail = $deliveryDriverData[0];
+                        $tempRecord['deliveryDriverTime'] = $serviceHelper->getFormattedTime($driverDetail->done_at, 'F d, Y, h:i:s A');
+                        if ($driverDetail->actionDoer) {
+                            $tempRecord['deliveryDriver'] = $driverDetail->actionDoer->name;
+                        }
+                    }
+                    $filteredOrderData[] = $tempRecord;
+                }
+
+                $returnData = [
+                    'draw' => $dtDraw,
+                    'recordsTotal' => $totalRec,
+                    'recordsFiltered' => $totalRec,
+                    'data' => $filteredOrderData
+                ];
+
+            } else {
+                $returnData = [
+                    'draw' => $dtDraw,
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'data' => []
+                ];
             }
-            $tempRecord = [];
-            $tempRecord['recordId'] = $record->id;
-            $tempRecord['orderId'] = $record->order_id;
-            $tempRecord['incrementId'] = $record->increment_id;
-            $apiChannelId = $record->channel;
-            $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-            $emirateId = $record->region_code;
-            $tempRecord['region'] = $emirates[$emirateId];
-            $shipAddress = $record->shippingAddress;
-            $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
-            $tempRecord['deliveryDate'] = $record->delivery_date;
-            $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
-            $tempRecord['deliveryPicker'] = '';
-            $tempRecord['deliveryPickerTime'] = '';
-            $tempRecord['deliveryDriver'] = '';
-            $tempRecord['deliveryDriverTime'] = '';
-            $orderStatusId = $record->order_status;
-            $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
-            $deliveryPickerData = $record->pickupData;
-            $deliveryDriverData = $record->deliveryData;
-            $tempRecord['actions'] = url('/supervisor/order-view/' . $record->id);
-            if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
-                $pickerDetail = $deliveryPickerData[0];
-                $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
-                if ($pickerDetail->actionDoer) {
-                    $tempRecord['deliveryPicker'] = $pickerDetail->actionDoer->name;
+        } elseif ($methodAction == 'status_chart') {
+
+            $chartData = $serviceHelper->getSaleOrderStatusChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+
+            $xAxisData = [];
+            $seriesData = [];
+            $seriesNameArray = [];
+            $seriesPointsArray = [];
+
+            foreach ($chartData as $dateKey => $dateData) {
+                foreach ($dateData as $statusKey => $statusValue) {
+                    $seriesNameArray[$statusKey] = $statusKey;
                 }
             }
-            if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
-                $driverDetail = $deliveryDriverData[0];
-                $tempRecord['deliveryDriverTime'] = $serviceHelper->getFormattedTime($driverDetail->done_at, 'F d, Y, h:i:s A');
-                if ($driverDetail->actionDoer) {
-                    $tempRecord['deliveryDriver'] = $driverDetail->actionDoer->name;
+
+            $nameArray = $seriesNameArray;
+            $seriesNameArray = [];
+            $orderStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+            foreach ($orderStatuses as $statusKey => $statusValue) {
+                if (array_key_exists($statusKey, $nameArray)) {
+                    $seriesNameArray[$statusKey] = $statusValue;
                 }
             }
-            $filteredOrderData[] = $tempRecord;
-        }
 
-        $returnData = [
-            'draw' => $dtDraw,
-            'recordsTotal' => $totalRec,
-            'recordsFiltered' => $totalRec,
-            'data' => $filteredOrderData
-        ];
+            foreach ($chartData as $dateKey => $dateData) {
+                $xAxisData[] = $dateKey;
+                foreach ($seriesNameArray as $statusKey => $statusValue) {
+                    $seriesPointsArray[$statusKey][] = (array_key_exists($statusKey, $dateData)) ? $dateData[$statusKey]['total_orders'] : 0;
+                }
+            }
+
+            foreach ($seriesNameArray as $statusKey => $statusData) {
+                $seriesData[] = [
+                    'name' => $statusData,
+                    'data' => $seriesPointsArray[$statusKey]
+                ];
+            }
+
+            $returnData = [
+                'success' => true,
+                'xaxis' => $xAxisData,
+                'series' => $seriesData,
+            ];
+
+        } elseif ($methodAction == 'sales_chart') {
+
+            $chartData = $serviceHelper->getSaleOrderSalesChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+
+            $xAxisData = [];
+            $seriesData = [];
+            $seriesNameArray = [];
+            $seriesPointsArray = [];
+
+            foreach ($chartData as $dateKey => $dateData) {
+                foreach ($dateData as $currencyKey => $currencyData) {
+                    $seriesNameArray[$currencyKey] = $currencyKey;
+                }
+            }
+            foreach ($chartData as $dateKey => $dateData) {
+                $xAxisData[] = $dateKey;
+                foreach ($seriesNameArray as $currencyKey => $currencyData) {
+                    $seriesPointsArray[$currencyKey][] = (array_key_exists($currencyKey, $dateData)) ? $dateData[$currencyKey]['total_sum'] : 0;
+                }
+            }
+
+            foreach ($seriesNameArray as $statusKey => $statusData) {
+                $seriesData[] = [
+                    'name' => $statusData,
+                    'data' => $seriesPointsArray[$statusKey]
+                ];
+            }
+
+            $returnData = [
+                'success' => true,
+                'xaxis' => $xAxisData,
+                'series' => $seriesData,
+            ];
+
+        }
 
         return response()->json($returnData, 200);
 
