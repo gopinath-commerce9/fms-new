@@ -55,10 +55,12 @@ class AdminServiceHelper
      *
      * @param string $dateTimeString
      * @param string $format
+     * @param string $env
+     * @param string $channel
      *
      * @return string
      */
-    public function getFormattedTime($dateTimeString = '', $format = '') {
+    public function getFormattedTime($dateTimeString = '', $format = '', $env = '', $channel = '') {
 
         if (is_null($dateTimeString) || (trim($dateTimeString) == '')) {
             return '';
@@ -68,8 +70,15 @@ class AdminServiceHelper
             $format = \DateTime::ISO8601;
         }
 
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
         $appTimeZone = config('app.timezone');
-        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $channelTimeZone = $apiService->getApiTimezone();
         $zoneList = timezone_identifiers_list();
         $cleanZone = (in_array(trim($channelTimeZone), $zoneList)) ? trim($channelTimeZone) : $appTimeZone;
 
@@ -118,14 +127,6 @@ class AdminServiceHelper
             return [];
         }
 
-        /*$uri = $this->restApiService->getRestApiUrl() . 'getorderscountbyregion';
-        $qParams = [
-            'region' => trim($region)
-        ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams);
-
-        return ($apiResult['status']) ? $apiResult['response'] : [];*/
-
         $givenFromDate = date('Y-m-d', strtotime('-3 days'));
         $givenToDate =  date('Y-m-d', strtotime('+10 days'));
 
@@ -153,18 +154,6 @@ class AdminServiceHelper
 
         $pageSizeClean = (is_numeric(trim($pageSize))) ? trim((int)$pageSize) : 0;
         $currentPageClean = (is_numeric(trim($currentPage))) ? trim((int)$currentPage) : 0;
-
-        /*$uri = $this->restApiService->getRestApiUrl() . 'getordersbyregion';
-        $qParams = [
-            'region' => trim($region),
-            'timeInterval' => trim($interval),
-            'date' => trim($date),
-            'pageSize' => trim($pageSizeClean),
-            'currentPage' => trim($currentPageClean),
-        ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams);
-
-        return ($apiResult['status']) ? $apiResult['response'] : [];*/
 
         $regionOrders = SaleOrder::where('region_code', $region)
             ->whereIn('order_status', SaleOrder::AVAILABLE_ORDER_STATUSES)
@@ -430,29 +419,43 @@ class AdminServiceHelper
 
     }
 
-    public function getDriversByDate($dateString = '') {
+    public function getDriversByDate($dateString = '', $env = '', $channel = '') {
 
         if (is_null($dateString) || (trim($dateString) == '')) {
             return [];
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'getdriversbydate';
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'getdriversbydate';
         $qParams = [
             'date' => trim($dateString)
         ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams, [], true, true);
+        $apiResult = $apiService->processGetApi($uri, $qParams, [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getCustomerGroups() {
+    public function getCustomerGroups($env = '', $channel = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'customerGroups/search';
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'customerGroups/search';
         $qParams = [
             'searchCriteria' => '?'
         ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams, [], true, true);
+        $apiResult = $apiService->processGetApi($uri, $qParams, [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
@@ -493,36 +496,57 @@ class AdminServiceHelper
         return [];
     }
 
-    public function getAvailableRegionsList($countryId = '') {
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
 
-        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
-            $countryId = $this->restApiService->getApiDefaultCountry();
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'directory/countries/' . $countryId;
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
+            $countryId = $apiService->getApiDefaultCountry();
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'directory/countries/' . $countryId;
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getAvailableCityList($countryId = '') {
+    public function getAvailableCityList($countryId = '', $env = '', $channel = '') {
 
-        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
-            $countryId = $this->restApiService->getApiDefaultCountry();
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'directory/areas/' . $countryId;
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
+            $countryId = $apiService->getApiDefaultCountry();
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'directory/areas/' . $countryId;
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getVendorsList() {
+    public function getVendorsList($env = '', $channel = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'vendors';
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'vendors';
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 

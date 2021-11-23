@@ -26,4 +26,14 @@ Route::prefix('sales')->group(function() {
         ->name('sales.posAddCart');
     Route::post('/pos/create-order', 'SalesController@posCreateOrder')
         ->name('sales.posCreateOrder');
+    Route::get('/stock-update', 'SalesController@stockUpdate')
+        ->name('sales.stockUpdate');
+    Route::post('/update-product-stock-qty', 'SalesController@updateProductStockQty')
+        ->name('sales.updateProductStockQty');
+    Route::get('/oos-report', 'SalesController@oosReport')
+        ->name('sales.oosReport');
+    Route::get('/order-items-report', 'SalesController@orderItemsReport')
+        ->name('sales.orderItemsReport');
+    Route::post('/filter-order-items', 'SalesController@filterOrderItemsReport')
+        ->name('sales.filterOrderItemsReport');
 });

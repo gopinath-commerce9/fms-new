@@ -59,10 +59,12 @@ class SalesServiceHelper
      *
      * @param string $dateTimeString
      * @param string $format
+     * @param string $env
+     * @param string $channel
      *
      * @return string
      */
-    public function getFormattedTime($dateTimeString = '', $format = '') {
+    public function getFormattedTime($dateTimeString = '', $format = '', $env = '', $channel = '') {
 
         if (is_null($dateTimeString) || (trim($dateTimeString) == '')) {
             return '';
@@ -72,8 +74,15 @@ class SalesServiceHelper
             $format = \DateTime::ISO8601;
         }
 
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
         $appTimeZone = config('app.timezone');
-        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $channelTimeZone = $apiService->getApiTimezone();
         $zoneList = timezone_identifiers_list();
         $cleanZone = (in_array(trim($channelTimeZone), $zoneList)) ? trim($channelTimeZone) : $appTimeZone;
 
@@ -177,51 +186,92 @@ class SalesServiceHelper
         return $returnData;
     }
 
-    public function getAvailableRegionsList($countryId = '') {
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
 
-        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
-            $countryId = $this->restApiService->getApiDefaultCountry();
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'directory/countries/' . $countryId;
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
+            $countryId = $apiService->getApiDefaultCountry();
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'directory/countries/' . $countryId;
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getAvailableCityList($countryId = '') {
+    public function getAvailableCityList($countryId = '', $env = '', $channel = '') {
 
         if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
             $countryId = $this->restApiService->getApiDefaultCountry();
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'directory/areas/' . $countryId;
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'directory/areas/' . $countryId;
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getProductData($productBarCode = '') {
+    public function getProductData($productBarCode = '', $env = '', $channel = '') {
 
         if (is_null($productBarCode) || (trim($productBarCode) == '')) {
             return [];
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'products';
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'products';
         $qParams = [
             'searchCriteria[filter_groups][0][filters][0][field]' => 'barcode',
             'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
             'searchCriteria[filter_groups][0][filters][0][value]' => $productBarCode,
         ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams);
+        $apiResult = $apiService->processGetApi($uri, $qParams);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function placePosOrder($orderData = [], $channelId = '', $placingUser = 0) {
+    public function getProductDataBySku($productSku = '', $env = '', $channel = '') {
+
+        if (is_null($productSku) || (trim($productSku) == '')) {
+            return [];
+        }
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'products/' . trim($productSku);
+        $apiResult = $apiService->processGetApi($uri);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
+    public function placePosOrder($orderData = [], $channelId = '', $placingUser = 0, $env = '', $channel = '') {
 
         if (is_null($orderData) || !is_array($orderData) || (count($orderData) == 0)) {
             return [
@@ -230,12 +280,19 @@ class SalesServiceHelper
             ];
         }
 
-        $uri = $this->restApiService->getRestApiUrl() . 'sales/createorder';
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'sales/createorder';
         $headers = [];
         if (!is_null($channelId) && is_string($channelId) && (trim($channelId) != '')) {
             $headers['Channel-Id'] = trim($channelId);
         }
-        $apiResult = $this->restApiService->processPostApi($uri, $orderData, $headers);
+        $apiResult = $apiService->processPostApi($uri, $orderData, $headers);
         if (!$apiResult['status']) {
             return [
                 'success' => false,
@@ -718,6 +775,164 @@ class SalesServiceHelper
                 'message' => $e->getMessage()
             ];
         }
+
+    }
+
+    public function getOutOfStockItems($dayInterval = 3, $env = '', $channel = '') {
+
+        $intervalClean =  (is_null($dayInterval) || !is_numeric($dayInterval) || ((int) trim($dayInterval) < 0))
+            ? (int)trim($dayInterval) : 3;
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'getoutofstockitems/' . $intervalClean;
+        $apiResult = $apiService->processGetApi($uri);
+
+        return $apiResult;
+
+    }
+
+    public function getStockItemData($productSku = '', $env = '', $channel = '') {
+
+        if (is_null($productSku) || (trim($productSku) == '')) {
+            return [ 'status' => false, 'message' => 'The product SKU should not be empty!' ];
+        }
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'stockItems/' . trim($productSku);
+        $apiResult = $apiService->processGetApi($uri);
+
+        return $apiResult;
+
+    }
+
+    public function setProductOutOfStock($productSku = '', $itemId = '', $env = '', $channel = '') {
+
+        if (is_null($productSku) || (trim($productSku) == '')) {
+            return [];
+        }
+
+        if (is_null($itemId) || (trim($itemId) == '')) {
+            return [];
+        }
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'products/' . trim($productSku) . '/stockItems/' . trim($itemId);
+        $params = [
+            'stockItem' => [
+                'is_in_stock' => false
+            ]
+        ];
+        $apiResult = $apiService->processPutApi($uri, $params);
+
+        return $apiResult;
+
+    }
+
+    public function getSaleOrderItemsReport($region = '', $apiChannel = '', $status = [], $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $orderRequest = SaleOrder::select('sale_orders.*', 'sale_order_items.product_id', 'sale_order_items.item_sku', 'sale_order_items.item_name', DB::raw('SUM(sale_order_items.qty_ordered) as total_qty'), DB::raw('SUM(sale_order_items.qty_returned) as total_return_qty'));
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $availableStatuses = $this->getAvailableStatuses();
+        if (!is_null($status) && is_array($status) && (count($status) > 0)) {
+            $orderRequest->whereIn('order_status', $status);
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $orderItems = $orderRequest->join('sale_order_items', 'sale_orders.order_id', '=', 'sale_order_items.sale_order_id')
+            ->groupBy('sale_order_items.item_sku')
+            ->orderBy('sale_order_items.product_id', 'asc')
+            ->get();
+
+        if (!$orderItems) {
+            return [];
+        }
+
+        $queryResultArray = $orderItems->toArray();
+        $finalArray = [];
+        foreach ($queryResultArray as $queryEl) {
+            $tempArray = [
+                'item_sku' => $queryEl['item_sku'],
+                'item_name' => $queryEl['item_name'],
+                'total_qty' => $queryEl['total_qty'],
+                'total_return_qty' => $queryEl['total_return_qty'],
+                'supplier_name' => '',
+                'item_type' => ''
+            ];
+            $productData = $this->getProductDataBySku($queryEl['item_sku'], $queryEl['env'], $queryEl['channel']);
+            $searchAttributes = [
+                'supplier_name',
+                'item_type',
+            ];
+            if (!is_null($productData) && is_array($productData) && (count($productData) > 0)) {
+                if (array_key_exists('custom_attributes', $productData)) {
+                    $customAttr = $productData['custom_attributes'];
+                    if (is_array($customAttr) && (count($customAttr) > 0)) {
+                        foreach ($customAttr as $customAttrEl) {
+                            if (array_key_exists('attribute_code', $customAttrEl) && array_key_exists('value', $customAttrEl)) {
+                                if (in_array($customAttrEl['attribute_code'], $searchAttributes)) {
+                                    $tempArray[$customAttrEl['attribute_code']] = $customAttrEl['value'];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            $finalArray[] = $tempArray;
+        }
+
+        return $finalArray;
 
     }
 

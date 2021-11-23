@@ -116,7 +116,7 @@ var SalesCustomJsBlocks = function() {
             $("form#order-form")[0].reset();
             $('#channel-Id').val("ELGROCER");
             $('.customer_info').show();
-            $('#email').val("elgrocer@commerce9.com");
+            $('#email').val("elgrocer@goodbasket.com");
         }
     };
 
@@ -180,7 +180,7 @@ var SalesCustomJsBlocks = function() {
         $('.customer_info').hide();
         $('#firstname').val("InStore");
         $('#lastname').val("InStore");
-        $('#email').val("instore@commerce9.com");
+        $('#email').val("instore@goodbasket.com");
         $('#telephone').val("+97155555555");
         $('#street').val("In Store");
         $('#delivery_time_slot').val("10:00 AM - 2:00 PM");
@@ -273,6 +273,38 @@ var SalesCustomJsBlocks = function() {
                 $('#cart-item').html(response.html);
                 posCalculateTotal();
             }
+        });
+    };
+
+    var initOosReportTable = function() {
+
+        var table = $('#oos_report_table');
+
+        table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [5, 10, 25, 50],
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: [],
+        });
+
+    };
+
+    var initFilterOrderItemDateRangePicker = function () {
+        var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary'
+        }, function(start, end, label) {
+            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
+        });
+        filterDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.startDate.format('YYYY-MM-DD'));
         });
     };
 
@@ -410,6 +442,15 @@ var SalesCustomJsBlocks = function() {
                 });
             });
 
+        },
+        updateStockPage: function(hostUrl) {
+
+        },
+        oosReportPage: function(hostUrl) {
+            initOosReportTable();
+        },
+        itemsReportPage: function(hostUrl) {
+            initFilterOrderItemDateRangePicker();
         },
     };
 

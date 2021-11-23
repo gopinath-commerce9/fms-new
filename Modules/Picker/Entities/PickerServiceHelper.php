@@ -60,10 +60,12 @@ class PickerServiceHelper
      *
      * @param string $dateTimeString
      * @param string $format
+     * @param string $env
+     * @param string $channel
      *
      * @return string
      */
-    public function getFormattedTime($dateTimeString = '', $format = '') {
+    public function getFormattedTime($dateTimeString = '', $format = '', $env = '', $channel = '') {
 
         if (is_null($dateTimeString) || (trim($dateTimeString) == '')) {
             return '';
@@ -73,8 +75,15 @@ class PickerServiceHelper
             $format = \DateTime::ISO8601;
         }
 
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
         $appTimeZone = config('app.timezone');
-        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $channelTimeZone = $apiService->getApiTimezone();
         $zoneList = timezone_identifiers_list();
         $cleanZone = (in_array(trim($channelTimeZone), $zoneList)) ? trim($channelTimeZone) : $appTimeZone;
 
@@ -154,22 +163,36 @@ class PickerServiceHelper
 
     }
 
-    public function getCustomerGroups() {
+    public function getCustomerGroups($env = '', $channel = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'customerGroups/search';
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'customerGroups/search';
         $qParams = [
             'searchCriteria' => '?'
         ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams, [], true, true);
+        $apiResult = $apiService->processGetApi($uri, $qParams, [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getVendorsList() {
+    public function getVendorsList($env = '', $channel = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'vendors';
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'vendors';
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
@@ -247,7 +270,7 @@ class PickerServiceHelper
 
         if ($allItemsAvailable) {
 
-            $uri = $this->restApiService->getRestApiUrl() . 'changeorderstatus';
+            $uri = $apiService->getRestApiUrl() . 'changeorderstatus';
             $params = [
                 'orderId' => $order->order_id,
                 'state' => $orderStatusNew,
@@ -255,7 +278,7 @@ class PickerServiceHelper
                 'parcelCount' => $boxCount,
                 'actualQuantity' => $orderItemPostAQData,
             ];
-            $statusApiResult = $this->restApiService->processPostApi($uri, $params);
+            $statusApiResult = $apiService->processPostApi($uri, $params);
             if (!$statusApiResult['status']) {
                 return [
                     'status' => false,
@@ -264,7 +287,7 @@ class PickerServiceHelper
             }
 
             $uri = $apiService->getRestApiUrl() . 'orders/' . $order->order_id;
-            $orderApiResult = $this->restApiService->processGetApi($uri);
+            $orderApiResult = $apiService->processGetApi($uri);
             if (!$orderApiResult['status']) {
                 return [
                     'status' => false,

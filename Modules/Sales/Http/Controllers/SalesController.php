@@ -705,4 +705,216 @@ class SalesController extends Controller
 
     }
 
+    public function stockUpdate(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Update Stock';
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+
+        return view('sales::update-stock', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'availableApiChannels',
+            'availableStatuses',
+            'serviceHelper'
+        ));
+
+    }
+
+    public function updateProductStockQty(Request $request) {
+
+        $productSku = (
+            $request->has('product_sku')
+            && (trim($request->input('product_sku')) != '')
+        ) ? trim($request->input('product_sku')) : '';
+
+        if ($productSku == '') {
+            return back()
+                ->with('error', "The product SKU should not be empty!");
+        }
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $searchDetailResponse = $serviceHelper->getStockItemData($productSku);
+        if (!$searchDetailResponse['status']) {
+            return back()
+                ->with('error', $searchDetailResponse['message']);
+        }
+
+        $searchDetails = $searchDetailResponse['response'];
+        if ($searchDetails['message']) {
+            return back()
+                ->with('error', $searchDetails['message']);
+        }
+
+        if (!array_key_exists('item_id', $searchDetails)) {
+            return back()
+                ->with('error', 'Could not update the Product Stock for SKU "' . $productSku . '"');
+        }
+
+        $updateStockResponse = $serviceHelper->setProductOutOfStock($productSku, $searchDetails['item_id']);
+        if (!$updateStockResponse['status']) {
+            return back()
+                ->with('error', $updateStockResponse['message']);
+        }
+
+        $updateStock = $updateStockResponse['response'];
+        if ($updateStock['message']) {
+            return back()
+                ->with('error', $updateStock['message']);
+        }
+
+    }
+
+    public function oosReport(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Out Of Stock Report';
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+
+        $dayInterval = 3;
+        $oosResult = $serviceHelper->getOutOfStockItems($dayInterval);
+        $oosData = ($oosResult['status']) ? $oosResult['response'] : [];
+
+        return view('sales::oos-report', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'availableApiChannels',
+            'availableStatuses',
+            'oosData',
+            'serviceHelper'
+        ));
+
+    }
+
+    public function orderItemsReport(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Order Items Sales Report';
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $emirates = config('fms.emirates');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+
+        return view('sales::order-items-report', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'availableApiChannels',
+            'availableStatuses',
+            'emirates',
+            'deliveryTimeSlots',
+            'serviceHelper'
+        ));
+
+    }
+
+    public function filterOrderItemsReport(Request $request) {
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $emirates = config('fms.emirates');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $orderStatus = (
+            $request->has('order_status_filter')
+            && is_array($request->input('order_status_filter'))
+            && (count($request->input('order_status_filter')) > 0)
+        ) ? trim($request->input('order_status_filter')) : [];
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
+        $orderStatusClean = [];
+        foreach ($orderStatus as $statusEl) {
+            if (array_key_exists($statusEl, $availableStatuses)) {
+                $orderStatusClean[] = $statusEl;
+            }
+        }
+
+        $fromDate = '';
+        $toDate = '';
+        if ($endDate > $startDate) {
+            $fromDate = $startDate;
+            $toDate = $endDate;
+        } else {
+            $fromDate = $endDate;
+            $toDate = $startDate;
+        }
+
+        $filterResult = $serviceHelper->getSaleOrderItemsReport($region, $apiChannel, $orderStatusClean, $fromDate, $toDate, $deliverySlot);
+        if (count($filterResult) == 0) {
+            return back()
+                ->with('error', "There is no record to export the CSV file.");
+        }
+
+        $fileName = "orders-items_" . date('Y-m-d', strtotime($fromDate)) . "_" . date('Y-m-d', strtotime($toDate)) . ".csv";
+        $headers = array(
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $headingColumns = ["SKU", "Name", "Total Qty","Total Return Qty", "Supplier", "Item Type"];
+
+        $callback = function() use($filterResult, $headingColumns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, array_values($headingColumns));
+            if(!empty($filterResult)) {
+                foreach($filterResult as $row) {
+                    fputcsv($file, [
+                        $row['item_sku'],
+                        $row['item_name'],
+                        $row['total_qty'],
+                        $row['total_return_qty'],
+                        $row['supplier_name'],
+                        $row['item_type']
+                    ]);
+                }
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+
+    }
+
 }

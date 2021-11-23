@@ -63,10 +63,12 @@ class SupervisorServiceHelper
      *
      * @param string $dateTimeString
      * @param string $format
+     * @param string $env
+     * @param string $channel
      *
      * @return string
      */
-    public function getFormattedTime($dateTimeString = '', $format = '') {
+    public function getFormattedTime($dateTimeString = '', $format = '', $env = '', $channel = '') {
 
         if (is_null($dateTimeString) || (trim($dateTimeString) == '')) {
             return '';
@@ -76,8 +78,15 @@ class SupervisorServiceHelper
             $format = \DateTime::ISO8601;
         }
 
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
         $appTimeZone = config('app.timezone');
-        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $channelTimeZone = $apiService->getApiTimezone();
         $zoneList = timezone_identifiers_list();
         $cleanZone = (in_array(trim($channelTimeZone), $zoneList)) ? trim($channelTimeZone) : $appTimeZone;
 
@@ -120,7 +129,7 @@ class SupervisorServiceHelper
         return $timeSlotArray;
     }
 
-    public function getSupervisorOrders($region = '', $apiChannel = '', $status = '', $deliveryDate = '', $timeSlot = '') {
+    public function getSupervisorOrders($region = '', $apiChannel = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');
 
@@ -145,8 +154,19 @@ class SupervisorServiceHelper
             $orderRequest->whereIn('order_status', array_keys($availableStatuses));
         }
 
-        if (!is_null($deliveryDate) && (trim($deliveryDate) != '')) {
-            $orderRequest->where('delivery_date', date('Y-m-d', strtotime(trim($deliveryDate))));
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
         }
 
         if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
@@ -159,22 +179,160 @@ class SupervisorServiceHelper
 
     }
 
-    public function getCustomerGroups() {
+    public function getSaleOrderSalesChartData($apiChannel = '', $region = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'customerGroups/search';
+        $returnData = [];
+
+        $orderRequest = SaleOrder::select('delivery_date', 'order_currency', DB::raw('sum(order_total) as total_sum'));
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableStatuses = $this->getSupervisorsAllowedStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $queryResult = $orderRequest
+            ->groupBy('delivery_date', 'order_currency')
+            ->orderBy('delivery_date', 'asc')
+            ->orderBy('order_currency', 'asc')
+            ->get();
+
+        if($queryResult && (count($queryResult) > 0)) {
+            foreach ($queryResult as $currentRow) {
+                $returnData[$currentRow['delivery_date']][$currentRow['order_currency']] = $currentRow;
+            }
+        }
+
+        return $returnData;
+
+    }
+
+    public function getSaleOrderStatusChartData($apiChannel = '', $region = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $returnData = [];
+
+        $orderRequest = SaleOrder::select('delivery_date', 'order_status', 'order_status_label', DB::raw('count(*) as total_orders'));
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $emirates = config('fms.emirates');
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_code', trim($region));
+        } else {
+            $orderRequest->whereIn('region_code', array_keys($emirates));
+        }
+
+        $availableStatuses = $this->getSupervisorsAllowedStatuses();
+        if (!is_null($status) && (trim($status) != '')) {
+            $orderRequest->where('order_status', trim($status));
+        } else {
+            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $queryResult = $orderRequest
+            ->groupBy('delivery_date', 'order_status')
+            ->orderBy('delivery_date', 'asc')
+            ->orderBy('order_status', 'asc')
+            ->get();
+
+        if($queryResult && (count($queryResult) > 0)) {
+            foreach ($queryResult as $currentRow) {
+                $returnData[$currentRow['delivery_date']][$currentRow['order_status']] = $currentRow;
+            }
+        }
+
+        return $returnData;
+
+    }
+
+    public function getCustomerGroups($env = '', $channel = '') {
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'customerGroups/search';
         $qParams = [
             'searchCriteria' => '?'
         ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams, [], true, true);
+        $apiResult = $apiService->processGetApi($uri, $qParams, [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 
-    public function getVendorsList() {
+    public function getVendorsList($env = '', $channel = '') {
 
-        $uri = $this->restApiService->getRestApiUrl() . 'vendors';
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'vendors';
+        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
@@ -240,13 +398,13 @@ class SupervisorServiceHelper
         $apiService->setApiEnvironment($orderEnv);
         $apiService->setApiChannel($orderChannel);
 
-        $uri = $this->restApiService->getRestApiUrl() . 'changeorderstatus';
+        $uri = $apiService->getRestApiUrl() . 'changeorderstatus';
         $params = [
             'orderId' => $order->order_id,
             'state' => SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED,
             'status' => SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED
         ];
-        $statusApiResult = $this->restApiService->processPostApi($uri, $params);
+        $statusApiResult = $apiService->processPostApi($uri, $params);
         if (!$statusApiResult['status']) {
             return [
                 'status' => false,
@@ -255,7 +413,7 @@ class SupervisorServiceHelper
         }
 
         $uri = $apiService->getRestApiUrl() . 'orders/' . $order->order_id;
-        $orderApiResult = $this->restApiService->processGetApi($uri);
+        $orderApiResult = $apiService->processGetApi($uri);
         if (!$orderApiResult['status']) {
             return [
                 'status' => false,

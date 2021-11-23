@@ -1,6 +1,61 @@
 "use strict";
 var AdminCustomJsBlocks = function() {
 
+    var initApiDeliveryDateRangePicker = function () {
+        var apiDRPicker = $('#api_channel_dates').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary'
+        }, function(start, end, label) {
+            $('input#api_channel_date_start').val(start.format('YYYY-MM-DD'));
+            $('input#api_channel_date_end').val(end.format('YYYY-MM-DD'));
+        });
+        apiDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#api_channel_date_start').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#api_channel_date_end').val(picker.startDate.format('YYYY-MM-DD'));
+        });
+    };
+
+    var fetchApiOrdersFromServer = function () {
+        $('#fetch_api_orders_form').on('submit', function(e){
+            e.preventDefault();
+            var data = $(this).serialize();
+            $.ajax({
+                url: $(this).attr('action'),
+                data: data,
+                method: 'POST',
+                beforeSend: function() {
+                    KTApp.blockPage({
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Please wait...'
+                    });
+                },
+                success: function(data){
+                    KTApp.unblockPage();
+                    showAlertMessage(data.message);
+                }
+            });
+        });
+    };
+
+    var initFilterDeliveryDateRangePicker = function () {
+        var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary'
+        }, function(start, end, label) {
+            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
+        });
+        filterDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.startDate.format('YYYY-MM-DD'));
+        });
+    };
+
     var saleOrderSalesBarChartSetter = function () {
         var chart = new ApexCharts(document.querySelector("#sale_orders_sales_bar_chart"), {
             series: [],
@@ -54,7 +109,7 @@ var AdminCustomJsBlocks = function() {
                 offsetX: 40
             },
             noData: {
-                text: 'Loading...'
+                text: 'No Data Found!'
             }
         });
         chart.render();
@@ -114,7 +169,7 @@ var AdminCustomJsBlocks = function() {
                 offsetX: 40
             },
             noData: {
-                text: 'Loading...'
+                text: 'No Data Found!'
             }
         });
         chart.render();
@@ -300,57 +355,14 @@ var AdminCustomJsBlocks = function() {
 
     return {
         indexPage: function(hostUrl){
-            var apiDRPicker = $('#api_channel_dates').daterangepicker({
-                buttonClasses: ' btn',
-                applyClass: 'btn-primary',
-                cancelClass: 'btn-secondary'
-            }, function(start, end, label) {
-                $('input#api_channel_date_start').val(start.format('YYYY-MM-DD'));
-                $('input#api_channel_date_end').val(end.format('YYYY-MM-DD'));
-            });
-            apiDRPicker.on('show.daterangepicker', function(ev, picker) {
-                //do something, like clearing an input
-                $('input#api_channel_date_start').val(picker.startDate.format('YYYY-MM-DD'));
-                $('input#api_channel_date_end').val(picker.startDate.format('YYYY-MM-DD'));
-            });
-            var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
-                buttonClasses: ' btn',
-                applyClass: 'btn-primary',
-                cancelClass: 'btn-secondary'
-            }, function(start, end, label) {
-                $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
-                $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
-            });
-            filterDRPicker.on('show.daterangepicker', function(ev, picker) {
-                //do something, like clearing an input
-                $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
-                $('input#delivery_date_end_filter').val(picker.startDate.format('YYYY-MM-DD'));
-            });
+            initApiDeliveryDateRangePicker();
+            initFilterDeliveryDateRangePicker();
             var saleOrderSalesChart = saleOrderSalesBarChartSetter();
             var saleOrderStatusChart = saleOrderStatusBarChartSetter();
             getSalesChartData(saleOrderSalesChart);
             getStatusChartData(saleOrderStatusChart);
             initAdminSaleOrderTable(saleOrderSalesChart, saleOrderStatusChart);
-            $('#fetch_api_orders_form').on('submit', function(e){
-                e.preventDefault();
-                var data = $(this).serialize();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    data: data,
-                    method: 'POST',
-                    beforeSend: function() {
-                        KTApp.blockPage({
-                            overlayColor: '#000000',
-                            state: 'danger',
-                            message: 'Please wait...'
-                        });
-                    },
-                    success: function(data){
-                        KTApp.unblockPage();
-                        showAlertMessage(data.message);
-                    }
-                });
-            });
+            fetchApiOrdersFromServer();
         },
         deliveryDetailsPage: function(hostUrl, orderIds, token) {
             $( document ).ready(function() {
