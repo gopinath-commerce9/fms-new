@@ -50,6 +50,14 @@ var UsersCustomJsBlocks = function() {
             jQuery('button#edit_user_cancel_btn').on('click', function(e) {
                 window.location = hostUrl + '/userauth/users';
             });
+        },
+        editProfilePage: function(hostUrl) {
+            let dpImage = new KTImageInput('profile_avatar_area');
+        },
+        passwordChangePage: function(hostUrl) {
+            showHidePasswordFn('#user_password_form_group');
+            showHidePasswordFn('#new_password_form_group');
+            showHidePasswordFn('#new_password_conf_form_group');
         }
     };
 
