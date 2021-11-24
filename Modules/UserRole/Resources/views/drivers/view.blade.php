@@ -59,6 +59,29 @@
 
                         <div class="tab-pane fade show active" id="driver_view_info_tab" role="tabpanel" aria-labelledby="driver_view_info_tab">
 
+                            <div class="form-group row my-2">
+
+                                <div class="col col-2 text-right">
+                                    <span class="label label-xl label-dark font-weight-boldest label-inline mr-2">General Info</span>
+                                </div>
+
+                                <div class="col col-10 text-right">
+                                    @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.update'))
+                                        <a href="{{ url('/userauth/users/edit/' . $givenUserData->id) }}" class="btn btn-warning mr-2" title="Edit">
+                                            <i class="flaticon2-pen"></i> Edit
+                                        </a>
+                                    @endif
+                                    @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.delete'))
+                                        @if(!$givenUserData->isDefaultUser())
+                                            <a href="{{ url('/userauth/users/delete/' . $givenUserData->id) }}" class="btn btn-danger mr-2" title="Delete">
+                                                <i class="flaticon-delete-1"></i> Delete
+                                            </a>
+                                        @endif
+                                    @endif
+                                </div>
+
+                            </div>
+
                             <div class="row">
 
                                 <div class="col col-2">
@@ -74,7 +97,7 @@
                                                 <?php
                                                 $userDisplayName = $givenUserData->name;
                                                 $userEmail = $givenUserData->email;
-                                                $userContact = $givenUserData->contact;
+                                                $userContact = $givenUserData->contact_number;
                                                 $userInitials = '';
                                                 $profilePicUrl = '';
                                                 if (!is_null($givenUserData->profile_picture) && ($givenUserData->profile_picture != '')) {

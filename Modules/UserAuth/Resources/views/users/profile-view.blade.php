@@ -17,7 +17,7 @@
                     <!--begin::Card Toolbar-->
                     <div class="card-toolbar">
                         <div class="col text-left">
-                            <a href="{{ url('/userauth/users') }}" class="btn btn-outline-primary">
+                            <a href="{{ url()->previous() }}" class="btn btn-outline-primary">
                                 <i class="flaticon2-back"></i> Back
                             </a>
                         </div>
@@ -36,13 +36,11 @@
                                 </a>
                             </li>
 
-                            @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('user-roles.view'))
                             <li class="nav-item">
                                 <a class="nav-link" data-toggle="tab" href="#user_view_role_tab">
                                     <span class="nav-text">Role</span>
                                 </a>
                             </li>
-                            @endif
 
                             {{--<li class="nav-item">
                                 <a class="nav-link" data-toggle="tab" href="#user_view_permissions_tab">
@@ -74,18 +72,9 @@
                                 </div>
 
                                 <div class="col col-10 text-right">
-                                    @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.update'))
-                                        <a href="{{ url('/userauth/users/edit/' . $givenUserData->id) }}" class="btn btn-warning mr-2" title="Edit">
-                                            <i class="flaticon2-pen"></i> Edit
-                                        </a>
-                                    @endif
-                                    @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.delete'))
-                                        @if(!$givenUserData->isDefaultUser())
-                                            <a href="{{ url('/userauth/users/delete/' . $givenUserData->id) }}" class="btn btn-danger mr-2" title="Delete">
-                                                <i class="flaticon-delete-1"></i> Delete
-                                            </a>
-                                        @endif
-                                    @endif
+                                    <a href="{{ url('/userauth/users/profile-edit') }}" class="btn btn-warning mr-2" title="Edit">
+                                        <i class="flaticon2-pen"></i> Edit
+                                    </a>
                                 </div>
 
                             </div>
@@ -158,7 +147,6 @@
 
                         </div>
 
-                        @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('user-roles.view'))
                         <div class="tab-pane fade" id="user_view_role_tab" role="tabpanel" aria-labelledby="user_view_role_tab">
 
                             <div class="form-group row my-2">
@@ -173,11 +161,11 @@
                                 <label class="col-2 col-form-label font-size-lg-h2 text-right">Role:</label>
                                 <div class="col-10">
                                     @if($givenUserData->mappedRole && (count($givenUserData->mappedRole) > 0))
-                                    <span class="label label-lg font-weight-bold label-light-primary label-inline mt-2">
+                                        <span class="label label-lg font-weight-bold label-light-primary label-inline mt-2">
                                         {{ $givenUserData->mappedRole[0]->display_name }}
                                     </span>
                                     @else
-                                    <span class="label label-lg font-weight-bold label-light-primary label-inline mt-2">
+                                        <span class="label label-lg font-weight-bold label-light-primary label-inline mt-2">
                                         Not Assigned
                                     </span>
                                     @endif
@@ -220,7 +208,6 @@
                             @endif
 
                         </div>
-                        @endif
 
                         {{--<div class="tab-pane fade" id="user_view_permissions_tab" role="tabpanel" aria-labelledby="user_view_permissions_tab">
                             ...

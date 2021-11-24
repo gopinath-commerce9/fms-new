@@ -11,7 +11,11 @@
 |
 */
 
-Route::prefix('sales')->group(function() {
+use Modules\Base\Http\Middleware\BlockInvalidUserMiddleware;
+
+Route::prefix('sales')->middleware([
+    BlockInvalidUserMiddleware::class . ':auth-user'
+])->group(function() {
     Route::get('/', 'SalesController@index')
         ->name('sales.index');
     Route::get('/orders', 'SalesController@ordersList')

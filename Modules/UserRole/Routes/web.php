@@ -12,8 +12,11 @@
 */
 
 use Modules\UserRole\Http\Middleware\AuthUserPermissionResolver;
+use Modules\Base\Http\Middleware\BlockInvalidUserMiddleware;
 
-Route::prefix('userrole')->group(function() {
+Route::prefix('userrole')->middleware([
+    BlockInvalidUserMiddleware::class . ':auth-user'
+])->group(function() {
 
     Route::get('/', function () {
         return redirect()->route('roles.index');
