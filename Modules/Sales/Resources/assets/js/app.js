@@ -102,21 +102,24 @@ var SalesCustomJsBlocks = function() {
 
     };
 
-    var posHideOnlinePayment = function (orderSource) {
+    var posHideOnlinePayment = function (orderSource, sourceList) {
         if(orderSource == 'ELGROCER') {
+            $("#paymentMethod").append(new Option("Online Payment Method", "saleschannel"));
+        } else if(orderSource == 'INSTASHOP') {
             $("#paymentMethod").append(new Option("Online Payment Method", "saleschannel"));
         } else {
             $("#paymentMethod option[value='saleschannel']").remove();
         }
         if(orderSource == 'INSTORE') {
             $('#order_source_id_div').hide();
-            posFillForm();
+            posFillForm(orderSource, sourceList);
         } else {
+            var sourcedtls =  sourceList[orderSource];
             $('#order_source_id_div').show();
             $("form#order-form")[0].reset();
-            $('#channel-Id').val("ELGROCER");
+            $('#channel-Id').val(sourcedtls['code']);
             $('.customer_info').show();
-            $('#email').val("elgrocer@goodbasket.com");
+            $('#email').val(sourcedtls['email']);
         }
     };
 
@@ -176,14 +179,15 @@ var SalesCustomJsBlocks = function() {
         });
     };
 
-    var posFillForm = function () {
+    var posFillForm = function (orderSource, sourceList) {
+        var sourcedtls =  sourceList[orderSource];
         $('.customer_info').hide();
-        $('#firstname').val("InStore");
-        $('#lastname').val("InStore");
-        $('#email').val("instore@goodbasket.com");
-        $('#telephone').val("+97155555555");
-        $('#street').val("In Store");
-        $('#delivery_time_slot').val("10:00 AM - 2:00 PM");
+        $('#firstname').val(sourcedtls['source']);
+        $('#lastname').val(sourcedtls['source']);
+        $('#email').val(sourcedtls['email']);
+        $('#telephone').val(sourcedtls['contact']);
+        $('#street').val(sourcedtls['source']);
+        $('#delivery_time_slot').val($("#delivery_time_slot option:first").val());
     };
 
     var posCalculateTotal = function () {
@@ -330,7 +334,7 @@ var SalesCustomJsBlocks = function() {
 
             $('select#channel-Id').on('change', function (e) {
                 var currentSource = $(this).val();
-                posHideOnlinePayment(currentSource);
+                posHideOnlinePayment(currentSource, sourceList);
                 posApplyServiceCharge(currentSource, sourceList);
             });
 

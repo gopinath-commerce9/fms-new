@@ -168,7 +168,10 @@ class SalesServiceHelper
             $returnData[$osKey] = [
                 'code' => $orderSource['code'],
                 'source' => $orderSource['source'],
-                'charge' => $orderSource['charge']
+                'channelId' => $orderSource['channelId'],
+                'charge' => $orderSource['charge'],
+                'email' => $orderSource['email'],
+                'contact' => $orderSource['contact']
             ];
         }
         return $returnData;

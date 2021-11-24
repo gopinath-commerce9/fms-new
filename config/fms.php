@@ -175,12 +175,26 @@ return [
             'ELGROCER' => [
                 'code' => 'ELGROCER',
                 'source' => 'ELGROCER',
-                'charge' => '5.00'
+                'channelId' => '4',
+                'charge' => '5.00',
+                'email' => 'elgrocer@commerce9.io',
+                'contact' => '+97155555555'
             ],
             'INSTORE' => [
                 'code' => 'INSTORE',
-                'source' => 'In Store',
-                'charge' => '0.00'
+                'source' => 'InStore',
+                'channelId' => '5',
+                'charge' => '0.00',
+                'email' => 'instore@commerce9.io',
+                'contact' => '+97155555555'
+            ],
+            'INSTASHOP' => [
+                'code' => 'INSTASHOP',
+                'source' => 'InstaShop',
+                'channelId' => '6',
+                'charge' => '5.00',
+                'email' => 'instashop@commerce9.io',
+                'contact' => '+97155555555'
             ],
         ],
 
