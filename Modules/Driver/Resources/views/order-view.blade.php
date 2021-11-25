@@ -191,6 +191,9 @@
                                                                 <option value="{{ \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_DELIVERED }}">
                                                                     {{ $orderStatuses[\Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_DELIVERED] }}
                                                                 </option>
+                                                                <option value="{{ \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_CANCELED }}">
+                                                                    {{ $orderStatuses[\Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_CANCELED] }}
+                                                                </option>
                                                             </select>
                                                         </td>
                                                         <td>
@@ -214,8 +217,18 @@
                                                 <table class="table table-borderless">
                                                     <tr>
                                                         <td>
-                                                            <input type="hidden" name="sale_order_status" value="{{ \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_DELIVERED }}">
-                                                            <input type="submit" name="driver_btn_submit" id="driver_btn_submit" class="btn btn-primary font-weight-bold" value="Set As Delivered">
+                                                            <select class="form-control" name="sale_order_status" id="sale_order_status">
+                                                                <option value="">Select Status</option>
+                                                                <option value="{{ \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_DELIVERED }}">
+                                                                    {{ $orderStatuses[\Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_DELIVERED] }}
+                                                                </option>
+                                                                <option value="{{ \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_CANCELED }}">
+                                                                    {{ $orderStatuses[\Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_CANCELED] }}
+                                                                </option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input type="submit" name="driver_btn_submit" id="driver_btn_submit" class="btn btn-primary font-weight-bold" value="Change Order Status">
                                                         </td>
                                                         <td></td>
                                                     </tr>

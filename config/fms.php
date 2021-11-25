@@ -153,6 +153,7 @@ return [
             'ready_to_dispatch',
             'out_for_delivery',
             'delivered',
+            'canceled',
         ],
         'picker' => [
             'being_prepared',

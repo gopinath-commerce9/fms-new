@@ -195,7 +195,8 @@ class DriverServiceHelper
 
         $driverModifiableStatuses = [
             SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
-            SaleOrder::SALE_ORDER_STATUS_DELIVERED
+            SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+            SaleOrder::SALE_ORDER_STATUS_CANCELED,
         ];
         if (is_null($orderStatus) || (trim($orderStatus) == '') || !in_array(trim($orderStatus), $driverModifiableStatuses)) {
             return [

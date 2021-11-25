@@ -336,7 +336,8 @@ class DriverController extends Controller
 
         $driverModifiableStatuses = [
             SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
-            SaleOrder::SALE_ORDER_STATUS_DELIVERED
+            SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+            SaleOrder::SALE_ORDER_STATUS_CANCELED,
         ];
         $validator = Validator::make($request->all() , [
             'sale_order_status' => ['required', Rule::in($driverModifiableStatuses)],
