@@ -15,7 +15,8 @@ class SaleOrder extends Model
         'order_updated',
         'ready_to_dispatch',
         'out_for_delivery',
-        'delivered'
+        'delivered',
+        'canceled',
     ];
 
     const SALE_ORDER_STATUS_PENDING = 'pending';
@@ -26,6 +27,7 @@ class SaleOrder extends Model
     const SALE_ORDER_STATUS_READY_TO_DISPATCH = 'ready_to_dispatch';
     const SALE_ORDER_STATUS_OUT_FOR_DELIVERY = 'out_for_delivery';
     const SALE_ORDER_STATUS_DELIVERED = 'delivered';
+    const SALE_ORDER_STATUS_CANCELED = 'canceled';
 
     /**
      * The table associated with the model.
