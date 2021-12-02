@@ -8,10 +8,13 @@
         "php": "^7.3|^8.0",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
+        "kreait/laravel-firebase": "^3.2",
+        "ladumor/one-signal": "0.4.1",
         "laravel/framework": "^8.54",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.3",
+        "mbpcoder/laravel-api-versioning": "^1.1",
         "nwidart/laravel-modules": "^8.2",
         "pragmarx/countries-laravel": "^0.7.0",
         "spipu/html2pdf": "^5.2"

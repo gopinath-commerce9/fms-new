@@ -261,4 +261,14 @@ class SaleOrder extends Model
             ->where('action',  SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED);
     }
 
+    /**
+     * Fetches the Data about who canceled the Sale Order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function canceledData() {
+        return $this->hasOne(SaleOrderProcessHistory::class, 'order_id', 'id')
+            ->where('action',  SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED);
+    }
+
 }
