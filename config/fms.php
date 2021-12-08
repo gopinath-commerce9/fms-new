@@ -157,10 +157,13 @@ return [
         ],
         'picker' => [
             'being_prepared',
+            'ready_to_dispatch',
         ],
         'driver' => [
             'ready_to_dispatch',
             'out_for_delivery',
+            'delivered',
+            'canceled',
         ],
     ],
 

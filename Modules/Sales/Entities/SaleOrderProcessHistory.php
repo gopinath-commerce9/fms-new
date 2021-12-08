@@ -18,6 +18,7 @@ class SaleOrderProcessHistory extends Model
     const SALE_ORDER_PROCESS_ACTION_DELIVERY_ASSIGN = 'delivery_assign';
     const SALE_ORDER_PROCESS_ACTION_DELIVERY = 'delivery';
     const SALE_ORDER_PROCESS_ACTION_DELIVERED = 'delivered';
+    const SALE_ORDER_PROCESS_ACTION_CANCELED = 'canceled';
 
     const SALE_ORDER_PROCESS_PICKUP_ACTIONS = [
         self::SALE_ORDER_PROCESS_ACTION_PICKUP,
@@ -26,7 +27,8 @@ class SaleOrderProcessHistory extends Model
 
     const SALE_ORDER_PROCESS_DELIVERY_ACTIONS = [
         self::SALE_ORDER_PROCESS_ACTION_DELIVERY,
-        self::SALE_ORDER_PROCESS_ACTION_DELIVERED
+        self::SALE_ORDER_PROCESS_ACTION_DELIVERED,
+        self::SALE_ORDER_PROCESS_ACTION_CANCELED
     ];
 
     const SALE_ORDER_PROCESS_ASSIGNING_ACTIONS = [
@@ -41,7 +43,8 @@ class SaleOrderProcessHistory extends Model
 
     const SALE_ORDER_PROCESS_COMPLETED_ACTIONS = [
         self::SALE_ORDER_PROCESS_ACTION_PICKED,
-        self::SALE_ORDER_PROCESS_ACTION_DELIVERED
+        self::SALE_ORDER_PROCESS_ACTION_DELIVERED,
+        self::SALE_ORDER_PROCESS_ACTION_CANCELED
     ];
 
     /**

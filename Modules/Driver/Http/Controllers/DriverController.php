@@ -323,7 +323,7 @@ class DriverController extends Controller
         }
 
         $canProceed = false;
-        if ($saleOrderObj->currentPicker && (count($saleOrderObj->currentDriver) > 0)) {
+        if ($saleOrderObj->currentDriver && (count($saleOrderObj->currentDriver) > 0)) {
             $currentHistory = $saleOrderObj->currentDriver[0];
             if ($currentHistory->done_by === $processUserId) {
                 $canProceed = true;
@@ -356,7 +356,7 @@ class DriverController extends Controller
 
         $serviceHelper = new DriverServiceHelper();
         $returnResult = $serviceHelper->changeSaleOrderStatus($saleOrderObj, $newStatus, $processUserId);
-        if ($returnResult) {
+        if ($returnResult['status']) {
             return redirect('driver/dashboard')->with('success', 'The Sale Order status is updated successfully!');
         } else {
             return redirect('driver/dashboard')->with('error', $returnResult['message']);

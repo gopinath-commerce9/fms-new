@@ -9,8 +9,12 @@ use DB;
 use Modules\Sales\Entities\SaleOrderPayment;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
 use Modules\Sales\Entities\SaleOrderStatusHistory;
+use App\Models\User;
+use Modules\UserRole\Entities\UserRole;
+use Modules\UserRole\Entities\UserRoleMap;
+use Modules\API\Entities\ApiServiceHelper;
 
-class DriverServiceHelper
+class DriverApiServiceHelper
 {
 
     private $restApiService = null;
@@ -100,22 +104,62 @@ class DriverServiceHelper
         return $statusListClean;
     }
 
-    public function getDeliveryTimeSlots() {
-        $statusList = $this->getDriversAllowedStatuses();
-        $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
-            ->groupBy('delivery_time_slot')
-            ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
-            ->get();
-        $timeSlotArray = [];
-        if ($orders && (count($orders) > 0)) {
-            foreach ($orders as $orderEl) {
-                $timeSlotArray[] = $orderEl->delivery_time_slot;
-            }
+    public function isValidApiUser($userId = 0) {
+
+        if (is_null($userId) || !is_numeric($userId) || ((int)$userId <= 0)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid User!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
         }
-        return $timeSlotArray;
+
+        $user = User::find($userId);
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'Invalid User!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
+        }
+
+        $roleMapData = UserRoleMap::firstWhere('user_id', $user->id);
+        if (!$roleMapData) {
+            return [
+                'success' => false,
+                'message' => 'The User not assigned to any role!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
+        }
+
+        $mappedRoleId = $roleMapData->role_id;
+        $roleData = UserRole::find($mappedRoleId);
+        if (!$roleData) {
+            return [
+                'success' => false,
+                'message' => 'The User not assigned to any role!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
+        }
+
+        if (!$roleData->isDriver()) {
+            return [
+                'success' => false,
+                'message' => 'The User is not a Driver!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Authorized User.',
+            'error' => '',
+            'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_OK,
+        ];
+
     }
 
-    public function getDriverOrders($region = '', $apiChannel = '', $status = '', $deliveryDate = '', $timeSlot = '') {
+    public function getDriverOrders($region = '', $apiChannel = '', $status = [], $deliveryDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');
 
@@ -134,10 +178,16 @@ class DriverServiceHelper
         }
 
         $availableStatuses = $this->getDriversAllowedStatuses();
-        if (!is_null($status) && (trim($status) != '')) {
-            $orderRequest->where('order_status', trim($status));
+        $statusKeys = array_keys($availableStatuses);
+        if (
+            !is_null($status)
+            && is_array($status)
+            && (count($status) > 0)
+            && (array_intersect($status, $statusKeys) == $status)
+        ) {
+            $orderRequest->whereIn('order_status', $status);
         } else {
-            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+            $orderRequest->whereIn('order_status', $statusKeys);
         }
 
         if (!is_null($deliveryDate) && (trim($deliveryDate) != '')) {
@@ -149,27 +199,6 @@ class DriverServiceHelper
         }
 
         return $orderRequest->orderBy('delivery_date', 'asc')->get();
-
-    }
-
-    public function getCustomerGroups() {
-
-        $uri = $this->restApiService->getRestApiUrl() . 'customerGroups/search';
-        $qParams = [
-            'searchCriteria' => '?'
-        ];
-        $apiResult = $this->restApiService->processGetApi($uri, $qParams, [], true, true);
-
-        return ($apiResult['status']) ? $apiResult['response'] : [];
-
-    }
-
-    public function getVendorsList() {
-
-        $uri = $this->restApiService->getRestApiUrl() . 'vendors';
-        $apiResult = $this->restApiService->processGetApi($uri, [], [], true, true);
-
-        return ($apiResult['status']) ? $apiResult['response'] : [];
 
     }
 

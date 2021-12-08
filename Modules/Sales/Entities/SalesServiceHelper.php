@@ -868,10 +868,16 @@ class SalesServiceHelper
         }
 
         $availableStatuses = $this->getAvailableStatuses();
-        if (!is_null($status) && is_array($status) && (count($status) > 0)) {
+        $statusKeys = array_keys($availableStatuses);
+        if (
+            !is_null($status)
+            && is_array($status)
+            && (count($status) > 0)
+            && (array_intersect($status, $statusKeys) == $status)
+        ) {
             $orderRequest->whereIn('order_status', $status);
         } else {
-            $orderRequest->whereIn('order_status', array_keys($availableStatuses));
+            $orderRequest->whereIn('order_status', $statusKeys);
         }
 
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;

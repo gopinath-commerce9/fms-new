@@ -372,7 +372,7 @@ class PickerController extends Controller
 
         $serviceHelper = new PickerServiceHelper();
         $returnResult = $serviceHelper->setOrderAsDispatchReady($saleOrderObj, $boxCount, $storeAvailabilityArray, $processUserId);
-        if ($returnResult) {
+        if ($returnResult['status']) {
             return redirect('picker/dashboard')->with('success', 'The Sale Order status is updated successfully!');
         } else {
             return redirect('picker/dashboard')->with('error', $returnResult['message']);
