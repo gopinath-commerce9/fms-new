@@ -4,6 +4,7 @@ namespace Modules\API\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 use Modules\UserRole\Entities\UserRole;
 use Modules\UserRole\Entities\UserRoleMap;
 use Validator;
@@ -199,14 +200,155 @@ class AuthController extends BaseController
 
     public function userDetails() {
 
+        $serviceHelper = new ApiServiceHelper();
+
         $user = auth()->user();
         $userId = $user->id;
+        $givenUserData = User::find($userId);
+        if(!$givenUserData) {
+            $errMessage = 'The User does not exist!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
+        $profilePicUrl = '';
+        if (!is_null($givenUserData->profile_picture) && ($givenUserData->profile_picture != '')) {
+            $dpData = json_decode($givenUserData->profile_picture, true);
+            $profilePicUrlPath = $dpData['path'];
+            $profilePicUrl = $serviceHelper->getUserImageUrl($profilePicUrlPath);
+        }
 
         $returnData = [
-            'user' => $user->toArray(),
+            'userId' => $givenUserData->id,
+            'userName' => $givenUserData->name,
+            'userEmail' => $givenUserData->email,
+            'userContact' => $givenUserData->contact_number,
+            'userPicture' => $profilePicUrl,
         ];
 
         return $this->sendResponse($returnData, 'The User Details fetched successfully');
+
+    }
+
+    public function profileUpdate(Request $request)
+    {
+
+        $user = auth()->user();
+        $userId = $user->id;
+        $givenUserData = User::find($userId);
+        if(!$givenUserData) {
+            $errMessage = 'The User does not exist!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
+        $validator = Validator::make($request->all() , [
+            'userName' => ['required', 'string', 'min:3', 'max:255'],
+            'userContact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
+            'profileAvatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:200'],
+            'profileAvatarRemove' => ['nullable', 'boolean']
+        ], [
+            'userName.required' => 'The User Name should be provided.',
+            'userName.string' => 'The User Name should be a string value.',
+            'userName.min' => 'The User Name should be minimum :min characters.',
+            'userName.max' => 'The User Name should not exceed :max characters.',
+            'userContact.required' => 'The User Contact Number should be provided.',
+            'userContact.min' => 'The User Contact should be minimum :min characters.',
+            'userContact.max' => 'The User Contact should not exceed :max characters.',
+        ]);
+        if ($validator->fails()) {
+            $errMessage = implode(" | ", $validator->errors()->all());
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+        $postData = $validator->validated();
+
+        $serviceHelper = new ApiServiceHelper();
+
+        try {
+
+            $givenUserData->name = trim($postData['userName']);
+            $givenUserData->contact_number = trim($postData['userContact']);
+
+            $profileData = null;
+            if (!is_null($givenUserData->profile_picture) && ($givenUserData->profile_picture != '')) {
+                $profileData = json_decode($givenUserData->profile_picture, true);
+            }
+
+            if (!is_null($postData['profileAvatarRemove']) && ($postData['profileAvatarRemove'] == '1')) {
+                $profilePicUrl = (!is_null($profileData)) ? $profileData['path'] : '';
+                $serviceHelper->deleteUserImage($profilePicUrl);
+                $givenUserData->profile_picture = null;
+            }
+
+            if($request->hasFile('profileAvatar')){
+
+                $profilePicUrl = (!is_null($profileData)) ? $profileData['path'] : '';
+                $serviceHelper->deleteUserImage($profilePicUrl);
+
+                $uploadFileObj = $request->file('profileAvatar');
+                $givenFileName = $uploadFileObj->getClientOriginalName();
+                $givenFileNameExt = $uploadFileObj->extension();
+                $proposedFileName = 'userAvatar_' . $givenUserData->id. '_' . date('YndHis') . '.' . $givenFileNameExt;
+                $uploadPath = $uploadFileObj->storeAs('media/images/users', $proposedFileName, 'public');
+                if ($uploadPath) {
+                    $givenUserData->profile_picture = json_encode([
+                        'name' => $givenFileName,
+                        'ext' => $givenFileNameExt,
+                        'path' => $proposedFileName
+                    ]);
+                }
+
+            }
+
+            $givenUserData->saveQuietly();
+
+            $returnData = [];
+            return $this->sendResponse($returnData, 'The User Profile is updated successfully!');
+
+        } catch(Exception $e) {
+            $errMessage = $e->getMessage();
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    public function changePassword(Request $request) {
+
+        $user = auth()->user();
+        $userId = $user->id;
+        $givenUserData = User::find($userId);
+        if(!$givenUserData) {
+            $errMessage = 'The User does not exist!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all() , [
+            'userPassword' => ['required'],
+            'newPassword' => [
+                'required',
+                'confirmed',
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+            ],
+        ], [
+            'userPassword.required' => 'The Current Password should be provided.',
+            'newPassword.required' => 'The New Password should be provided.',
+        ]);
+
+        if ($validator->fails()) {
+            $errMessage = implode(" | ", $validator->errors());
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $postData = $validator->validated();
+
+        if (!Hash::check($postData['userPassword'], $givenUserData->password)) {
+            $errMessage = 'The current Password is not valid!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
+        $givenUserData->password = Hash::make($postData['newPassword']);
+        $givenUserData->saveQuietly();
+
+        $returnData = [];
+        return $this->sendResponse($returnData, 'The User Password is updated successfully!');
 
     }
 
@@ -301,22 +443,30 @@ class AuthController extends BaseController
 
     public function logout(Request $request) {
 
+        $user = auth()->user();
+        $userId = $user->id;
+        $givenUserData = User::find($userId);
+        if(!$givenUserData) {
+            $errMessage = 'The User does not exist!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
         $validator = Validator::make($request->all() , [
             'deviceName' => ['required'],
         ], [
-            'deviceName.required' => 'Device Name should be minimum :min characters.',
+            'deviceName.required' => 'Device Name should not be empty.',
         ]);
         if ($validator->fails()) {
             $errMessage = implode(" | ", $validator->errors());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
-        $user = auth()->user();
-
-        auth()->user()->tokens()->where('name', $request->deviceName)->delete();
+        /*$user->tokens()->delete();*/
+        /*$user->tokens()->where('name', $request->deviceName)->delete();*/
+        $user->currentAccessToken()->delete();
 
         $mobileAppUser = MobileAppUser::updateOrCreate([
-            'user_id' => $user->id
+            'user_id' => $givenUserData->id
         ], [
             'access_token' => null,
             'device_id' => null,

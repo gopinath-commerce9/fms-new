@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\API\Entities\MobileAppUser;
 use Modules\API\Http\Controllers\BaseController;
+use Validator;
+use Hash;
 use Modules\Driver\Entities\DriverApiServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderProcessHistory;

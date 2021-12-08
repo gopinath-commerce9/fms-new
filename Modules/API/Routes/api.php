@@ -23,6 +23,10 @@ Route::prefix('V1')->group(function() {
     Route::middleware(['auth:sanctum'])->group(function() {
         Route::get('/me', 'AuthController@userDetails')
             ->name('apiApi.userDetails');
+        Route::post('/me/update-profile', 'AuthController@profileUpdate')
+            ->name('apiApi.profileUpdate');
+        Route::post('/me/change-password', 'AuthController@changePassword')
+            ->name('apiApi.changePassword');
         Route::post('/set-onesignal-player-id', 'AuthController@setOneSignalPlayerId')
             ->name('apiApi.setOneSignalPlayerId');
         Route::post('/set-firebase-token-id', 'AuthController@setFirebaseTokenId')
