@@ -410,6 +410,7 @@ class ApiController extends BaseController
 
         $canProceed = false;
         $driverDetail = null;
+        $isOrderCanceled = false;
         if (
             ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH)
             || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY)
@@ -444,6 +445,7 @@ class ApiController extends BaseController
             if ($deliveryDriverData) {
                 if (($userId > 0) && !is_null($deliveryDriverData->done_by) && ((int)$deliveryDriverData->done_by == $userId)) {
                     $canProceed = true;
+                    $isOrderCanceled = true;
                     $driverDetail = $deliveryDriverData;
                 }
             }
@@ -453,6 +455,10 @@ class ApiController extends BaseController
             }
         }
 
+        $emirates = config('fms.emirates');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $statusList = config('fms.order_statuses');
+
         $saleOrderObj->saleCustomer;
         $saleOrderObj->orderItems;
         $saleOrderObj->billingAddress;
@@ -461,17 +467,88 @@ class ApiController extends BaseController
         $saleOrderObj->statusHistory;
         $saleOrderData = $saleOrderObj->toArray();
 
-        $saleOrderData['deliveryPickerTime'] = '';
-        $saleOrderData['deliveryDriverTime'] = '';
-        $deliveryPickerData = $saleOrderObj->pickedData;
-        if ($deliveryPickerData) {
-            $saleOrderData['deliveryPickerTime'] = $deliveryPickerData->done_at;
-        }
-        if (!is_null($driverDetail)) {
-            $saleOrderData['deliveryDriverTime'] = $driverDetail->done_at;
+        $returnData = [
+            'recordId' => $saleOrderData['id'],
+            'orderId' => $saleOrderData['order_id'],
+            'incrementId' => $saleOrderData['increment_id'],
+            'channel' => (!is_null($saleOrderData['channel']) && array_key_exists($saleOrderData['channel'], $availableApiChannels)) ? $availableApiChannels[$saleOrderData['channel']]['name'] : $saleOrderData['channel'],
+            'region' => (!is_null($saleOrderData['region_code']) && array_key_exists($saleOrderData['region_code'], $emirates)) ? $emirates[$saleOrderData['region_code']] : $saleOrderData['region_code'],
+            'city' => $saleOrderData['city'],
+            'zoneId' => $saleOrderData['zone_id'],
+            'orderCreatedAt' => (!is_null($saleOrderData['order_created_at']) && strtotime($saleOrderData['order_created_at'])) ? date('Y-m-d H:i:s', strtotime($saleOrderData['order_created_at'])) : $saleOrderData['order_created_at'],
+            'deliveryDate' => $saleOrderData['delivery_date'],
+            'deliveryTimeSlot' => $saleOrderData['delivery_time_slot'],
+            'totalQtyOrdered' => $saleOrderData['total_qty_ordered'],
+            'orderWeight' => $saleOrderData['order_weight'],
+            'boxCount' => $saleOrderData['box_count'],
+            'orderCurrency' => $saleOrderData['order_currency'],
+            'orderSubtotal' => $saleOrderData['order_subtotal'],
+            'orderTax' => $saleOrderData['order_tax'],
+            'discountAmount' => $saleOrderData['discount_amount'],
+            'shippingTotal' => $saleOrderData['shipping_total'],
+            'shippingMethod' => $saleOrderData['shipping_method'],
+            'orderTotal' => $saleOrderData['order_total'],
+            'orderDue' => $saleOrderData['order_due'],
+            'orderStatus' => (!is_null($saleOrderData['order_status']) && array_key_exists($saleOrderData['order_status'], $statusList)) ? $statusList[$saleOrderData['order_status']] : $saleOrderData['order_status'],
+            'orderItems' => [],
+            'shippingAddress' => [],
+            'deliveryPickerTime' => '',
+            'orderDeliveredTime' => '',
+            'orderCanceledTime' => '',
+        ];
+
+        if (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items']) && (count($saleOrderData['order_items']) > 0)) {
+            $orderItems = $saleOrderData['order_items'];
+            foreach ($orderItems as $orderItemEl) {
+                $returnData['orderItems'][] = [
+                    'itemId' => $orderItemEl['item_id'],
+                    'productId' => $orderItemEl['product_id'],
+                    'productType' => $orderItemEl['product_type'],
+                    'itemSku' => $orderItemEl['item_sku'],
+                    'itemBarcode' => $orderItemEl['item_barcode'],
+                    'itemName' => $orderItemEl['item_name'],
+                    'itemInfo' => $orderItemEl['item_info'],
+                    'itemImage' => $orderItemEl['item_image'],
+                    'qtyOrdered' => $orderItemEl['qty_ordered'],
+                    'sellingUnit' => $orderItemEl['selling_unit'],
+                    'sellingUnitLabel' => $orderItemEl['selling_unit_label'],
+                    'price' => $orderItemEl['price'],
+                    'rowTotal' => $orderItemEl['row_total'],
+                    'taxAmount' => $orderItemEl['tax_amount'],
+                    'discountAmount' => $orderItemEl['discount_amount'],
+                    'rowGrandTotal' => $orderItemEl['row_grand_total'],
+                ];
+            }
         }
 
-        return $this->sendResponse($saleOrderData, 'The Sale Order fetched successfully!');
+        if (!is_null($saleOrderData['shipping_address']) && is_array($saleOrderData['shipping_address']) && (count($saleOrderData['shipping_address']) > 0)) {
+            $shippingAddress = $saleOrderData['shipping_address'];
+            $returnData['shippingAddress'] = [
+                'firstName' => $shippingAddress['first_name'],
+                'lastName' => $shippingAddress['last_name'],
+                'address1' => $shippingAddress['address_1'],
+                'address2' => $shippingAddress['address_2'],
+                'address3' => $shippingAddress['address_3'],
+                'city' => $shippingAddress['city'],
+                'region' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                'countryId' => $shippingAddress['country_id'],
+                'postCode' => $shippingAddress['post_code'],
+                'contactNumber' => $shippingAddress['contact_number'],
+            ];
+        }
+
+        $deliveryPickerData = $saleOrderObj->pickedData;
+        if ($deliveryPickerData) {
+            $returnData['deliveryPickerTime'] = $deliveryPickerData->done_at;
+        }
+        if (!is_null($driverDetail) && !$isOrderCanceled) {
+            $returnData['orderDeliveredTime'] = $driverDetail->done_at;
+        }
+        if (!is_null($driverDetail) && $isOrderCanceled) {
+            $returnData['orderCanceledTime'] = $driverDetail->done_at;
+        }
+
+        return $this->sendResponse($returnData, 'The Sale Order fetched successfully!');
 
     }
 
