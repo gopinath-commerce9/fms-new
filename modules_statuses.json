@@ -1,0 +1,16 @@
+{
+    "UserRole": true,
+    "UserAddress": true,
+    "Vehicle": true,
+    "Base": true,
+    "UserAuth": true,
+    "Dashboard": true,
+    "Sales": true,
+    "Configuration": true,
+    "Admin": true,
+    "Supervisor": true,
+    "Picker": true,
+    "Driver": true,
+    "Cashier": true,
+    "API": true
+}

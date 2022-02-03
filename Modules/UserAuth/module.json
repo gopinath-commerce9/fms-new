@@ -1,0 +1,13 @@
+{
+    "name": "UserAuth",
+    "alias": "userauth",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\UserAuth\\Providers\\UserAuthServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

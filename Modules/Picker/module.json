@@ -1,0 +1,13 @@
+{
+    "name": "Picker",
+    "alias": "picker",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Picker\\Providers\\PickerServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}
