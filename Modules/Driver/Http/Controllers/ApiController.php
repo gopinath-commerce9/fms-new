@@ -467,6 +467,36 @@ class ApiController extends BaseController
         $saleOrderObj->statusHistory;
         $saleOrderData = $saleOrderObj->toArray();
 
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $totalOrderValue = $saleOrderData['order_total'];
+        $totalDueValue = $saleOrderData['order_due'];
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            $totalDueValue = $totalOrderValue;
+        }
+
+        $paymentMethodTitle = '';
+        $payInfoLoopTargetLabel = 'method_title';
+        if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+            $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+            if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                foreach ($paymentAddInfo as $paymentInfoEl) {
+                    if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                        $paymentMethodTitle = $paymentInfoEl['value'];
+                    }
+                }
+            }
+        }
+
+        $paymentStatus = '';
+        $epsilon = 0.00001;
+        if (!(abs($totalOrderValue - 0) < $epsilon)) {
+            if (abs($totalDueValue - 0) < $epsilon) {
+                $paymentStatus = 'paid';
+            } else {
+                $paymentStatus = 'due';
+            }
+        }
+
         $returnData = [
             'recordId' => $saleOrderData['id'],
             'orderId' => $saleOrderData['order_id'],
@@ -488,8 +518,10 @@ class ApiController extends BaseController
             'shippingTotal' => $saleOrderData['shipping_total'],
             'shippingMethod' => $saleOrderData['shipping_method'],
             'orderTotal' => $saleOrderData['order_total'],
-            'orderDue' => $saleOrderData['order_due'],
+            'orderDue' => $totalDueValue,
             'orderStatus' => (!is_null($saleOrderData['order_status']) && array_key_exists($saleOrderData['order_status'], $statusList)) ? $statusList[$saleOrderData['order_status']] : $saleOrderData['order_status'],
+            'paymentMethod' => $paymentMethodTitle,
+            'paymentStatus' => $paymentStatus,
             'orderItems' => [],
             'shippingAddress' => [],
             'deliveryPickerTime' => '',

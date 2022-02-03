@@ -333,12 +333,108 @@ class UserRoleController extends Controller
 
         $serviceHelper = new UserRoleServiceHelper();
 
+        $emirates = config('fms.emirates');
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getPickersAllowedStatuses();
+        $deliveryTimeSlots = $serviceHelper->getPickerDeliveryTimeSlots();
+
         return view('userrole::pickers.list', compact(
             'pageTitle',
             'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'availableStatuses',
+            'deliveryTimeSlots',
             'serviceHelper',
             'pickers'
         ));
+
+    }
+
+    public function pickersReportFilter(Request $request) {
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        $emirates = config('fms.emirates');
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $picker = (
+            $request->has('picker_filter')
+            && (trim($request->input('picker_filter')) != '')
+        ) ? trim($request->input('picker_filter')) : '';
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $filteredOrderStats = $serviceHelper->getPickerOrderStats($region, $apiChannel, $picker, $startDate, $endDate);
+
+        $filteredOrderData = [];
+        $totalRec = 0;
+        $collectRecStart = $dtStart;
+        $collectRecEnd = $collectRecStart + $dtPageLength;
+        $currentRec = -1;
+        foreach ($filteredOrderStats as $record) {
+            $totalRec++;
+            $currentRec++;
+            if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                continue;
+            }
+            $filteredOrderData[] = [
+                'pickerId' => $record['pickerId'],
+                'picker' => $record['picker'],
+                'active' => $record['active'],
+                'date' => $record['date'],
+                'assignedOrders' => $record['assignedOrders'],
+                'pickedOrders' => $record['pickedOrders'],
+                'holdedOrders' => $record['holdedOrders']
+            ];
+        }
+
+        $returnData = [
+            'draw' => $dtDraw,
+            'recordsTotal' => $totalRec,
+            'recordsFiltered' => $totalRec,
+            'data' => $filteredOrderData
+        ];
+
+        return response()->json($returnData, 200);
 
     }
 
@@ -403,12 +499,105 @@ class UserRoleController extends Controller
 
         $serviceHelper = new UserRoleServiceHelper();
 
+        $emirates = config('fms.emirates');
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+
         return view('userrole::drivers.list', compact(
             'pageTitle',
             'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
             'serviceHelper',
             'drivers'
         ));
+
+    }
+
+    public function driversReportFilter(Request $request) {
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        $emirates = config('fms.emirates');
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $driver = (
+            $request->has('driver_filter')
+            && (trim($request->input('driver_filter')) != '')
+        ) ? trim($request->input('driver_filter')) : '';
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate);
+
+        $filteredOrderData = [];
+        $totalRec = 0;
+        $collectRecStart = $dtStart;
+        $collectRecEnd = $collectRecStart + $dtPageLength;
+        $currentRec = -1;
+        foreach ($filteredOrderStats as $record) {
+            $totalRec++;
+            $currentRec++;
+            if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                continue;
+            }
+            $filteredOrderData[] = [
+                'driverId' => $record['driverId'],
+                'driver' => $record['driver'],
+                'active' => $record['active'],
+                'date' => $record['date'],
+                'assignedOrders' => $record['assignedOrders'],
+                'deliveryOrders' => $record['deliveryOrders'],
+                'deliveredOrders' => $record['deliveredOrders'],
+                'canceledOrders' => $record['canceledOrders']
+            ];
+        }
+
+        $returnData = [
+            'draw' => $dtDraw,
+            'recordsTotal' => $totalRec,
+            'recordsFiltered' => $totalRec,
+            'data' => $filteredOrderData
+        ];
+
+        return response()->json($returnData, 200);
 
     }
 

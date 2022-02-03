@@ -1,9 +1,22 @@
 <div class="aside aside-left d-flex flex-column" id="kt_aside">
 
+    <?php
+        $currentMenuUrl = '/' . Request::path();
+        $dashboardUrl = '/dashboard';
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+        if (!is_null($currentRole) && \Illuminate\Support\Facades\Route::has($currentRole . '.dashboard')) {
+            $dashboardUrl = '/' . $currentRole . '/dashboard';
+        }
+    ?>
+
     <!--begin::Brand-->
     <div class="aside-brand d-flex flex-column align-items-center flex-column-auto py-4 py-lg-8">
         <!--begin::Logo-->
-        <a href="{{ url('/')  }}">
+        <a href="{{ url($dashboardUrl)  }}">
             <img alt="Logo" src="{{ asset('ktmt/media/logos/c9_logo.png') }}" class="max-h-50px" />
         </a>
         <!--end::Logo-->
@@ -15,19 +28,6 @@
 
         <!--begin::Nav-->
         <ul class="nav flex-column">
-
-            <?php
-                $currentMenuUrl = '/' . Request::path();
-                $dashboardUrl = '/dashboard';
-                $currentRole = null;
-                if (session()->has('authUserData')) {
-                    $sessionUser = session('authUserData');
-                    $currentRole = $sessionUser['roleCode'];
-                }
-                if (!is_null($currentRole) && \Illuminate\Support\Facades\Route::has($currentRole . '.dashboard')) {
-                    $dashboardUrl = '/' . $currentRole . '/dashboard';
-                }
-            ?>
 
             <li class="nav-item mb-5" data-toggle="tooltip" data-placement="right" data-container="body" data-boundary="window" title="Dashboard">
                 <a href="{{ url($dashboardUrl) }}" class="nav-link btn btn-icon btn-clean btn-icon-white btn-lg <?php if($currentMenuUrl == $dashboardUrl){?> active <?php } ?>">
