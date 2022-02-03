@@ -68,11 +68,15 @@ Route::prefix('userrole')->middleware([
 
     Route::get('/pickers', 'UserRoleController@pickersList')
         ->name('roles.pickersList');
+    Route::post('/pickers-report-filter', 'UserRoleController@pickersReportFilter')
+        ->name('roles.pickersReportFilter');
     Route::get('/pickers/view/{pickerId}', 'UserRoleController@pickerView')
         ->name('roles.pickerView');
 
     Route::get('/drivers', 'UserRoleController@driversList')
         ->name('roles.driversList');
+    Route::post('/drivers-report-filter', 'UserRoleController@driversReportFilter')
+        ->name('roles.driversReportFilter');
     Route::get('/drivers/view/{driverId}', 'UserRoleController@driverView')
         ->name('roles.driverView');
 
