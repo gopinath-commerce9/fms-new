@@ -11,21 +11,21 @@ return [
         'development' => [
 
             'defaults' => [
-                'channel' => 'gb-1',
+                'channel' => 'ac-1',
                 'country_code' => 'AE'
             ],
 
             'channels' => [
-                'gb-1' => [
-                    'id' => 'gb-1',
+                'ac-1' => [
+                    'id' => 'ac-1',
                     'name' => 'Magento UAT',
-                    'url' => 'https://admuat.goodbasket.com/',
+                    'url' => 'https://staging.aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
-                    'authKey' => 'ajaygb',
-                    'authSecret' => 'jayaraj321$A',
+                    'authKey' => 'gopicommerce',
+                    'authSecret' => 'c9@commerce9',
                     'timezone' => 'Asia/Dubai',
                     'timeoutSeconds' => 600,
                     'retryLoop' => 5,
@@ -38,21 +38,21 @@ return [
         'testing' => [
 
             'defaults' => [
-                'channel' => 'gb-1',
+                'channel' => 'ac-1',
                 'country_code' => 'AE'
             ],
 
             'channels' => [
-                'gb-1' => [
-                    'id' => 'gb-1',
+                'ac-1' => [
+                    'id' => 'ac-1',
                     'name' => 'Magento UAT',
-                    'url' => 'https://admuat.goodbasket.com/',
+                    'url' => 'https://staging.aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
-                    'authKey' => 'ajaygb',
-                    'authSecret' => 'jayaraj321$A',
+                    'authKey' => 'gopicommerce',
+                    'authSecret' => 'c9@commerce9',
                     'timezone' => 'Asia/Dubai',
                     'timeoutSeconds' => 600,
                     'retryLoop' => 5,
@@ -65,21 +65,21 @@ return [
         'staging' => [
 
             'defaults' => [
-                'channel' => 'gb-1',
+                'channel' => 'ac-1',
                 'country_code' => 'AE'
             ],
 
             'channels' => [
-                'gb-1' => [
-                    'id' => 'gb-1',
+                'ac-1' => [
+                    'id' => 'ac-1',
                     'name' => 'Magento UAT',
-                    'url' => 'https://admuat.goodbasket.com/',
+                    'url' => 'https://staging.aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
-                    'authKey' => 'nived',
-                    'authSecret' => 'Commerce@9',
+                    'authKey' => 'gopicommerce',
+                    'authSecret' => 'c9@commerce9',
                     'timezone' => 'Asia/Dubai',
                     'timeoutSeconds' => 600,
                     'retryLoop' => 5,
@@ -92,21 +92,21 @@ return [
         'production' => [
 
             'defaults' => [
-                'channel' => 'gb-1',
+                'channel' => 'ac-1',
                 'country_code' => 'AE'
             ],
 
             'channels' => [
-                'gb-1' => [
-                    'id' => 'gb-1',
+                'ac-1' => [
+                    'id' => 'ac-1',
                     'name' => 'Magento',
-                    'url' => 'https://api.goodbasket.com/',
+                    'url' => 'https://aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
-                    'authKey' => 'nived',
-                    'authSecret' => 'Commerce@9',
+                    'authKey' => 'gopicommerce',
+                    'authSecret' => 'c9@commerce9',
                     'timezone' => 'Asia/Dubai',
                     'timeoutSeconds' => 600,
                     'retryLoop' => 5,

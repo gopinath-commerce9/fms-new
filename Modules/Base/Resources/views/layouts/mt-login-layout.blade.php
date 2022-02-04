@@ -21,7 +21,7 @@
         <link href="{{ asset('ktmt/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
         <link href="{{ asset('ktmt/plugins/custom/prismjs/prismjs.bundle.css') }}" rel="stylesheet" type="text/css" />
         <link href="{{ asset('ktmt/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
-        <link rel="shortcut icon" href="{{ asset('ktmt/media/logos/c9_favicon.png') }}" />
+        <link rel="shortcut icon" href="{{ asset('ktmt/media/logos/aanacart-favicon-final.png') }}" />
         <!--end::Global Theme Styles(used by all pages)-->
 
         {{-- Laravel Mix - CSS File --}}
