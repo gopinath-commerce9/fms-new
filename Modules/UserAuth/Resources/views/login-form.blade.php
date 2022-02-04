@@ -12,7 +12,7 @@
                     <!--begin::Login Header-->
                     <div class="d-flex flex-center mb-15">
                         <a href="#">
-                            <img src="{{ asset('ktmt/media/logos/c9_logo_long.svg') }}" class="max-h-75px" alt="" />
+                            <img src="{{ asset('ktmt/media/logos/aanacart-logo.svg') }}" class="max-h-75px" alt="" />
                         </a>
                     </div>
                     <!--end::Login Header-->

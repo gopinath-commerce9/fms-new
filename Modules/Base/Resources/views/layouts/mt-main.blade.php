@@ -33,7 +33,7 @@
 
         @yield('custom-css-section')
 
-        <link rel="shortcut icon" href="{{ asset('ktmt/media/logos/c9_favicon.png') }}" />
+        <link rel="shortcut icon" href="{{ asset('ktmt/media/logos/aanacart-favicon-final.png') }}" />
 
         @yield('initialize-js-section')
 

@@ -17,7 +17,7 @@
     <div class="aside-brand d-flex flex-column align-items-center flex-column-auto py-4 py-lg-8">
         <!--begin::Logo-->
         <a href="{{ url($dashboardUrl)  }}">
-            <img alt="Logo" src="{{ asset('ktmt/media/logos/c9_logo.png') }}" class="max-h-50px" />
+            <img alt="Logo" src="{{ asset('ktmt/media/logos/aanacart-logo.svg') }}" class="max-h-50px" />
         </a>
         <!--end::Logo-->
     </div>
