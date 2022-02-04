@@ -12,7 +12,7 @@
                     <!--begin::Login Header-->
                     <div class="d-flex flex-center mb-15">
                         <a href="#">
-                            <img src="{{ asset('ktmt/media/logos/aanacart-logo.svg') }}" class="max-h-75px" alt="" />
+                            <object data="{{ asset('ktmt/media/logos/aanacart-logo.svg') }}" type="image/svg+xml" class="max-h-75px" width="100%" height="100"></object>
                         </a>
                     </div>
                     <!--end::Login Header-->
