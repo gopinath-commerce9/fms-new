@@ -24,12 +24,12 @@ Route::prefix('sales')->middleware([
         ->name('sales.searchOrderByIncrementId');
     Route::post('/filter-order', 'SalesController@searchOrderByFilters')
         ->name('sales.searchOrderByFilters');
-    Route::get('/pos', 'SalesController@posView')
+    /*Route::get('/pos', 'SalesController@posView')
         ->name('sales.pos');
     Route::post('/pos/add-cart', 'SalesController@posAddCart')
         ->name('sales.posAddCart');
     Route::post('/pos/create-order', 'SalesController@posCreateOrder')
-        ->name('sales.posCreateOrder');
+        ->name('sales.posCreateOrder');*/
     Route::get('/stock-update', 'SalesController@stockUpdate')
         ->name('sales.stockUpdate');
     Route::post('/update-product-stock-qty', 'SalesController@updateProductStockQty')
