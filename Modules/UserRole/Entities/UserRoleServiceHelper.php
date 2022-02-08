@@ -140,6 +140,24 @@ class UserRoleServiceHelper
         return $timeSlotArray;
     }
 
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
+
+        $baseServiceHelper = new BaseServiceHelper();
+        $regionList = $baseServiceHelper->getRegionList($env, $channel);
+
+        if (count($regionList) == 0) {
+            return [];
+        }
+
+        $returnData = [];
+        foreach ($regionList as $regionEl) {
+            $returnData[$regionEl['region_id']] = $regionEl['name'];
+        }
+
+        return $returnData;
+
+    }
+
     public function getPickerOrderStats($region = '', $apiChannel = '', $picker = '', $startDate = '', $endDate = '') {
 
         $statsList = [];
@@ -174,7 +192,7 @@ class UserRoleServiceHelper
                             $currentSaleOrder = $processHistory->saleOrder;
                             $canProceed = true;
 
-                            if (!is_null($regionClean) && ($currentSaleOrder->region_code != $regionClean)) {
+                            if (!is_null($regionClean) && ($currentSaleOrder->region_id != $regionClean)) {
                                 $canProceed = false;
                             }
 
@@ -287,7 +305,7 @@ class UserRoleServiceHelper
                             $currentSaleOrder = $processHistory->saleOrder;
                             $canProceed = true;
 
-                            if (!is_null($regionClean) && ($currentSaleOrder->region_code != $regionClean)) {
+                            if (!is_null($regionClean) && ($currentSaleOrder->region_id != $regionClean)) {
                                 $canProceed = false;
                             }
 

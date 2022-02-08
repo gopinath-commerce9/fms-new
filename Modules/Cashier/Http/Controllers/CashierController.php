@@ -19,7 +19,15 @@ class CashierController extends Controller
 
     public function dashboard(Request $request)
     {
-        return redirect()->route('sales.pos');
+        /*return redirect()->route('sales.pos');*/
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Dashboard';
+
+        return view('cashier::index', compact(
+            'pageTitle',
+            'pageSubTitle'
+        ));
     }
 
 }

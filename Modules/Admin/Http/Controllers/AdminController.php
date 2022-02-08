@@ -28,14 +28,15 @@ class AdminController extends Controller
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Dashboard';
 
-        $emirates = config('fms.emirates');
         $serviceHelper = new AdminServiceHelper();
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $selectedEmirate = (
             $request->has('emirate')
             && (trim($request->input('emirate')) != '')
             && array_key_exists(trim($request->input('emirate')), $emirates)
-        ) ? trim($request->input('emirate')) : 'DXB';
+        ) ? trim($request->input('emirate')) : '859';
 
         $regionOrderCount = $serviceHelper->getOrdersCountByRegion($selectedEmirate);
         $todayDate = date('Y-m-d');
@@ -93,7 +94,8 @@ class AdminController extends Controller
             && array_key_exists(trim($request->input('api_channel_filter')), $availableApiChannels)
         ) ? trim($request->input('api_channel_filter')) : null;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region_filter')
             && (trim($request->input('emirates_region_filter')) != '')
