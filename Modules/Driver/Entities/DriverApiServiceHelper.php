@@ -3,6 +3,7 @@
 
 namespace Modules\Driver\Entities;
 
+use Modules\Base\Entities\BaseServiceHelper;
 use Modules\Base\Entities\RestApiService;
 use Modules\Sales\Entities\SaleOrder;
 use DB;
@@ -159,15 +160,33 @@ class DriverApiServiceHelper
 
     }
 
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
+
+        $baseServiceHelper = new BaseServiceHelper();
+        $regionList = $baseServiceHelper->getRegionList($env, $channel);
+
+        if (count($regionList) == 0) {
+            return [];
+        }
+
+        $returnData = [];
+        foreach ($regionList as $regionEl) {
+            $returnData[$regionEl['region_id']] = $regionEl['name'];
+        }
+
+        return $returnData;
+
+    }
+
     public function getDriverOrders($region = '', $apiChannel = '', $status = [], $deliveryDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');
 
-        $emirates = config('fms.emirates');
+        $emirates = $this->getAvailableRegionsList();
         if (!is_null($region) && (trim($region) != '')) {
-            $orderRequest->where('region_code', trim($region));
+            $orderRequest->where('region_id', trim($region));
         } else {
-            $orderRequest->whereIn('region_code', array_keys($emirates));
+            $orderRequest->whereIn('region_id', array_keys($emirates));
         }
 
         $availableApiChannels = $this->getAllAvailableChannels();

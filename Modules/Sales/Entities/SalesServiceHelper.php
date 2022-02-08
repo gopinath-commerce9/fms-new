@@ -122,15 +122,33 @@ class SalesServiceHelper
         return $timeSlotArray;
     }
 
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
+
+        $baseServiceHelper = new BaseServiceHelper();
+        $regionList = $baseServiceHelper->getRegionList($env, $channel);
+
+        if (count($regionList) == 0) {
+            return [];
+        }
+
+        $returnData = [];
+        foreach ($regionList as $regionEl) {
+            $returnData[$regionEl['region_id']] = $regionEl['name'];
+        }
+
+        return $returnData;
+
+    }
+
     public function getSaleOrders($region = '', $apiChannel = '', $status = '', $deliveryDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');
 
-        $emirates = config('fms.emirates');
+        $emirates = $this->getAvailableRegionsList();
         if (!is_null($region) && (trim($region) != '')) {
-            $orderRequest->where('region_code', trim($region));
+            $orderRequest->where('region_id', trim($region));
         } else {
-            $orderRequest->whereIn('region_code', array_keys($emirates));
+            $orderRequest->whereIn('region_id', array_keys($emirates));
         }
 
         $availableApiChannels = $this->getAllAvailableChannels();
@@ -187,26 +205,6 @@ class SalesServiceHelper
             ];
         }
         return $returnData;
-    }
-
-    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
-
-        $apiService = $this->restApiService;
-        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
-            $apiService = new RestApiService();
-            $apiService->setApiEnvironment($env);
-            $apiService->setApiChannel($channel);
-        }
-
-        if (is_null($countryId) || (is_string($countryId) && (trim($countryId) == ''))) {
-            $countryId = $apiService->getApiDefaultCountry();
-        }
-
-        $uri = $apiService->getRestApiUrl() . 'directory/countries/' . $countryId;
-        $apiResult = $apiService->processGetApi($uri, [], [], true, true);
-
-        return ($apiResult['status']) ? $apiResult['response'] : [];
-
     }
 
     public function getAvailableCityList($countryId = '', $env = '', $channel = '') {
@@ -853,11 +851,11 @@ class SalesServiceHelper
 
         $orderRequest = SaleOrder::select('sale_orders.*', 'sale_order_items.product_id', 'sale_order_items.item_sku', 'sale_order_items.item_name', DB::raw('SUM(sale_order_items.qty_ordered) as total_qty'), DB::raw('SUM(sale_order_items.qty_returned) as total_return_qty'));
 
-        $emirates = config('fms.emirates');
+        $emirates = $this->getAvailableRegionsList();
         if (!is_null($region) && (trim($region) != '')) {
-            $orderRequest->where('region_code', trim($region));
+            $orderRequest->where('region_id', trim($region));
         } else {
-            $orderRequest->whereIn('region_code', array_keys($emirates));
+            $orderRequest->whereIn('region_id', array_keys($emirates));
         }
 
         $availableApiChannels = $this->getAllAvailableChannels();

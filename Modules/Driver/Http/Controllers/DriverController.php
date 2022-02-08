@@ -33,14 +33,15 @@ class DriverController extends Controller
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Dashboard';
 
-        $emirates = config('fms.emirates');
         $serviceHelper = new DriverServiceHelper();
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $selectedEmirate = (
             $request->has('emirate')
             && (trim($request->input('emirate')) != '')
             && array_key_exists(trim($request->input('emirate')), $emirates)
-        ) ? trim($request->input('emirate')) : 'DXB';
+        ) ? trim($request->input('emirate')) : '859';
 
         $todayDate = date('Y-m-d');
 
@@ -116,7 +117,8 @@ class DriverController extends Controller
             && (trim($request->input('length')) != '')
         ) ? (int)trim($request->input('length')) : 10;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')

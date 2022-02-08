@@ -112,6 +112,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
         Log::info($this->uniqueId() . ': Started the Job Process.');
 
+        $storeConfig = $this->getStoreConfigs();
+
         $orderIdApiResponse = $this->getOrderIdsBetweenDates();
         if (is_array($orderIdApiResponse) && (count($orderIdApiResponse) > 0)) {
             if (
@@ -142,7 +144,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
                                 if(is_array($saleOrderEl['items']) && (count($saleOrderEl['items']) > 0)) {
                                     foreach ($saleOrderEl['items'] as $orderItemEl) {
-                                        $orderItemResponse = $this->processSaleOrderItem($orderItemEl, $saleOrderObj);
+                                        $orderItemResponse = $this->processSaleOrderItem($orderItemEl, $saleOrderObj, $storeConfig);
                                         if(!$orderItemResponse['status']) {
                                             Log::error($this->uniqueId() . ': Could not process Order Item #' . $orderItemEl['item_id'] . ' for Sale Order #' . $saleOrderId . '. '  . $orderItemResponse['message']);
                                         }
@@ -218,6 +220,27 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         if ($this->restApiService->isValidApiChannel($channel)) {
             $this->restApiService->setApiChannel($channel);
         }
+    }
+
+    /**
+     * Fetch the Store Configurations.
+     *
+     * @return array
+     */
+    private function getStoreConfigs() {
+
+        $uri = $this->restApiService->getRestApiUrl() . 'store/storeConfigs';
+        $apiResult = $this->restApiService->processGetApi($uri);
+        if ($apiResult['status']) {
+            if (is_array($apiResult['response']) && array_key_exists('0', $apiResult['response'])) {
+                return $apiResult['response'][0];
+            } else {
+                return [];
+            }
+        } else {
+            return [];
+        }
+
     }
 
     /**
@@ -343,15 +366,16 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                     'region_code' => $orderShippingAddress['region_code'],
                     'region' => $orderShippingAddress['region'],
                     'city' => $orderShippingAddress['city'],
-                    'zone_id' => $saleOrderEl['extension_attributes']['zone_id'],
+                    'zone_id' => ((array_key_exists('zone_id', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone_id'] : null),
                     'store' => $saleOrderEl['store_name'],
-                    'delivery_date' => $saleOrderEl['extension_attributes']['delivery_date'],
-                    'delivery_time_slot' => $saleOrderEl['extension_attributes']['delivery_time_slot'],
+                    'delivery_date' => ((array_key_exists('order_delivery_date', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_date'] : null),
+                    'delivery_time_slot' => ((array_key_exists('order_delivery_time', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_time'] : null),
+                    'delivery_notes' => ((array_key_exists('order_delivery_note', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_note'] : null),
                     'total_item_count' => $saleOrderEl['total_item_count'],
                     'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
                     'order_weight' => $saleOrderEl['weight'],
                     'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
-                    'not_require_pack' => $saleOrderEl['extension_attributes']['not_require_pack'],
+                    'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : null,
                     'order_currency' => $saleOrderEl['order_currency_code'],
                     'order_subtotal' => $saleOrderEl['subtotal'],
                     'order_tax' => $saleOrderEl['tax_amount'],
@@ -390,12 +414,17 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
      *
      * @param array $orderItemEl
      * @param SaleOrder|null $saleOrderObj
+     * @param array $storeConfig
      *
      * @return array
      */
-    private function processSaleOrderItem($orderItemEl = [], SaleOrder $saleOrderObj = null) {
+    private function processSaleOrderItem($orderItemEl = [], SaleOrder $saleOrderObj = null, $storeConfig = []) {
 
         try {
+
+            $mediaUrl = $storeConfig['base_media_url'];
+            $productImageUrlSegment = 'catalog/product';
+            $productImageUrl = $mediaUrl . $productImageUrlSegment;
 
             $itemExtAttr = $orderItemEl['extension_attributes'];
 
@@ -409,23 +438,23 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                 'product_id' => $orderItemEl['product_id'],
                 'product_type' => $orderItemEl['product_type'],
                 'item_sku' => $orderItemEl['sku'],
-                'item_barcode' => $itemExtAttr['barcode'],
-                'item_name' => $itemExtAttr['product_en_name'],
-                'item_info' => $itemExtAttr['pack_weight_info'],
-                'item_image' => $itemExtAttr['product_image'],
-                'actual_qty' => $itemExtAttr['actual_qty'],
+                'item_barcode' => ((array_key_exists('barcode', $itemExtAttr)) ? $itemExtAttr['barcode'] : $orderItemEl['sku']),
+                'item_name' => ((array_key_exists('product_en_name', $itemExtAttr)) ? $itemExtAttr['product_en_name'] : $orderItemEl['name']),
+                'item_info' => ((array_key_exists('pack_weight_info', $itemExtAttr)) ? $itemExtAttr['pack_weight_info'] : $itemExtAttr['product_weight']),
+                'item_image' => $productImageUrl . $itemExtAttr['product_image'],
+                'actual_qty' => ((array_key_exists('actual_qty', $itemExtAttr)) ? $itemExtAttr['actual_qty'] : $orderItemEl['qty_ordered']),
                 'qty_ordered' => $orderItemEl['qty_ordered'],
                 'qty_shipped' => $orderItemEl['qty_shipped'],
                 'qty_invoiced' => $orderItemEl['qty_invoiced'],
                 'qty_canceled' => $orderItemEl['qty_canceled'],
                 'qty_returned' => $orderItemEl['qty_returned'],
                 'qty_refunded' => $orderItemEl['qty_refunded'],
-                'selling_unit' => $itemExtAttr['selling_format'],
-                'selling_unit_label' => $itemExtAttr['selling_format_label'],
-                'billing_period' => $itemExtAttr['billing_period'],
-                'delivery_day' => $itemExtAttr['delivery_day'],
+                'selling_unit' => $itemExtAttr['unit'],
+                'selling_unit_label' => $itemExtAttr['product_weight'],
+                'billing_period' => ((array_key_exists('billing_period', $itemExtAttr)) ? $itemExtAttr['billing_period'] : null),
+                'delivery_day' => ((array_key_exists('delivery_day', $itemExtAttr)) ? $itemExtAttr['delivery_day'] : null),
                 'scale_number' => ((array_key_exists('scale_number', $itemExtAttr)) ? $itemExtAttr['scale_number'] : null),
-                'country_label' => $itemExtAttr['country_label'],
+                'country_label' => $itemExtAttr['country_of_manufacture'],
                 'item_weight' => $orderItemEl['row_weight'],
                 'price' => $orderItemEl['price'],
                 'row_total' => $orderItemEl['row_total'],
@@ -434,8 +463,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                 'discount_amount' => $orderItemEl['discount_amount'],
                 'discount_percent' => $orderItemEl['discount_percent'],
                 'row_grand_total' => $orderItemEl['row_total_incl_tax'],
-                'vendor_id' => $itemExtAttr['vendor_id'],
-                'vendor_availability' => $itemExtAttr['vendor_availability'],
+                'vendor_id' => ((array_key_exists('vendor_id', $itemExtAttr)) ? $itemExtAttr['vendor_id'] : null),
+                'vendor_availability' => ((array_key_exists('vendor_availability', $itemExtAttr)) ? $itemExtAttr['vendor_availability'] : null),
                 'is_active' => 1
             ]);
 

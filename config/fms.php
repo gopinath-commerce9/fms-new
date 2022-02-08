@@ -136,12 +136,12 @@ return [
         'delivered' => 'Delivered',
     ],
 
-    'emirates' => [
+    /*'emirates' => [
         'DXB' =>'Dubai',
         'SHJ' =>'Sharjah',
         'AUH'=>'Abu Dhabhi',
         'AJM' => 'Ajman'
-    ],
+    ],*/
 
     'role_allowed_statuses' => [
         'supervisor' => [
@@ -217,7 +217,7 @@ return [
     ],
 
     'fulfillment' => [
-        'done_by' => 'Commerce9'
+        'done_by' => 'Aanacart'
     ],
 
 ];
