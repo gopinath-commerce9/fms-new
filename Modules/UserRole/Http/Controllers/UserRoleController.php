@@ -333,7 +333,8 @@ class UserRoleController extends Controller
 
         $serviceHelper = new UserRoleServiceHelper();
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $todayDate = date('Y-m-d');
 
@@ -374,7 +375,8 @@ class UserRoleController extends Controller
             && (trim($request->input('length')) != '')
         ) ? (int)trim($request->input('length')) : 10;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')
@@ -466,7 +468,8 @@ class UserRoleController extends Controller
         $pageSubTitle = 'Picker: ' . $pickerObject->name;
         $givenUserData = $pickerObject;
         $serviceHelper = new UserRoleServiceHelper();
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
 
@@ -499,7 +502,8 @@ class UserRoleController extends Controller
 
         $serviceHelper = new UserRoleServiceHelper();
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $todayDate = date('Y-m-d');
 
@@ -536,7 +540,8 @@ class UserRoleController extends Controller
             && (trim($request->input('length')) != '')
         ) ? (int)trim($request->input('length')) : 10;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')
@@ -629,7 +634,8 @@ class UserRoleController extends Controller
         $pageSubTitle = 'Driver: ' . $driverObject->name;
         $givenUserData = $driverObject;
         $serviceHelper = new UserRoleServiceHelper();
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
 

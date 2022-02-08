@@ -111,7 +111,8 @@ class ApiController extends BaseController
             return $this->sendResponse([], 'No Orders Found!');
         }
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
         $filteredOrderData = [];
@@ -143,7 +144,7 @@ class ApiController extends BaseController
                 $tempRecord['incrementId'] = $record->increment_id;
                 $apiChannelId = $record->channel;
                 $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                $emirateId = $record->region_code;
+                $emirateId = $record->region_id;
                 $tempRecord['region'] = $emirates[$emirateId];
                 $tempRecord['city'] = $record->city;
                 $tempRecord['zoneId'] = $record->zone_id;
@@ -199,7 +200,8 @@ class ApiController extends BaseController
             return $this->sendResponse([], 'No Orders Found!');
         }
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
         $filteredOrderData = [];
@@ -231,7 +233,7 @@ class ApiController extends BaseController
                 $tempRecord['incrementId'] = $record->increment_id;
                 $apiChannelId = $record->channel;
                 $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                $emirateId = $record->region_code;
+                $emirateId = $record->region_id;
                 $tempRecord['region'] = $emirates[$emirateId];
                 $tempRecord['city'] = $record->city;
                 $tempRecord['zoneId'] = $record->zone_id;
@@ -288,7 +290,8 @@ class ApiController extends BaseController
             return $this->sendResponse([], 'No Orders Found!');
         }
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
         $statusList = config('fms.order_statuses');
@@ -324,7 +327,7 @@ class ApiController extends BaseController
                 $tempRecord['incrementId'] = $record->increment_id;
                 $apiChannelId = $record->channel;
                 $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                $emirateId = $record->region_code;
+                $emirateId = $record->region_id;
                 $tempRecord['region'] = $emirates[$emirateId];
                 $tempRecord['city'] = $record->city;
                 $tempRecord['zoneId'] = $record->zone_id;
@@ -410,6 +413,7 @@ class ApiController extends BaseController
 
         $canProceed = false;
         $driverDetail = null;
+        $isOrderDelivered = false;
         $isOrderCanceled = false;
         if (
             ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH)
@@ -433,6 +437,8 @@ class ApiController extends BaseController
             if ($deliveryDriverData) {
                 if (($userId > 0) && !is_null($deliveryDriverData->done_by) && ((int)$deliveryDriverData->done_by == $userId)) {
                     $canProceed = true;
+                    $isOrderDelivered = true;
+                    $isOrderCanceled = false;
                     $driverDetail = $deliveryDriverData;
                 }
             }
@@ -445,6 +451,7 @@ class ApiController extends BaseController
             if ($deliveryDriverData) {
                 if (($userId > 0) && !is_null($deliveryDriverData->done_by) && ((int)$deliveryDriverData->done_by == $userId)) {
                     $canProceed = true;
+                    $isOrderDelivered = false;
                     $isOrderCanceled = true;
                     $driverDetail = $deliveryDriverData;
                 }
@@ -455,7 +462,8 @@ class ApiController extends BaseController
             }
         }
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $statusList = config('fms.order_statuses');
 
@@ -502,7 +510,7 @@ class ApiController extends BaseController
             'orderId' => $saleOrderData['order_id'],
             'incrementId' => $saleOrderData['increment_id'],
             'channel' => (!is_null($saleOrderData['channel']) && array_key_exists($saleOrderData['channel'], $availableApiChannels)) ? $availableApiChannels[$saleOrderData['channel']]['name'] : $saleOrderData['channel'],
-            'region' => (!is_null($saleOrderData['region_code']) && array_key_exists($saleOrderData['region_code'], $emirates)) ? $emirates[$saleOrderData['region_code']] : $saleOrderData['region_code'],
+            'region' => (!is_null($saleOrderData['region_id']) && array_key_exists($saleOrderData['region_id'], $emirates)) ? $emirates[$saleOrderData['region_id']] : $saleOrderData['region_id'],
             'city' => $saleOrderData['city'],
             'zoneId' => $saleOrderData['zone_id'],
             'orderCreatedAt' => (!is_null($saleOrderData['order_created_at']) && strtotime($saleOrderData['order_created_at'])) ? date('Y-m-d H:i:s', strtotime($saleOrderData['order_created_at'])) : $saleOrderData['order_created_at'],
@@ -573,7 +581,7 @@ class ApiController extends BaseController
         if ($deliveryPickerData) {
             $returnData['deliveryPickerTime'] = $deliveryPickerData->done_at;
         }
-        if (!is_null($driverDetail) && !$isOrderCanceled) {
+        if (!is_null($driverDetail) && $isOrderDelivered) {
             $returnData['orderDeliveredTime'] = $driverDetail->done_at;
         }
         if (!is_null($driverDetail) && $isOrderCanceled) {

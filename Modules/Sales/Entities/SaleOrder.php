@@ -60,6 +60,7 @@ class SaleOrder extends Model
         'store',
         'delivery_date',
         'delivery_time_slot',
+        'delivery_notes',
         'total_item_count',
         'total_qty_ordered',
         'order_weight',

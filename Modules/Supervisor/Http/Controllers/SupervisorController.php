@@ -33,8 +33,9 @@ class SupervisorController extends Controller
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Dashboard';
 
-        $emirates = config('fms.emirates');
         $serviceHelper = new SupervisorServiceHelper();
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $selectedEmirate = (
             $request->has('emirate')
@@ -123,7 +124,8 @@ class SupervisorController extends Controller
             && (trim($request->input('length')) != '')
         ) ? (int)trim($request->input('length')) : 10;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')

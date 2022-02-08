@@ -25,8 +25,9 @@ class SalesController extends Controller
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Dashboard';
 
-        $emirates = config('fms.emirates');
         $serviceHelper = new SalesServiceHelper();
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
 
         $selectedEmirate = (
             $request->has('emirate')
@@ -113,7 +114,8 @@ class SalesController extends Controller
             && (trim($request->input('length')) != '')
         ) ? (int)trim($request->input('length')) : 10;
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')
@@ -217,7 +219,8 @@ class SalesController extends Controller
     public function posView(Request $request) {
 
         $serviceHelper = new SalesServiceHelper();
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $deliveryTimeSlots = config('fms.delivery_time_slots');
         $orderSources = $serviceHelper->getAvailablePosOrderSources();
         $paymentMethods = $serviceHelper->getAvailablePosPaymentMethods();
@@ -525,7 +528,8 @@ class SalesController extends Controller
     public function posCreateOrder(Request $request) {
 
         $serviceHelper = new SalesServiceHelper();
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $deliveryTimeSlots = config('fms.delivery_time_slots');
         $orderSources = $serviceHelper->getAvailablePosOrderSources();
         $paymentMethods = $serviceHelper->getAvailablePosPaymentMethods();
@@ -802,7 +806,8 @@ class SalesController extends Controller
 
         $serviceHelper = new SalesServiceHelper();
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
@@ -823,7 +828,8 @@ class SalesController extends Controller
 
         $serviceHelper = new SalesServiceHelper();
 
-        $emirates = config('fms.emirates');
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
