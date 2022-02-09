@@ -148,7 +148,7 @@ class AdminController extends Controller
                     $tempRecord['incrementId'] = $record->increment_id;
                     $apiChannelId = $record->channel;
                     $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                    $emirateId = $record->region_code;
+                    $emirateId = $record->region_id;
                     $tempRecord['region'] = $emirates[$emirateId];
                     $shipAddress = $record->shippingAddress;
                     $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;

@@ -15,6 +15,7 @@ class AddNewFieldsSalesTable extends Migration
     {
         Schema::table('sale_orders', function (Blueprint $table) {
             $table->text('delivery_notes')->nullable()->after('delivery_time_slot');
+            $table->string('increment_id', 50)->change();
         });
     }
 
@@ -27,6 +28,7 @@ class AddNewFieldsSalesTable extends Migration
     {
         Schema::table('sale_orders', function (Blueprint $table) {
             $table->dropColumn('delivery_notes');
+            $table->unsignedBigInteger('increment_id')->change();
         });
     }
 }

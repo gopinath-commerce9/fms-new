@@ -14,9 +14,11 @@ use Illuminate\Http\Request;
 */
 
 Route::prefix('V1')->group(function() {
-    Route::post('/drivers/login', 'ApiController@generateDriverToken')
+    Route::post('/driver/login', 'ApiController@generateDriverToken')
         ->name('driverApi.generateDriverToken');
     Route::middleware(['auth:sanctum'])->group(function() {
+        Route::get('/driver/get-all-orders', 'ApiController@getAllOrders')
+            ->name('driverApi.getAllOrders');
         Route::get('/driver/get-recent-orders', 'ApiController@getRecentAssignedOrders')
             ->name('driverApi.getRecentAssignedOrders');
         Route::get('/driver/get-delivery-orders', 'ApiController@getDeliveryOrders')
