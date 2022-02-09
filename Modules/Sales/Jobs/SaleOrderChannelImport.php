@@ -55,8 +55,12 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         'pending',
         'processing',
         'being_prepared',
+        'holded',
+        'order_updated',
         'ready_to_dispatch',
-        'out_for_delivery'
+        'out_for_delivery',
+        'delivered',
+        'canceled',
     ];
 
     /**
@@ -255,10 +259,10 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
             'searchCriteria[filter_groups][0][filters][0][field]' => 'status',
             'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'in',
             'searchCriteria[filter_groups][0][filters][0][value]' => implode(',', $this->allowedSaleOrderStatuses),
-            'searchCriteria[filter_groups][1][filters][0][field]' => 'delivery_date',
+            'searchCriteria[filter_groups][1][filters][0][field]' => 'order_delivery_date',
             'searchCriteria[filter_groups][1][filters][0][condition_type]' => 'gteq',
             'searchCriteria[filter_groups][1][filters][0][value]' => $this->fromDate,
-            'searchCriteria[filter_groups][2][filters][0][field]' => 'delivery_date',
+            'searchCriteria[filter_groups][2][filters][0][field]' => 'order_delivery_date',
             'searchCriteria[filter_groups][2][filters][0][condition_type]' => 'lteq',
             'searchCriteria[filter_groups][2][filters][0][value]' => $this->toDate,
             'fields' => 'items[entity_id]'
