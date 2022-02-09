@@ -189,7 +189,7 @@ class DriverController extends Controller
                 $tempRecord['incrementId'] = $record->increment_id;
                 $apiChannelId = $record->channel;
                 $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                $emirateId = $record->region_code;
+                $emirateId = $record->region_id;
                 $tempRecord['region'] = $emirates[$emirateId];
                 $shipAddress = $record->shippingAddress;
                 $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
@@ -405,7 +405,7 @@ class DriverController extends Controller
             }
             $orderData = $saleOrderObj->toArray();
 
-            $path = public_path('ktmt/media/logos/c9_logo_long.svg');
+            $path = public_path('ktmt/media/logos/aanacart-favicon-final.png');
             $type = pathinfo($path, PATHINFO_EXTENSION);
             $data = file_get_contents($path);
             $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);

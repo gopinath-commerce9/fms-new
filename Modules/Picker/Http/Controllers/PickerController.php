@@ -206,7 +206,7 @@ class PickerController extends Controller
                 $tempRecord['incrementId'] = $record->increment_id;
                 $apiChannelId = $record->channel;
                 $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                $emirateId = $record->region_code;
+                $emirateId = $record->region_id;
                 $tempRecord['region'] = $emirates[$emirateId];
                 $shipAddress = $record->shippingAddress;
                 $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
@@ -268,7 +268,7 @@ class PickerController extends Controller
         }
 
         $vendorList = [];
-        if (session()->has('salesOrderVendorList')) {
+        /*if (session()->has('salesOrderVendorList')) {
             $vendorList = session()->get('salesOrderVendorList');
         } else {
             $vendorResponse = $serviceHelper->getVendorsList();
@@ -277,7 +277,7 @@ class PickerController extends Controller
                 $vendorList[$vendor['vendor_id']] = $vendor['vendor_name'];
             }
             session()->put('salesOrderVendorList', $vendorList);
-        }
+        }*/
 
         $saleOrderObj->saleCustomer;
         $saleOrderObj->orderItems;
