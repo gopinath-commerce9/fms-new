@@ -16,9 +16,9 @@ use Illuminate\Http\Request;
 Route::prefix('V1')->group(function() {
     Route::post('/login', 'AuthController@generateToken')
         ->name('apiApi.login');
-    Route::post('/supervisors/login', 'AuthController@generateSupervisorToken')
+    Route::post('/supervisor/login', 'AuthController@generateSupervisorToken')
         ->name('apiApi.generateSupervisorToken');
-    Route::post('/pickers/login', 'AuthController@generatePickerToken')
+    Route::post('/picker/login', 'AuthController@generatePickerToken')
         ->name('apiApi.generatePickerToken');
     Route::middleware(['auth:sanctum'])->group(function() {
         Route::get('/me', 'AuthController@userDetails')

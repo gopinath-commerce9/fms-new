@@ -82,6 +82,98 @@ class ApiController extends BaseController
 
     }
 
+    public function getAllOrders(Request $request) {
+
+        $serviceHelper = new DriverApiServiceHelper();
+
+        $user = auth()->user();
+        $userId = $user->id;
+        $validStatus = $serviceHelper->isValidApiUser($userId);
+        if ($validStatus['success'] === false) {
+            return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
+        }
+
+        $pageStart = (
+            $request->has('page')
+            && (trim($request->input('page')) != '')
+        ) ? (int)trim($request->input('page')) : 0;
+
+        $pageLength = (
+            $request->has('limit')
+            && (trim($request->input('limit')) != '')
+        ) ? (int)trim($request->input('limit')) : 10;
+
+        $deliveryDate = (
+            $request->has('deliveryDate')
+            && (trim($request->input('deliveryDate')) != '')
+        ) ? trim($request->input('deliveryDate')) : '';
+
+        $filterStatus = [];
+        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, $deliveryDate, '');
+        if (!$filteredOrders) {
+            return $this->sendResponse([], 'No Orders Found!');
+        }
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
+        $filteredOrderData = [];
+        $totalRec = 0;
+        $collectRecStart = $pageStart;
+        $collectRecEnd = $collectRecStart + $pageLength;
+        $currentRec = -1;
+        foreach ($filteredOrders as $record) {
+            $deliveryDriverData = $record->currentDriver;
+            $canProceed = false;
+            $driverDetail = null;
+            if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                foreach ($deliveryDriverData as $dDeliver) {
+                    if (($userId > 0) && !is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userId)) {
+                        $canProceed = true;
+                        $driverDetail = $dDeliver;
+                    }
+                }
+            }
+            if ($canProceed) {
+                $totalRec++;
+                $currentRec++;
+                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                    continue;
+                }
+                $tempRecord = [];
+                $tempRecord['recordId'] = $record->id;
+                $tempRecord['orderId'] = $record->order_id;
+                $tempRecord['incrementId'] = $record->increment_id;
+                $apiChannelId = $record->channel;
+                $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
+                $emirateId = $record->region_id;
+                $tempRecord['region'] = $emirates[$emirateId];
+                $tempRecord['city'] = $record->city;
+                $tempRecord['zoneId'] = $record->zone_id;
+                $shipAddress = $record->shippingAddress;
+                $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
+                $tempRecord['deliveryDate'] = $record->delivery_date;
+                $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
+                $tempRecord['deliveryPickerTime'] = '';
+                $tempRecord['deliveryDriverTime'] = '';
+                $orderStatusId = $record->order_status;
+                $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
+                $deliveryPickerData = $record->pickedData;
+                if ($deliveryPickerData) {
+                    $tempRecord['deliveryPickerTime'] = $deliveryPickerData->done_at;
+                }
+                if (!is_null($driverDetail)) {
+                    $tempRecord['deliveryDriverTime'] = $driverDetail->done_at;
+                }
+                $filteredOrderData[] = $tempRecord;
+            }
+        }
+
+        return $this->sendResponse($filteredOrderData, count($filteredOrderData) . ' Order(s) Found!');
+
+    }
+
     public function getRecentAssignedOrders(Request $request) {
 
         $serviceHelper = new DriverApiServiceHelper();
@@ -103,10 +195,15 @@ class ApiController extends BaseController
             && (trim($request->input('limit')) != '')
         ) ? (int)trim($request->input('limit')) : 10;
 
+        $deliveryDate = (
+            $request->has('deliveryDate')
+            && (trim($request->input('deliveryDate')) != '')
+        ) ? trim($request->input('deliveryDate')) : '';
+
         $filterStatus = [
             SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH
         ];
-        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, '', '');
+        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, $deliveryDate, '');
         if (!$filteredOrders) {
             return $this->sendResponse([], 'No Orders Found!');
         }
@@ -192,10 +289,15 @@ class ApiController extends BaseController
             && (trim($request->input('limit')) != '')
         ) ? (int)trim($request->input('limit')) : 10;
 
+        $deliveryDate = (
+            $request->has('deliveryDate')
+            && (trim($request->input('deliveryDate')) != '')
+        ) ? trim($request->input('deliveryDate')) : '';
+
         $filterStatus = [
             SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY
         ];
-        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, '', '');
+        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, $deliveryDate, '');
         if (!$filteredOrders) {
             return $this->sendResponse([], 'No Orders Found!');
         }
@@ -281,11 +383,16 @@ class ApiController extends BaseController
             && (trim($request->input('limit')) != '')
         ) ? (int)trim($request->input('limit')) : 10;
 
+        $deliveryDate = (
+            $request->has('deliveryDate')
+            && (trim($request->input('deliveryDate')) != '')
+        ) ? trim($request->input('deliveryDate')) : '';
+
         $filterStatus = [
             SaleOrder::SALE_ORDER_STATUS_DELIVERED,
             SaleOrder::SALE_ORDER_STATUS_CANCELED,
         ];
-        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, '', '');
+        $filteredOrders = $serviceHelper->getDriverOrders('', '', $filterStatus, $deliveryDate, '');
         if (!$filteredOrders) {
             return $this->sendResponse([], 'No Orders Found!');
         }
