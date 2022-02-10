@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Auth\AuthenticationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
 use \Exception;
 
@@ -43,7 +44,8 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
-        if ($request->wantsJson() ||  $request->expectsJson()) {
+        /*if ($request->wantsJson() || $request->expectsJson()) {*/
+        if ($request->is('api/*')) {
             return $this->handleApiException($request, $exception);
         }
 
@@ -55,7 +57,14 @@ class Handler extends ExceptionHandler
         $exception = $this->prepareException($exception);
 
         if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
-            $exception = $this->unauthenticated($request, $exception);
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'http_status' => 401
+                ],
+                'message' => $exception->getMessage()
+            ], 401);
+            /*$exception = $this->unauthenticated($request, $customAuthException);*/
         } elseif ($exception instanceof \Illuminate\Validation\ValidationException) {
             $exception = $this->convertValidationExceptionToResponse($exception, $request);
         }

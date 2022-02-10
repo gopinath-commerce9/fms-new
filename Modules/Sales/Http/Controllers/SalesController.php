@@ -173,11 +173,11 @@ class SalesController extends Controller
             $tempRecord['incrementId'] = $record->increment_id;
             $apiChannelId = $record->channel;
             $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-            $emirateId = $record->region_code;
+            $emirateId = $record->region_id;
             $tempRecord['region'] = $emirates[$emirateId];
             $shipAddress = $record->shippingAddress;
             $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
-            $tempRecord['deliveryDate'] = $record->delivery_date;
+            $tempRecord['deliveryDate'] = (!is_null($record->delivery_date)) ? date('d-m-Y', strtotime($record->delivery_date)) : '';
             $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
             $tempRecord['deliveryPicker'] = '';
             $tempRecord['deliveryPickerTime'] = '';

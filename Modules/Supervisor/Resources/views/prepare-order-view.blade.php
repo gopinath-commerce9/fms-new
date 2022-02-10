@@ -20,7 +20,7 @@
                     </div>
                 </div>
 
-                <form action="{{ url('/supervisor/order-status-change/' . $saleOrderData['id']) }}" method="POST" id="order_view_status_change_form">
+                <form action="{{ url('/supervisor/prepare-order-status-change/' . $saleOrderData['id']) }}" method="POST" id="order_view_status_change_form">
                     @csrf
 
                     <div class="card-body p-0">
@@ -31,7 +31,7 @@
                         <div class="row justify-content-center py-8 px-8 py-md-27 px-md-0">
                             <div class="col-md-11">
                                 <div class="d-flex justify-content-between pb-10 pb-md-20 flex-column flex-md-row">
-                                    <h1 class="display-2 font-weight-boldest mb-10"><?php echo ($saleOrderData['zone_id']) ? $saleOrderData['zone_id'] : ''; ?></h1>
+                                    <h1 class="display-2 font-weight-boldest mb-10"><?php echo ($saleOrderData['zone_id']) ?? ''; ?></h1>
                                     <div class="d-flex flex-column align-items-md-end px-0">
 
                                         <span class="d-flex flex-column align-items-md-end opacity-70">
@@ -176,94 +176,49 @@
                         <div class="row justify-content-center py-8 px-8 py-md-10 px-md-0">
                             <div class="col-md-11">
                                 <div class="d-flex justify-content-between">
-                                    <?php if(
-                                        ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_PENDING)
-                                        || ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_PROCESSING)
-                                        || ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_ON_HOLD)
-                                    ) {?>
+                                    <?php if($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {?>
 
-                                        <div class="row">
-                                            <div class="col col-12">
-                                                <table class="table table-borderless">
-                                                    <tr>
-                                                        <td>
-                                                            <select class="form-control" name="assign_pickup_to" id="assign_pickup_to">
-                                                                <option value="">Select a Picker</option>
-                                                                @if(count($pickers->mappedUsers) > 0)
-                                                                    @foreach($pickers->mappedUsers as $userEl)
-                                                                        <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            <input type="submit" name="btnsubmit" class="btn btn-primary font-weight-bold" value="Being Prepared">
-                                                        </td>
-                                                    </tr>
+                                    <div class="row">
+                                        <div class="col col-12">
+                                            <table class="table table-borderless">
 
-                                                    <tr>
-                                                        <td>
-                                                            <a href="{{ url('/supervisor/print-order-items-list/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Order Item List</a>
-                                                        </td>
-                                                        <td></td>
-                                                    </tr>
+                                                {{--<tr>
 
-                                                </table>
-                                            </div>
+                                                    <td>
+                                                        <input type="button" name="picker_btn_scan" id="picker_btnscan" class="btn btn-primary font-weight-bold" value="Scan Product">
+                                                    </td>
+
+                                                    <td>
+                                                        <input type="button" name="picker_btn_enable_entry" id="picker_btn_enable_entry" class="btn btn-primary font-weight-bold" value="Enable Manual Entry in Actual Qty">
+                                                        <input type="button" name="picker_btn_disable_entry" id="picker_btn_disable_entry" class="btn btn-primary font-weight-bold" value="Disable Manual Entry in Actual Qty">
+                                                    </td>
+
+                                                </tr>--}}
+
+                                                <tr>
+
+                                                    <td>
+                                                        Number of Boxes : <input type="text"  min="1"  class="box_qty"  style="text-align:center" size="5" name="box_qty" id="box_qty_1"  required="" value="{{ old('box_qty') }}">
+                                                    </td>
+
+                                                    <td>
+                                                        <input type="submit" name="picker_btn_submit" id="picker_btn_submit" class="btn btn-primary font-weight-bold" value="Ready To Dispatch">
+                                                    </td>
+
+                                                </tr>
+
+                                                <tr>
+                                                    <td>
+                                                        <a href="{{ url('/supervisor/print-order-items-list/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Order Item List</a>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+
+                                            </table>
                                         </div>
+                                    </div>
 
-                                    <?php } elseif($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) { ?>
-
-                                        <div class="row">
-                                            <div class="col col-12">
-                                                <table class="table table-borderless">
-                                                    <tr>
-                                                        <td>
-                                                            <select class="form-control" name="assign_delivery_to" id="assign_delivery_to">
-                                                                <option value="">Select a Driver</option>
-                                                                @if(count($drivers->mappedUsers) > 0)
-                                                                    @foreach($drivers->mappedUsers as $userEl)
-                                                                        <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            <input type="submit" name="btnsubmit" class="btn btn-primary font-weight-bold" value="Assign Driver">
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <a href="{{ url('/supervisor/print-shipping-label/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Shipping Label</a>
-                                                        </td>
-                                                        <td></td>
-                                                    </tr>
-
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                    <?php } else { ?>
-
-                                        <div class="row">
-                                            <div class="col col-12">
-                                                <table class="table table-borderless">
-                                                    <tr>
-                                                        <td>
-                                                            Order Status
-                                                        </td>
-                                                        <td>
-                                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">
-                                                                {{ $orderStatuses[$saleOrderData['order_status']] }}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                    <?php } ?>
+                                    <?php  } ?>
 
                                 </div>
                             </div>
@@ -280,15 +235,16 @@
                                             <thead>
                                                 <tr>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Store Availability</th>
-                                                    <th class="text-right font-weight-bold text-muted text-uppercase">Quantity</th>
+                                                    {{--<th class="pl-0 font-weight-bold text-muted text-uppercase">Actual Quantity</th>--}}
+                                                    <th class="pl-0 font-weight-bold text-muted text-uppercase">Quantity</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Item</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Country</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Sku</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Shelf Number</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Scale Number</th>
-                                                    <th class="text-right font-weight-bold text-muted text-uppercase">Price</th>
-                                                    <th class="text-right font-weight-bold text-muted text-uppercase">Totals</th>
-                                                    <th class="text-right font-weight-bold text-muted text-uppercase">Vendor</th>
+                                                    <th class="pl-0 font-weight-bold text-muted text-uppercase">Price</th>
+                                                    <th class="pl-0 font-weight-bold text-muted text-uppercase">Totals</th>
+                                                    <th class="pl-0 font-weight-bold text-muted text-uppercase">Vendor</th>
                                                     <th class="pl-0 font-weight-bold text-muted text-uppercase">Vendor Availability</th>
                                                 </tr>
                                             </thead>
@@ -351,28 +307,42 @@
                                                 $productName = "";
                                             }
 
+                                            $storeAvailabilityValue = '';
+                                            if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED) {
+                                                $storeAvailabilityValue = '';
+                                            } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES) {
+                                                $storeAvailabilityValue = $item['store_availability'];
+                                            } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NO) {
+                                                $storeAvailabilityValue = $item['store_availability'];
+                                            }
+
                                             ?>
                                             <tr>
-
-                                                <td class="border-top-0 pl-0 py-4">
-                                                    @if($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES)
-                                                        <span class="label label-lg font-weight-bold label-light-success label-inline">
-                                                            Yes
-                                                        </span>
-                                                    @elseif($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NO)
-                                                        <span class="label label-lg font-weight-bold label-light-danger label-inline">
-                                                            No
-                                                        </span>
-                                                    @elseif($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED)
-                                                        <span class="label label-lg font-weight-bold label-light-info label-inline">
-                                                            Not Checked
-                                                        </span>
-                                                    @else
-                                                        <span class="label label-lg font-weight-bold label-light-info label-inline">
-                                                            Not Checked
-                                                        </span>
-                                                    @endif
+                                                <td>
+                                                    <select class="form-control store-availability" name="store_availability[{{ $item['id'] }}]" id="store_availability_{{ $item['id'] }}">
+                                                        <option value="" {{ ($storeAvailabilityValue === '') ? " selected " : '' }}>Not Checked</option>
+                                                        <option value="1" {{ ($storeAvailabilityValue === 1) ? " selected " : '' }}>Yes</option>
+                                                        <option value="0" {{ ($storeAvailabilityValue === 0) ? " selected " : '' }}>No</option>
+                                                    </select>
                                                 </td>
+
+                                                {{--<td>
+
+                                                    <input type="text" class="actual_qty"  name="actual_qty[<?php echo $itemInputId;?>]" id="actual_qty_<?php echo $itemInputId;?>"  value="<?php echo $actualQty; ?>" style="width: 80px;">
+                                                    <input type="hidden"  class="actual_qty_tmp" name="tmpactual_qty[<?php echo $itemInputId;?>]" id="tmpactual_qty_<?php echo $itemInputId;?>" value="<?php echo $actualQty; ?>"  style="width: 80px;">
+
+                                                    <input type="hidden" class="ordered_qty" name="ordered_qty[<?php echo $itemInputId;?>]" id="ordered_qty_<?php echo $itemInputId;?>" value="<?php echo $item['qty_ordered']; ?>" >
+                                                    <input type="hidden" class="selling_format" name="selling_format[<?php echo $itemInputId;?>]" id="selling_format_<?php echo $itemInputId;?>" value="<?php echo $sellingFormat; ?>"  >
+                                                    <?php echo $sellingFormat;?>
+
+
+                                                    <span id="tick_mark_<?php echo $item['item_sku'];?>"  style="font-size: 20px; font-weight: bold; color: green"></span>
+
+                                                    <span>
+                                                        <a href="javascript:;" onclick="clearValue('<?php echo $itemInputId;?>')">Clear </a>
+                                                    </span>
+
+                                                </td>--}}
 
                                                 <td class="border-top-0 pl-0 py-4"><?php echo $item['qty_ordered']." ".$sellingFormat;?></td>
                                                 <td class="border-top-0 pl-0 py-4"><?php echo $productName;?> <br> <b>Pack & Weight Info :</b> <?php echo $weightInfo;?>
@@ -413,8 +383,8 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div class="border-bottom w-100 my-13 opacity-15"></div>
                                 </div>
+                                <div class="border-bottom w-100 my-13 opacity-15"></div>
                                 <!--begin::Invoice total-->
 
 
@@ -422,26 +392,22 @@
                                     <table class="table text-md-right font-weight-boldest">
                                         <tbody>
                                         <tr>
-                                            <td></td>
                                             <td class="align-middle title-color font-size-lg border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
                                             <td class="align-middle font-size-h3 border-0 pt-0"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['order_subtotal'];?></td>
                                         </tr>
                                         <tr>
-                                            <td></td>
                                             <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
                                             <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['shipping_total'];?></td>
                                         </tr>
                                         <?php if( !empty($saleOrderData['discount_amount']) ) {?>
                                         <tr>
 
-                                            <td></td>
                                             <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
                                             <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['discount_amount'];?></td>
 
                                         </tr>
                                         <?php } ?>
                                         <tr>
-                                            <td></td>
                                             <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
                                             <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['order_total'];?></td>
                                         </tr>
@@ -471,10 +437,10 @@
 
 @section('custom-js-section')
 
-    <script src="{{ asset('js/supervisor.js') }}"></script>
+    <script src="{{ asset('js/picker.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            SupervisorCustomJsBlocks.orderViewPage('{{ url('/') }}');
+            PickerCustomJsBlocks.orderViewPage('{{ url('/') }}');
         });
     </script>
 

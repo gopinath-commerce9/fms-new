@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Sales\Entities\SaleOrderItem;
 use Modules\Supervisor\Entities\SupervisorServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
@@ -348,7 +349,7 @@ class SupervisorController extends Controller
         }
 
         $vendorList = [];
-        if (session()->has('salesOrderVendorList')) {
+        /*if (session()->has('salesOrderVendorList')) {
             $vendorList = session()->get('salesOrderVendorList');
         } else {
             $vendorResponse = $serviceHelper->getVendorsList();
@@ -357,7 +358,7 @@ class SupervisorController extends Controller
                 $vendorList[$vendor['vendor_id']] = $vendor['vendor_name'];
             }
             session()->put('salesOrderVendorList', $vendorList);
-        }
+        }*/
 
         $saleOrderObj->saleCustomer;
         $saleOrderObj->orderItems;
@@ -377,18 +378,33 @@ class SupervisorController extends Controller
         $pickers = $userRoleObj->allPickers();
         $drivers = $userRoleObj->allDrivers();
 
-        return view('supervisor::order-view', compact(
-            'pageTitle',
-            'pageSubTitle',
-            'saleOrderObj',
-            'saleOrderData',
-            'customerGroups',
-            'vendorList',
-            'serviceHelper',
-            'orderStatuses',
-            'pickers',
-            'drivers'
-        ));
+        if ($saleOrderObj->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
+            return view('supervisor::prepare-order-view', compact(
+                'pageTitle',
+                'pageSubTitle',
+                'saleOrderObj',
+                'saleOrderData',
+                'customerGroups',
+                'vendorList',
+                'serviceHelper',
+                'orderStatuses',
+                'pickers',
+                'drivers'
+            ));
+        } else {
+            return view('supervisor::order-view', compact(
+                'pageTitle',
+                'pageSubTitle',
+                'saleOrderObj',
+                'saleOrderData',
+                'customerGroups',
+                'vendorList',
+                'serviceHelper',
+                'orderStatuses',
+                'pickers',
+                'drivers'
+            ));
+        }
 
     }
 
@@ -498,6 +514,136 @@ class SupervisorController extends Controller
             }
         } else {
             return back()->with('error', 'No process happened!');
+        }
+
+    }
+
+    public function prepareOrderStatusChange(Request $request, $orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        $allowedStatuses = [
+            SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED
+        ];
+        if (!in_array($saleOrderObj->order_status, $allowedStatuses)) {
+            return back()
+                ->with('error', 'The Sale Order Status cannot be changed!');
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $orderItemCount = count($saleOrderObj->orderItems);
+        $allowedAvailabilityValues = [
+            SaleOrderItem::STORE_AVAILABLE_YES,
+            SaleOrderItem::STORE_AVAILABLE_NO
+        ];
+
+        $validator = Validator::make($request->all() , [
+            'box_qty' => ['required', 'numeric', 'integer', 'min:1'],
+            'store_availability' => ['required', 'array', 'size:' . $orderItemCount],
+            'store_availability.*' => [Rule::in($allowedAvailabilityValues)],
+        ], [
+            'box_qty.required' => 'The Box Count should not be empty.',
+            'box_qty.min' => 'The Box Count should be atleast :min.',
+            'store_availability.required' => 'The Order Items are not checked for Store Availability.',
+            'store_availability.*.in' => 'Some of the Order Items are not checked for Store Availability.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput($request->only('box_qty'));
+        }
+
+        $postData = $validator->validated();
+        $boxCount = $postData['box_qty'];
+        $storeAvailabilityArray = $postData['store_availability'];
+
+        $serviceHelper = new SupervisorServiceHelper();
+        $pickerId = $processUserId;
+        if ($saleOrderObj->currentPicker && (count($saleOrderObj->currentPicker) > 0)) {
+            $currentHistory = $saleOrderObj->currentPicker[0];
+            $pickerId = $currentHistory->done_by;
+        }
+        $returnResult = $serviceHelper->setOrderAsDispatchReady($saleOrderObj, $boxCount, $storeAvailabilityArray, $pickerId);
+        if ($returnResult['status']) {
+            return back()->with('success', 'The Sale Order status is updated successfully!');
+        } else {
+            return back()->with('error', $returnResult['message']);
+        }
+
+    }
+
+    public function printOrderItemList($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        try {
+
+            $pdfOrientation = 'P';
+            $pdfPaperSize = 'A4';
+            $pdfUseLang = 'en';
+            $pdfDefaultFont = 'Arial';
+
+            $saleOrderObj->saleCustomer;
+            $saleOrderObj->orderItems;
+            $saleOrderObj->billingAddress;
+            $saleOrderObj->shippingAddress;
+            $saleOrderObj->paymentData;
+            $saleOrderObj->statusHistory;
+            $saleOrderObj->processHistory;
+            if ($saleOrderObj->processHistory && (count($saleOrderObj->processHistory) > 0)) {
+                foreach($saleOrderObj->processHistory as $processHistory) {
+                    $processHistory->actionDoer;
+                }
+            }
+            $orderData = $saleOrderObj->toArray();
+
+            $path = public_path('ktmt/media/logos/aanacart-favicon-final.png');
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+            $fulfilledBy = config('fms.fulfillment.done_by');
+
+            $pdfContent = view('supervisor::print-order-item-list', compact('orderData', 'logoEncoded', 'fulfilledBy'))->render();
+
+            $pdfName = "print-item-list-order-" . $saleOrderObj->increment_id . ".pdf";
+            $outputMode = 'D';
+
+            $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
+            $html2pdf->setDefaultFont($pdfDefaultFont);
+            $html2pdf->writeHTML($pdfContent);
+
+            $pdfOutput = $html2pdf->output($pdfName, $outputMode);
+
+        } catch (Html2PdfException $e) {
+            $html2pdf->clean();
+            $formatter = new ExceptionFormatter($e);
+            return back()
+                ->with('error', $formatter->getMessage());
         }
 
     }
