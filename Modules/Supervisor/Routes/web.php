@@ -32,6 +32,8 @@ Route::prefix('supervisor')->middleware([
         ->name('supervisor.orderStatusChange');
     Route::post('/prepare-order-status-change/{orderId}', 'SupervisorController@prepareOrderStatusChange')
         ->name('supervisor.prepareOrderStatusChange');
+    Route::get('/print-order-items-list/{orderId}', 'SupervisorController@printOrderItemList')
+        ->name('supervisor.printOrderItemList');
     Route::get('/print-shipping-label/{orderId}', 'SupervisorController@printShippingLabel')
         ->name('supervisor.printShippingLabel');
 });

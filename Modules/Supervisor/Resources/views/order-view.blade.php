@@ -201,6 +201,13 @@
                                                         </td>
                                                     </tr>
 
+                                                    <tr>
+                                                        <td>
+                                                            <a href="{{ url('/supervisor/print-order-items-list/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Order Item List</a>
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+
                                                 </table>
                                             </div>
                                         </div>

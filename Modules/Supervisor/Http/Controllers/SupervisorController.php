@@ -587,6 +587,67 @@ class SupervisorController extends Controller
 
     }
 
+    public function printOrderItemList($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        try {
+
+            $pdfOrientation = 'P';
+            $pdfPaperSize = 'A4';
+            $pdfUseLang = 'en';
+            $pdfDefaultFont = 'Arial';
+
+            $saleOrderObj->saleCustomer;
+            $saleOrderObj->orderItems;
+            $saleOrderObj->billingAddress;
+            $saleOrderObj->shippingAddress;
+            $saleOrderObj->paymentData;
+            $saleOrderObj->statusHistory;
+            $saleOrderObj->processHistory;
+            if ($saleOrderObj->processHistory && (count($saleOrderObj->processHistory) > 0)) {
+                foreach($saleOrderObj->processHistory as $processHistory) {
+                    $processHistory->actionDoer;
+                }
+            }
+            $orderData = $saleOrderObj->toArray();
+
+            $path = public_path('ktmt/media/logos/aanacart-favicon-final.png');
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+            $fulfilledBy = config('fms.fulfillment.done_by');
+
+            $pdfContent = view('supervisor::print-order-item-list', compact('orderData', 'logoEncoded', 'fulfilledBy'))->render();
+
+            $pdfName = "print-item-list-order-" . $saleOrderObj->increment_id . ".pdf";
+            $outputMode = 'D';
+
+            $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
+            $html2pdf->setDefaultFont($pdfDefaultFont);
+            $html2pdf->writeHTML($pdfContent);
+
+            $pdfOutput = $html2pdf->output($pdfName, $outputMode);
+
+        } catch (Html2PdfException $e) {
+            $html2pdf->clean();
+            $formatter = new ExceptionFormatter($e);
+            return back()
+                ->with('error', $formatter->getMessage());
+        }
+
+    }
+
     public function printShippingLabel($orderId) {
 
         if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
