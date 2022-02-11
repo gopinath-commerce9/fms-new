@@ -25,7 +25,7 @@
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <input type='text' class="form-control" name="api_channel_dates" id="api_channel_dates" readonly placeholder="Select Delivery Date Range" type="text"/>
+                                        <input type='text' class="form-control" name="api_channel_dates" id="api_channel_dates" readonly placeholder="Select Order Placed Date Range" type="text"/>
                                         <input  type="hidden" value="{{ date('Y-m-d') }}" id="api_channel_date_start" name="api_channel_date_start" />
                                         <input  type="hidden" value="{{ date('Y-m-d') }}" id="api_channel_date_end" name="api_channel_date_end" />
                                     </div>
