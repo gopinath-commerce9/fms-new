@@ -30,7 +30,14 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
      *
      * @var int
      */
-    public $timeout = 900;
+    public $timeout = 600;
+
+    /**
+     * The number of times the job may be attempted.
+     *
+     * @var int
+     */
+    public $tries = 5;
 
     /**
      * The number of seconds after which the job's unique lock will be released.
