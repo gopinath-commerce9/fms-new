@@ -126,12 +126,12 @@ class SalesServiceProvider extends ServiceProvider
             ->everyMinute()->runInBackground()->name('saleOrderImportQueueWorker');
         $schedule->call(function() {
             $availableApiChannels = (new RestApiService())->getAllAvailableApiChannels();
-            $startDate = date('Y-m-d', strtotime('-10 days'));;
-            $endDate = date('Y-m-d', strtotime('+10 days'));;
+            $startDate = date('Y-m-d', strtotime('-1 days'));;
+            $endDate = date('Y-m-d', strtotime('+1 days'));;
             foreach ($availableApiChannels as $apiChannel) {
                 SaleOrderChannelImport::dispatch($apiChannel['id'], $startDate, $endDate);
             }
-        })->everyFiveMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
+        })->everyFifteenMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
     }
 
 }
