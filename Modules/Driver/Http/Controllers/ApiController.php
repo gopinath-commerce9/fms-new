@@ -141,6 +141,45 @@ class ApiController extends BaseController
                 if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                     continue;
                 }
+
+                $record->orderItems;
+                $record->shippingAddress;
+                $record->paymentData;
+                /*$record->saleCustomer;
+                $record->billingAddress;
+                $record->statusHistory;*/
+                $saleOrderData = $record->toArray();
+
+                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $totalOrderValue = $saleOrderData['order_total'];
+                $totalDueValue = $saleOrderData['order_due'];
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                    $totalDueValue = $totalOrderValue;
+                }
+
+                $paymentMethodTitle = '';
+                $payInfoLoopTargetLabel = 'method_title';
+                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                $paymentMethodTitle = $paymentInfoEl['value'];
+                            }
+                        }
+                    }
+                }
+
+                $paymentStatus = '';
+                $epsilon = 0.00001;
+                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                    if (abs($totalDueValue - 0) < $epsilon) {
+                        $paymentStatus = 'paid';
+                    } else {
+                        $paymentStatus = 'due';
+                    }
+                }
+
                 $tempRecord = [];
                 $tempRecord['recordId'] = $record->id;
                 $tempRecord['orderId'] = $record->order_id;
@@ -159,6 +198,12 @@ class ApiController extends BaseController
                 $tempRecord['deliveryDriverTime'] = '';
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
+                $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['orderTotal'] = $totalOrderValue;
+                $tempRecord['orderDue'] = $totalDueValue;
+                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentStatus'] = $paymentStatus;
+                $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
                 if ($deliveryPickerData) {
                     $tempRecord['deliveryPickerTime'] = $deliveryPickerData->done_at;
@@ -166,6 +211,24 @@ class ApiController extends BaseController
                 if (!is_null($driverDetail)) {
                     $tempRecord['deliveryDriverTime'] = $driverDetail->done_at;
                 }
+
+                if (!is_null($saleOrderData['shipping_address']) && is_array($saleOrderData['shipping_address']) && (count($saleOrderData['shipping_address']) > 0)) {
+                    $shippingAddress = $saleOrderData['shipping_address'];
+                    $tempRecord['shippingAddress'] = [
+                        'firstName' => $shippingAddress['first_name'],
+                        'lastName' => $shippingAddress['last_name'],
+                        'address1' => $shippingAddress['address_1'],
+                        'address2' => $shippingAddress['address_2'],
+                        'address3' => $shippingAddress['address_3'],
+                        'city' => $shippingAddress['city'],
+                        'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                        'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                        'countryId' => $shippingAddress['country_id'],
+                        'postCode' => $shippingAddress['post_code'],
+                        'contactNumber' => $shippingAddress['contact_number'],
+                    ];
+                }
+
                 $filteredOrderData[] = $tempRecord;
             }
         }
@@ -235,6 +298,45 @@ class ApiController extends BaseController
                 if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                     continue;
                 }
+
+                $record->orderItems;
+                $record->shippingAddress;
+                $record->paymentData;
+                /*$record->saleCustomer;
+                $record->billingAddress;
+                $record->statusHistory;*/
+                $saleOrderData = $record->toArray();
+
+                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $totalOrderValue = $saleOrderData['order_total'];
+                $totalDueValue = $saleOrderData['order_due'];
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                    $totalDueValue = $totalOrderValue;
+                }
+
+                $paymentMethodTitle = '';
+                $payInfoLoopTargetLabel = 'method_title';
+                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                $paymentMethodTitle = $paymentInfoEl['value'];
+                            }
+                        }
+                    }
+                }
+
+                $paymentStatus = '';
+                $epsilon = 0.00001;
+                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                    if (abs($totalDueValue - 0) < $epsilon) {
+                        $paymentStatus = 'paid';
+                    } else {
+                        $paymentStatus = 'due';
+                    }
+                }
+
                 $tempRecord = [];
                 $tempRecord['recordId'] = $record->id;
                 $tempRecord['orderId'] = $record->order_id;
@@ -253,6 +355,12 @@ class ApiController extends BaseController
                 $tempRecord['deliveryDriverTime'] = '';
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
+                $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['orderTotal'] = $totalOrderValue;
+                $tempRecord['orderDue'] = $totalDueValue;
+                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentStatus'] = $paymentStatus;
+                $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
                 if ($deliveryPickerData) {
                     $tempRecord['deliveryPickerTime'] = $deliveryPickerData->done_at;
@@ -260,6 +368,24 @@ class ApiController extends BaseController
                 if (!is_null($driverDetail)) {
                     $tempRecord['deliveryDriverTime'] = $driverDetail->done_at;
                 }
+
+                if (!is_null($saleOrderData['shipping_address']) && is_array($saleOrderData['shipping_address']) && (count($saleOrderData['shipping_address']) > 0)) {
+                    $shippingAddress = $saleOrderData['shipping_address'];
+                    $tempRecord['shippingAddress'] = [
+                        'firstName' => $shippingAddress['first_name'],
+                        'lastName' => $shippingAddress['last_name'],
+                        'address1' => $shippingAddress['address_1'],
+                        'address2' => $shippingAddress['address_2'],
+                        'address3' => $shippingAddress['address_3'],
+                        'city' => $shippingAddress['city'],
+                        'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                        'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                        'countryId' => $shippingAddress['country_id'],
+                        'postCode' => $shippingAddress['post_code'],
+                        'contactNumber' => $shippingAddress['contact_number'],
+                    ];
+                }
+
                 $filteredOrderData[] = $tempRecord;
             }
         }
@@ -329,6 +455,45 @@ class ApiController extends BaseController
                 if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                     continue;
                 }
+
+                $record->orderItems;
+                $record->shippingAddress;
+                $record->paymentData;
+                /*$record->saleCustomer;
+                $record->billingAddress;
+                $record->statusHistory;*/
+                $saleOrderData = $record->toArray();
+
+                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $totalOrderValue = $saleOrderData['order_total'];
+                $totalDueValue = $saleOrderData['order_due'];
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                    $totalDueValue = $totalOrderValue;
+                }
+
+                $paymentMethodTitle = '';
+                $payInfoLoopTargetLabel = 'method_title';
+                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                $paymentMethodTitle = $paymentInfoEl['value'];
+                            }
+                        }
+                    }
+                }
+
+                $paymentStatus = '';
+                $epsilon = 0.00001;
+                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                    if (abs($totalDueValue - 0) < $epsilon) {
+                        $paymentStatus = 'paid';
+                    } else {
+                        $paymentStatus = 'due';
+                    }
+                }
+
                 $tempRecord = [];
                 $tempRecord['recordId'] = $record->id;
                 $tempRecord['orderId'] = $record->order_id;
@@ -347,6 +512,12 @@ class ApiController extends BaseController
                 $tempRecord['deliveryDriverTime'] = '';
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
+                $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['orderTotal'] = $totalOrderValue;
+                $tempRecord['orderDue'] = $totalDueValue;
+                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentStatus'] = $paymentStatus;
+                $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
                 if ($deliveryPickerData) {
                     $tempRecord['deliveryPickerTime'] = $deliveryPickerData->done_at;
@@ -354,6 +525,24 @@ class ApiController extends BaseController
                 if (!is_null($driverDetail)) {
                     $tempRecord['deliveryDriverTime'] = $driverDetail->done_at;
                 }
+
+                if (!is_null($saleOrderData['shipping_address']) && is_array($saleOrderData['shipping_address']) && (count($saleOrderData['shipping_address']) > 0)) {
+                    $shippingAddress = $saleOrderData['shipping_address'];
+                    $tempRecord['shippingAddress'] = [
+                        'firstName' => $shippingAddress['first_name'],
+                        'lastName' => $shippingAddress['last_name'],
+                        'address1' => $shippingAddress['address_1'],
+                        'address2' => $shippingAddress['address_2'],
+                        'address3' => $shippingAddress['address_3'],
+                        'city' => $shippingAddress['city'],
+                        'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                        'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                        'countryId' => $shippingAddress['country_id'],
+                        'postCode' => $shippingAddress['post_code'],
+                        'contactNumber' => $shippingAddress['contact_number'],
+                    ];
+                }
+
                 $filteredOrderData[] = $tempRecord;
             }
         }
@@ -428,6 +617,45 @@ class ApiController extends BaseController
                 if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                     continue;
                 }
+
+                $record->orderItems;
+                $record->shippingAddress;
+                $record->paymentData;
+                /*$record->saleCustomer;
+                $record->billingAddress;
+                $record->statusHistory;*/
+                $saleOrderData = $record->toArray();
+
+                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $totalOrderValue = $saleOrderData['order_total'];
+                $totalDueValue = $saleOrderData['order_due'];
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                    $totalDueValue = $totalOrderValue;
+                }
+
+                $paymentMethodTitle = '';
+                $payInfoLoopTargetLabel = 'method_title';
+                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                $paymentMethodTitle = $paymentInfoEl['value'];
+                            }
+                        }
+                    }
+                }
+
+                $paymentStatus = '';
+                $epsilon = 0.00001;
+                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                    if (abs($totalDueValue - 0) < $epsilon) {
+                        $paymentStatus = 'paid';
+                    } else {
+                        $paymentStatus = 'due';
+                    }
+                }
+
                 $tempRecord = [];
                 $tempRecord['recordId'] = $record->id;
                 $tempRecord['orderId'] = $record->order_id;
@@ -446,6 +674,12 @@ class ApiController extends BaseController
                 $tempRecord['deliveryDriverTime'] = '';
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $statusList[$orderStatusId];
+                $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['orderTotal'] = $totalOrderValue;
+                $tempRecord['orderDue'] = $totalDueValue;
+                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentStatus'] = $paymentStatus;
+                $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
                 if ($deliveryPickerData) {
                     $tempRecord['deliveryPickerTime'] = $deliveryPickerData->done_at;
@@ -453,6 +687,24 @@ class ApiController extends BaseController
                 if (!is_null($driverDetail)) {
                     $tempRecord['deliveryDriverTime'] = $driverDetail->done_at;
                 }
+
+                if (!is_null($saleOrderData['shipping_address']) && is_array($saleOrderData['shipping_address']) && (count($saleOrderData['shipping_address']) > 0)) {
+                    $shippingAddress = $saleOrderData['shipping_address'];
+                    $tempRecord['shippingAddress'] = [
+                        'firstName' => $shippingAddress['first_name'],
+                        'lastName' => $shippingAddress['last_name'],
+                        'address1' => $shippingAddress['address_1'],
+                        'address2' => $shippingAddress['address_2'],
+                        'address3' => $shippingAddress['address_3'],
+                        'city' => $shippingAddress['city'],
+                        'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                        'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                        'countryId' => $shippingAddress['country_id'],
+                        'postCode' => $shippingAddress['post_code'],
+                        'contactNumber' => $shippingAddress['contact_number'],
+                    ];
+                }
+
                 $filteredOrderData[] = $tempRecord;
             }
         }
@@ -677,7 +929,8 @@ class ApiController extends BaseController
                 'address2' => $shippingAddress['address_2'],
                 'address3' => $shippingAddress['address_3'],
                 'city' => $shippingAddress['city'],
-                'region' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
                 'countryId' => $shippingAddress['country_id'],
                 'postCode' => $shippingAddress['post_code'],
                 'contactNumber' => $shippingAddress['contact_number'],
