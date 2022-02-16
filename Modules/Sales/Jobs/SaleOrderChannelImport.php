@@ -62,12 +62,12 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         'pending',
         'processing',
         'being_prepared',
-        'holded',
-        'order_updated',
+        /*'holded',
+        'order_updated',*/
         'ready_to_dispatch',
-        'out_for_delivery',
+        /*'out_for_delivery',
         'delivered',
-        'canceled',
+        'canceled',*/
     ];
 
     /**
@@ -85,9 +85,9 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         $this->setApiChannel($channel);
         $this->restApiChannel = $this->restApiService->getCurrentApiChannel();
         $givenFromDate = (is_string($fromDateString) && (trim($fromDateString) != ''))
-            ? date('Y-m-d', strtotime($fromDateString)) : date('Y-m-d', strtotime('-' . $this->dateDifference . ' days'));
+            ? date('Y-m-d H:i:s', strtotime($fromDateString)) : date('Y-m-d', strtotime('-' . $this->dateDifference . ' days'));
         $givenToDate = (is_string($toDateString) && (trim($toDateString) != ''))
-            ? date('Y-m-d', strtotime($toDateString)) : date('Y-m-d', strtotime('+1 days'));
+            ? date('Y-m-d H:i:s', strtotime($toDateString)) : date('Y-m-d', strtotime('+1 days'));
         if ($givenToDate > $givenFromDate) {
             $this->fromDate = $givenFromDate;
             $this->toDate = $givenToDate;
@@ -268,10 +268,10 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
             'searchCriteria[filter_groups][0][filters][0][value]' => implode(',', $this->allowedSaleOrderStatuses),
             'searchCriteria[filter_groups][1][filters][0][field]' => 'created_at',
             'searchCriteria[filter_groups][1][filters][0][condition_type]' => 'gteq',
-            'searchCriteria[filter_groups][1][filters][0][value]' => date('Y-m-d 00:00:00', strtotime($this->fromDate)),
+            'searchCriteria[filter_groups][1][filters][0][value]' => date('Y-m-d H:i:s', strtotime($this->fromDate)),
             'searchCriteria[filter_groups][2][filters][0][field]' => 'created_At',
             'searchCriteria[filter_groups][2][filters][0][condition_type]' => 'lteq',
-            'searchCriteria[filter_groups][2][filters][0][value]' => date('Y-m-d 23:59:59', strtotime($this->toDate)),
+            'searchCriteria[filter_groups][2][filters][0][value]' => date('Y-m-d H:i:s', strtotime($this->toDate)),
             'fields' => 'items[entity_id]'
         ];
         $apiResult = $this->restApiService->processGetApi($uri, $qParams);
