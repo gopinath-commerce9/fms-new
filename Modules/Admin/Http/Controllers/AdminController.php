@@ -472,7 +472,7 @@ class AdminController extends Controller
         ) ? trim($request->input('api_channel_date_end')) : date('Y-m-d', strtotime('+10 days'));
 
         $sessionUser = session('authUserData');
-        SaleOrderChannelImport::dispatch($apiChannel, $startDate, $endDate, $sessionUser['id']);
+        SaleOrderChannelImport::dispatch($apiChannel, date('Y-m-d 00:00:00', strtotime($startDate)), date('Y-m-d 23:59:59', strtotime($endDate)), $sessionUser['id']);
 
         return response()->json([ 'message' => 'The sale orders will be fetched in the background' ], 200);
 
