@@ -197,7 +197,7 @@
                                                 @foreach($saleOrders as $orderEl)
                                                     <?php
                                                     $apiChannelId = $orderEl->channel;
-                                                    $emirateId = $orderEl->region_code;
+                                                    $emirateId = $orderEl->region_id;
                                                     $shipAddress = $orderEl->shippingAddress;
                                                     $orderStatusId = $orderEl->order_status;
                                                     $pickerName = '';
