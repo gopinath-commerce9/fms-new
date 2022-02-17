@@ -195,7 +195,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                                     Log::error($this->uniqueId() . ': Could not record the processing of Sale Order #' . $saleOrderId . '. ' . $processResponse['message']);
                                 }
 
-                                Log::info($this->uniqueId() . ': Finished processing Sale Order #' . $saleOrderId . '.');
+                                /*Log::info($this->uniqueId() . ': Finished processing Sale Order #' . $saleOrderId . '.');*/
 
                             } else {
                                 Log::error($this->uniqueId() . ': Could not process Sale Order data for Sale Order #' . $saleOrderId . '. ' . $saleResponse['message']);
