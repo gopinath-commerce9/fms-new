@@ -92,7 +92,8 @@ class PickerController extends Controller
             ->where('channel', $currentChannel)
             ->whereIn('order_status', array_keys($availableStatuses));
         if ($targetOrder) {
-            $deliveryPickerData = $targetOrder->currentPicker;
+            $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+            $deliveryPickerData = $saleOrder->currentPicker;
             $canProceed = false;
             if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                 foreach ($deliveryPickerData as $dPicker) {
@@ -102,7 +103,7 @@ class PickerController extends Controller
                 }
             }
             if ($canProceed) {
-                return redirect('/picker/order-view/' . $targetOrder->id);
+                return redirect('/picker/order-view/' . $saleOrder->id);
             } else {
                 return back()
                     ->with('error', "Sale Order #" . $incrementId . " not accessible!");

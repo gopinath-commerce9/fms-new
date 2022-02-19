@@ -131,7 +131,7 @@ class SalesServiceProvider extends ServiceProvider
             foreach ($availableApiChannels as $apiChannel) {
                 SaleOrderChannelImport::dispatch($apiChannel['id'], $startDate, $endDate);
             }
-        })->everyThirtyMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
+        })->everyFiveMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
     }
 
 }

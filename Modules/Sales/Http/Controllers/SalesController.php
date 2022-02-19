@@ -77,13 +77,14 @@ class SalesController extends Controller
             ->where('channel', $currentChannel)
             ->whereIn('order_status', array_keys($availableStatuses));
         if ($targetOrder) {
+            $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
             $currentRole = null;
             if (session()->has('authUserData')) {
                 $sessionUser = session('authUserData');
                 $currentRole = $sessionUser['roleCode'];
             }
             if (!is_null($currentRole)) {
-                return redirect('/' . $currentRole . '/order-view/' . $targetOrder->id);
+                return redirect('/' . $currentRole . '/order-view/' . $saleOrder->id);
             } else {
                 return back()
                     ->with('error', "Sale Order #" . $incrementId . " not found!");

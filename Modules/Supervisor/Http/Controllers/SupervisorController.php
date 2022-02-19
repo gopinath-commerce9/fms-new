@@ -91,7 +91,8 @@ class SupervisorController extends Controller
             ->where('channel', $currentChannel)
             ->whereIn('order_status', array_keys($availableStatuses));
         if ($targetOrder) {
-            return redirect('/supervisor/order-view/' . $targetOrder->id);
+            $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+            return redirect('/supervisor/order-view/' . $saleOrder->id);
         } else {
             return back()
                 ->with('error', "Sale Order #" . $incrementId . " not found!");

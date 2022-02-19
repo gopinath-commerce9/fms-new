@@ -498,7 +498,8 @@ class AdminController extends Controller
             ->where('env', $currentEnv)
             ->where('channel', $currentChannel);
         if ($targetOrder) {
-            return redirect('/admin/order-view/' . $targetOrder->id);
+            $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+            return redirect('/admin/order-view/' . $saleOrder->id);
         } else {
             return back()
                 ->with('error', "Sale Order #" . $incrementId . " not found!");
