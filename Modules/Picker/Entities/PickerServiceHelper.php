@@ -305,6 +305,11 @@ class PickerServiceHelper
                 ];
             }
 
+            /*$statusApiResponse = $statusApiResult['response'];
+            if (!in_array('success', $statusApiResponse)) {
+
+            }*/
+
             $uri = $apiService->getRestApiUrl() . 'orders/' . $order->order_id;
             $orderApiResult = $apiService->processGetApi($uri);
             if (!$orderApiResult['status']) {
@@ -317,6 +322,35 @@ class PickerServiceHelper
             try {
 
                 $saleOrderEl = $orderApiResult['response'];
+
+                if(is_array($saleOrderEl['status_histories']) && (count($saleOrderEl['status_histories']) > 0)) {
+                    foreach ($saleOrderEl['status_histories'] as $historyEl) {
+                        $statusHistoryObj = SaleOrderStatusHistory::firstOrCreate([
+                            'order_id' => $order->id,
+                            'history_id' => $historyEl['entity_id'],
+                            'sale_order_id' => $order->order_id,
+                        ], [
+                            'name' => $historyEl['entity_name'],
+                            'status' => $historyEl['status'],
+                            'comments' => $historyEl['comment'],
+                            'status_created_at' => $historyEl['created_at'],
+                            'customer_notified' => $historyEl['is_customer_notified'],
+                            'visible_on_front' => $historyEl['is_visible_on_front'],
+                            'is_active' => 1
+                        ]);
+                    }
+                }
+
+                if (
+                    ($saleOrderEl['status'] === SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED)
+                    || ($saleOrderEl['status'] !== SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH)
+                ) {
+                    return [
+                        'status' => false,
+                        'message' => "Sale Order status could not update!"
+                    ];
+                }
+
                 $orderUpdateResult = SaleOrder::where('id', $order->id)
                     ->update([
                         'order_updated_at' => $saleOrderEl['updated_at'],
@@ -372,24 +406,6 @@ class PickerServiceHelper
                     'extra_info' => json_encode($saleOrderEl['extension_attributes']['payment_additional_info']),
                     'is_active' => 1
                 ]);
-
-                if(is_array($saleOrderEl['status_histories']) && (count($saleOrderEl['status_histories']) > 0)) {
-                    foreach ($saleOrderEl['status_histories'] as $historyEl) {
-                        $statusHistoryObj = SaleOrderStatusHistory::firstOrCreate([
-                            'order_id' => $order->id,
-                            'history_id' => $historyEl['entity_id'],
-                            'sale_order_id' => $order->order_id,
-                        ], [
-                            'name' => $historyEl['entity_name'],
-                            'status' => $historyEl['status'],
-                            'comments' => $historyEl['comment'],
-                            'status_created_at' => $historyEl['created_at'],
-                            'customer_notified' => $historyEl['is_customer_notified'],
-                            'visible_on_front' => $historyEl['is_visible_on_front'],
-                            'is_active' => 1
-                        ]);
-                    }
-                }
 
                 $saleOrderProcessHistoryAssigner = (new SaleOrderProcessHistory())->create([
                     'order_id' => $order->id,
