@@ -608,10 +608,13 @@ class SupervisorServiceHelper
                 ];
             }
 
-            /*$statusApiResponse = $statusApiResult['response'];
-            if (!in_array('success', $statusApiResponse)) {
-
-            }*/
+            $statusApiResponse = $statusApiResult['response'];
+            if (($statusApiResponse['status'] !== 'success') || ($statusApiResponse['status'] == 'failed')) {
+                return [
+                    'status' => false,
+                    'message' => $statusApiResponse['message']
+                ];
+            }
 
             $uri = $apiService->getRestApiUrl() . 'orders/' . $order->order_id;
             $orderApiResult = $apiService->processGetApi($uri);
