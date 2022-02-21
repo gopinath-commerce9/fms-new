@@ -122,7 +122,7 @@ class SalesServiceProvider extends ServiceProvider
     }
 
     private function scheduleSaleChannelImportJob(Schedule $schedule) {
-        $schedule->command('queue:work --queue=saleOrderImport')
+        $schedule->command('queue:work --queue=saleOrderImport --max-time=115')
             ->everyMinute()->runInBackground()->name('saleOrderImportQueueWorker');
         $schedule->call(function() {
             $availableApiChannels = (new RestApiService())->getAllAvailableApiChannels();
@@ -131,7 +131,7 @@ class SalesServiceProvider extends ServiceProvider
             foreach ($availableApiChannels as $apiChannel) {
                 SaleOrderChannelImport::dispatch($apiChannel['id'], $startDate, $endDate);
             }
-        })->everyFiveMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
+        })->everyThirtyMinutes()->name('saleOrderImportQueueJob')->withoutOverlapping();
     }
 
 }
