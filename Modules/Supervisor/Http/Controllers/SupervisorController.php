@@ -86,12 +86,25 @@ class SupervisorController extends Controller
         $currentChannel = $serviceHelper->getApiChannel();
         $currentEnv = $serviceHelper->getApiEnvironment();
 
-        $targetOrder = SaleOrder::firstWhere('increment_id', $incrementId)
-            ->where('env', $currentEnv)
-            ->where('channel', $currentChannel)
-            ->whereIn('order_status', array_keys($availableStatuses));
+        $targetOrderQ = SaleOrder::select('*');
+        $targetOrderQ->where('increment_id', $incrementId);
+        if (!is_null($currentEnv)) {
+            $targetOrderQ->where('env', $currentEnv);
+        }
+        if (!is_null($currentChannel)) {
+            $targetOrderQ->where('channel', $currentChannel);
+        }
+        if (count(array_keys($availableStatuses)) > 0) {
+            $targetOrderQ->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $targetOrder = $targetOrderQ->get();
         if ($targetOrder) {
             $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+            if (is_null($saleOrder)) {
+                return back()
+                    ->with('error', "Sale Order #" . $incrementId . " not found!");
+            }
             return redirect('/supervisor/order-view/' . $saleOrder->id);
         } else {
             return back()
@@ -636,6 +649,7 @@ class SupervisorController extends Controller
 
             $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
             $html2pdf->setDefaultFont($pdfDefaultFont);
+            $html2pdf->setTestTdInOnePage(false);
             $html2pdf->writeHTML($pdfContent);
 
             $pdfOutput = $html2pdf->output($pdfName, $outputMode);
@@ -702,6 +716,7 @@ class SupervisorController extends Controller
 
             $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
             $html2pdf->setDefaultFont($pdfDefaultFont);
+            $html2pdf->setTestTdInOnePage(false);
             $html2pdf->writeHTML($pdfContent);
 
             $pdfOutput = $html2pdf->output($pdfName, $outputMode);

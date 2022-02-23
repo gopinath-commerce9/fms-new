@@ -72,12 +72,25 @@ class SalesController extends Controller
         $currentChannel = $serviceHelper->getApiChannel();
         $currentEnv = $serviceHelper->getApiEnvironment();
 
-        $targetOrder = SaleOrder::firstWhere('increment_id', $incrementId)
-            ->where('env', $currentEnv)
-            ->where('channel', $currentChannel)
-            ->whereIn('order_status', array_keys($availableStatuses));
+        $targetOrderQ = SaleOrder::select('*');
+        $targetOrderQ->where('increment_id', $incrementId);
+        if (!is_null($currentEnv)) {
+            $targetOrderQ->where('env', $currentEnv);
+        }
+        if (!is_null($currentChannel)) {
+            $targetOrderQ->where('channel', $currentChannel);
+        }
+        if (count(array_keys($availableStatuses)) > 0) {
+            $targetOrderQ->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $targetOrder = $targetOrderQ->get();
         if ($targetOrder) {
             $saleOrder = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+            if (is_null($saleOrder)) {
+                return back()
+                    ->with('error', "Sale Order #" . $incrementId . " not found!");
+            }
             $currentRole = null;
             if (session()->has('authUserData')) {
                 $sessionUser = session('authUserData');
