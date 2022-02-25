@@ -107,9 +107,9 @@ class SalesServiceHelper
         return $statusListClean;
     }
 
-    public function getSupervisorsAllowedStatuses() {
+    public function getPicklistStatuses() {
         $statusList = config('fms.order_statuses');
-        $allowedStatusList = config('fms.role_allowed_statuses.supervisor');
+        $allowedStatusList = config('fms.picklist_statuses');
         $statusListClean = [];
         if(!is_null($allowedStatusList) && is_array($allowedStatusList) && (count($allowedStatusList) > 0)) {
             foreach ($allowedStatusList as $loopStatus) {
@@ -1045,7 +1045,7 @@ class SalesServiceHelper
             $orderRequest->whereIn('channel', array_keys($availableApiChannels));
         }
 
-        $availableStatuses = $this->getSupervisorsAllowedStatuses();
+        $availableStatuses = $this->getPicklistStatuses();
         $statusKeys = array_keys($availableStatuses);
         if (
             !is_null($status)

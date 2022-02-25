@@ -949,7 +949,7 @@ class SalesController extends Controller
         $serviceHelper = new SalesServiceHelper();
         $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
-        $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+        $availableStatuses = $serviceHelper->getPicklistStatuses();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
         $productCategories = $serviceHelper->getProductCategories();
 
@@ -970,6 +970,8 @@ class SalesController extends Controller
     }
 
     public function filterPicklist(Request $request) {
+
+        set_time_limit(600);
 
         $serviceHelper = new SalesServiceHelper();
 
@@ -1010,7 +1012,7 @@ class SalesController extends Controller
             && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
         ) ? trim($request->input('channel_filter')) : '';
 
-        $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+        $availableStatuses = $serviceHelper->getPicklistStatuses();
         $orderStatus = (
             $request->has('order_status_values')
             && (trim($request->input('order_status_values')) != '')

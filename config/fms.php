@@ -143,6 +143,14 @@ return [
         'AJM' => 'Ajman'
     ],*/
 
+    'picklist_statuses' => [
+        'pending',
+        'processing',
+        'being_prepared',
+        'holded',
+        'order_updated'
+    ],
+
     'role_allowed_statuses' => [
         'supervisor' => [
             'pending',

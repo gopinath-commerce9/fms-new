@@ -360,6 +360,7 @@ var SalesCustomJsBlocks = function() {
             ajax: {
                 url: targetForm.attr('action'),
                 type: targetForm.attr('method'),
+                timeout: 600000,
                 data: function(d) {
 
                     var orderStatusValues = '';
