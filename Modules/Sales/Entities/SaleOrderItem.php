@@ -81,6 +81,15 @@ class SaleOrderItem extends Model
     }
 
     /**
+     * Fetches the Product Category Details of the Sale Order Item.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function productCategory() {
+        return $this->hasOne(ProductCategory::class, 'product_id', 'product_id');
+    }
+
+    /**
      * Checks whether the given Sale Order Item is Available at the Store.
      *
      * @return bool

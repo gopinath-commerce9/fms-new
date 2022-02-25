@@ -102,6 +102,22 @@ var SalesCustomJsBlocks = function() {
 
     };
 
+    var initPicklistDeliveryDateRangePicker = function () {
+        var picklistDRPicker = $('#delivery_date_range_filter').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary'
+        }, function(start, end, label) {
+            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
+        });
+        picklistDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
+        });
+    };
+
     var posHideOnlinePayment = function (orderSource, sourceList) {
         if(orderSource == 'ELGROCER') {
             $("#paymentMethod").append(new Option("Online Payment Method", "saleschannel"));
@@ -312,6 +328,115 @@ var SalesCustomJsBlocks = function() {
         });
     };
 
+    var select2ElementsInitiator = function () {
+
+        $('#order_status_filter').select2({
+            placeholder: "Select Order Statuses",
+        });
+
+        $('#product_category_filter').select2({
+            placeholder: "Select Product Categories",
+        });
+
+    };
+
+    var initSaleOrderItemPicklistTable = function() {
+
+        var table = $('#item_picklist_filter_table');
+        var targetForm = $('form#filter_item_picklist_form');
+        var dataTable = table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [10, 25, 50, 100, 200],
+            pageLength: 25,
+            order: [[0, 'asc']],
+            searchDelay: 500,
+            processing: true,
+            language: {
+                processing: '<div class="btn btn-secondary spinner spinner-dark spinner-right">Please Wait</div>',
+            },
+            serverSide: true,
+            ajax: {
+                url: targetForm.attr('action'),
+                type: targetForm.attr('method'),
+                data: function(d) {
+
+                    var orderStatusValues = '';
+                    var productCatValues = '';
+                    $.each(targetForm.serializeArray(), function(key, val) {
+                        if (val.name === 'filter_action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            if (val.name === 'order_status_filter') {
+                                orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'product_category_filter') {
+                                productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+                            }  else {
+                                d[val.name] = val.value;
+                            }
+                        }
+                    });
+
+                    d['order_status_values'] = orderStatusValues;
+                    d['product_category_values'] = productCatValues;
+
+                    d['columnsDef'] = [
+                        'deliveryDate', 'deliveryTimeSlot', 'orderId', 'productType',
+                        'productSku', 'productName', 'quantity'
+                    ];
+
+                },
+            },
+            columns: [
+                {data: 'deliveryDate'},
+                {data: 'deliveryTimeSlot'},
+                {data: 'orderId'},
+                {data: 'productType'},
+                {data: 'productSku'},
+                {data: 'productName'},
+                {data: 'quantity'}
+            ],
+            columnDefs: [],
+        });
+
+        $('button#filter_item_picklist_filter_btn').on('click', function(e) {
+            e.preventDefault();
+            dataTable.table().draw();
+        });
+
+        $('button#filter_item_picklist_reset_btn').on('click', function(e) {
+            e.preventDefault();
+            $('.datatable-input').each(function() {
+                $(this).val('');
+            });
+            dataTable.table().draw();
+        });
+
+        $('button#filter_item_picklist_pdf_btn').on('click', function(e) {
+            e.preventDefault();
+            getItemPicklistPdf();
+        });
+
+    };
+
+    var getItemPicklistPdf = function () {
+        var targetForm = $('#filter_item_picklist_form');
+        $('#filter_action').val('pdf_generator');
+        var orderStatusValues = '';
+        var productCatValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'order_status_filter') {
+                orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'product_category_filter') {
+                productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#order_status_values').val(orderStatusValues);
+        $('#product_category_values').val(productCatValues);
+        targetForm.submit();
+    };
+
     var showAlertMessage = function(message) {
         $("div.custom_alert_trigger_messages_area")
             .html('<div class="alert alert-custom alert-dark alert-light-dark fade show" role="alert">' +
@@ -455,6 +580,11 @@ var SalesCustomJsBlocks = function() {
         },
         itemsReportPage: function(hostUrl) {
             initFilterOrderItemDateRangePicker();
+        },
+        picklistPage: function(hostUrl){
+            initPicklistDeliveryDateRangePicker();
+            select2ElementsInitiator();
+            initSaleOrderItemPicklistTable();
         },
     };
 

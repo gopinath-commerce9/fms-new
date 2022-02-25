@@ -40,4 +40,8 @@ Route::prefix('sales')->middleware([
         ->name('sales.orderItemsReport');
     Route::post('/filter-order-items', 'SalesController@filterOrderItemsReport')
         ->name('sales.filterOrderItemsReport');
+    Route::get('/picklist', 'SalesController@picklist')
+        ->name('sales.picklist');
+    Route::post('/filter-picklist', 'SalesController@filterPicklist')
+        ->name('sales.filterPicklist');
 });

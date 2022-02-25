@@ -107,6 +107,20 @@ class SalesServiceHelper
         return $statusListClean;
     }
 
+    public function getSupervisorsAllowedStatuses() {
+        $statusList = config('fms.order_statuses');
+        $allowedStatusList = config('fms.role_allowed_statuses.supervisor');
+        $statusListClean = [];
+        if(!is_null($allowedStatusList) && is_array($allowedStatusList) && (count($allowedStatusList) > 0)) {
+            foreach ($allowedStatusList as $loopStatus) {
+                $statusKey = strtolower(str_replace(' ', '_', trim($loopStatus)));
+                $statusValue = ucwords(str_replace('_', ' ', trim($statusKey)));
+                $statusListClean[$statusKey] = (array_key_exists($statusKey, $statusList) ? $statusList[$statusKey] : $statusValue);
+            }
+        }
+        return $statusListClean;
+    }
+
     public function getDeliveryTimeSlots() {
         $statusList = $this->getAvailableStatuses();
         $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
@@ -120,6 +134,21 @@ class SalesServiceHelper
             }
         }
         return $timeSlotArray;
+    }
+
+    public function getProductCategories() {
+        $categories = ProductCategory::select('category_id', 'category_name', DB::raw('count(*) as total_categories'))
+            ->groupBy('category_id')
+            ->get();
+        $categoryArray = [
+            '0' => 'UnCat'
+        ];
+        if ($categories && (count($categories) > 0)) {
+            foreach ($categories as $categoryEl) {
+                $categoryArray[$categoryEl->category_id] = $categoryEl->category_name;
+            }
+        }
+        return $categoryArray;
     }
 
     public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
@@ -995,6 +1024,91 @@ class SalesServiceHelper
         }
 
         return $finalArray;
+
+    }
+
+    public function getSaleOrderPickList($region = '', $apiChannel = '', $status = [], $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $orderRequest = SaleOrder::select('*');
+
+        $emirates = $this->getAvailableRegionsList();
+        if (!is_null($region) && (trim($region) != '')) {
+            $orderRequest->where('region_id', trim($region));
+        } else {
+            $orderRequest->whereIn('region_id', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
+            $orderRequest->where('channel', trim($apiChannel));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $availableStatuses = $this->getSupervisorsAllowedStatuses();
+        $statusKeys = array_keys($availableStatuses);
+        if (
+            !is_null($status)
+            && is_array($status)
+            && (count($status) > 0)
+            && (array_intersect($status, $statusKeys) == $status)
+        ) {
+            $orderRequest->whereIn('order_status', $status);
+        } else {
+            $orderRequest->whereIn('order_status', $statusKeys);
+        }
+
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            $fromDate = '';
+            $toDate = '';
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+            $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+        }
+
+        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        $orderRequest->orderBy('delivery_date', 'asc');
+        $orderRequest->orderBy('delivery_time_slot', 'asc');
+        $orderRequest->orderBy('increment_id', 'asc');
+
+        return $orderRequest->get();
+
+    }
+
+    public function getCategoryByProductId($productId = '', $env = '', $channel = '') {
+
+        if (is_null($productId) || (trim($productId) == '') || !is_numeric(trim($productId))) {
+            return null;
+        }
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'parentcatid/' . trim($productId);
+        $apiResult = $apiService->processGetApi($uri);
+        if (!$apiResult['status']) {
+            return null;
+        }
+
+        if (!is_array($apiResult['response']) || (count($apiResult['response']) == 0)) {
+            return null;
+        }
+
+        return $apiResult['response'][0];
 
     }
 

@@ -113,6 +113,17 @@ return [
             'active' => false,
             'children' => null,
         ],
+        [
+            'name' => 'Sales Picklist',
+            'path' => '/sales/picklist',
+            'icon' => 'fas fa-list-ol',
+            'customIcon' => false,
+            'toolTip' => 'Sales Picklist',
+            'permission_type' => 'role',
+            'permission' => ['admin', 'supervisor'],
+            'active' => true,
+            'children' => null,
+        ],
     ],
 
 ];

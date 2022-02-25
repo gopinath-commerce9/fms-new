@@ -5,12 +5,16 @@ namespace Modules\Sales\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Sales\Entities\ProductCategory;
 use Modules\Sales\Entities\SalesServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
 use Modules\UserRole\Entities\UserRole;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Spipu\Html2Pdf\Exception\ExceptionFormatter;
+use Spipu\Html2Pdf\Exception\Html2PdfException;
+use Spipu\Html2Pdf\Html2Pdf;
 
 class SalesController extends Controller
 {
@@ -934,6 +938,322 @@ class SalesController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+
+    }
+
+    public function picklist(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Sales Picklist';
+
+        $serviceHelper = new SalesServiceHelper();
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+        $productCategories = $serviceHelper->getProductCategories();
+
+        $todayDate = date('Y-m-d');
+
+        return view('sales::picklist', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'availableStatuses',
+            'deliveryTimeSlots',
+            'productCategories',
+            'serviceHelper'
+        ));
+
+    }
+
+    public function filterPicklist(Request $request) {
+
+        $serviceHelper = new SalesServiceHelper();
+
+        $availableActions = ['datatable', 'pdf_generator'];
+        $methodAction = (
+            $request->has('filter_action')
+            && (trim($request->input('filter_action')) != '')
+            && in_array(trim($request->input('filter_action')), $availableActions)
+        ) ? trim($request->input('filter_action')) : 'datatable';
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+        $orderStatus = (
+            $request->has('order_status_values')
+            && (trim($request->input('order_status_values')) != '')
+        ) ? explode(',', trim($request->input('order_status_values'))) : [];
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
+        $productCategories = $serviceHelper->getProductCategories();
+        $categoryFilter = (
+            $request->has('product_category_values')
+            && (trim($request->input('product_category_values')) != '')
+        ) ? explode(',', trim($request->input('product_category_values'))) : [];
+
+        $filteredOrders = $serviceHelper->getSaleOrderPickList($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
+        if ($filteredOrders) {
+            if ($methodAction == 'datatable') {
+
+                $filteredOrderData = [];
+                $totalRec = 0;
+                $collectRecStart = $dtStart;
+                $collectRecEnd = $collectRecStart + $dtPageLength;
+                $currentRec = -1;
+                foreach ($filteredOrders as $record) {
+
+                    $record->orderItems;
+                    if ($record->orderItems && (count($record->orderItems) > 0)) {
+                        $orderItems = $record->orderItems;
+                        foreach ($orderItems as $orderItemEl) {
+
+                            $productId = $orderItemEl->product_id;
+                            $productCat = null;
+                            if ($orderItemEl->productCategory) {
+                                $productCat = $orderItemEl->productCategory;
+                            }
+
+                            if (is_null($productCat)) {
+                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                if (!is_null($catApiResult)) {
+                                    $productCat = ProductCategory::firstOrCreate([
+                                        'env' => $record->env,
+                                        'channel' => $record->channel,
+                                        'product_id' => $productId
+                                    ], [
+                                        'product_sku' => $catApiResult['product_sku'],
+                                        'product_name' => $catApiResult['product_name'],
+                                        'category_id' => $catApiResult['category_id'],
+                                        'category_name' => $catApiResult['category_name']
+                                    ]);
+                                }
+                            }
+
+                            $productCatIdFinal = '0';
+                            $productCatFinal = 'UnCat';
+                            if (!is_null($productCat)) {
+                                $productCatIdFinal = strval($productCat->category_id);
+                                $productCatFinal = strval($productCat->category_name);
+                            }
+
+                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+
+                                $totalRec++;
+                                $currentRec++;
+                                if (($currentRec >= $collectRecStart) && ($currentRec < $collectRecEnd)) {
+
+                                    $filteredOrderData[] = [
+                                        'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
+                                        'deliveryTimeSlot' => $record->delivery_time_slot,
+                                        'orderId' => $record->increment_id,
+                                        'productType' => $productCatFinal,
+                                        'productSku' => $orderItemEl->item_sku,
+                                        'productName' => $orderItemEl->item_name,
+                                        'quantity' => $orderItemEl->qty_ordered,
+                                    ];
+
+                                }
+
+                            }
+
+                        }
+                    }
+
+                }
+
+                $returnData = [
+                    'draw' => $dtDraw,
+                    'recordsTotal' => $totalRec,
+                    'recordsFiltered' => $totalRec,
+                    'data' => $filteredOrderData
+                ];
+                return response()->json($returnData, 200);
+
+            } elseif ($methodAction == 'pdf_generator') {
+
+                $filteredOrderData = [];
+                $filteredOrderTotalWeight = [];
+
+                foreach ($filteredOrders as $record) {
+
+                    $record->orderItems;
+                    $record->shippingAddress;
+
+                    if ($record->orderItems && (count($record->orderItems) > 0)) {
+
+                        $orderItems = $record->orderItems;
+                        foreach ($orderItems as $orderItemEl) {
+
+                            $productId = $orderItemEl->product_id;
+                            $productCat = null;
+                            if ($orderItemEl->productCategory) {
+                                $productCat = $orderItemEl->productCategory;
+                            }
+
+                            if (is_null($productCat)) {
+                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                if (!is_null($catApiResult)) {
+                                    $productCat = ProductCategory::firstOrCreate([
+                                        'env' => $record->env,
+                                        'channel' => $record->channel,
+                                        'product_id' => $productId
+                                    ], [
+                                        'product_sku' => $catApiResult['product_sku'],
+                                        'product_name' => $catApiResult['product_name'],
+                                        'category_id' => $catApiResult['category_id'],
+                                        'category_name' => $catApiResult['category_name']
+                                    ]);
+                                }
+                            }
+
+                            $productCatIdFinal = '0';
+                            $productCatFinal = 'UnCat';
+                            if (!is_null($productCat)) {
+                                $productCatIdFinal = strval($productCat->category_id);
+                                $productCatFinal = strval($productCat->category_name);
+                            }
+
+                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+
+                                $productWeight = 0;
+                                if (array_key_exists($productCatIdFinal, $filteredOrderTotalWeight)) {
+                                    $productWeight = (float) $filteredOrderTotalWeight[$productCatIdFinal]['weight'];
+                                }
+                                $filteredOrderTotalWeight[$productCatIdFinal]['id'] = $productCatIdFinal;
+                                $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
+                                $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
+
+                                $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
+                                    'deliveryDate' => $record->delivery_date,
+                                    'deliveryTimeSlot' => $record->delivery_time_slot,
+                                    'orderId' => $record->order_id,
+                                    'orderNumber' => $record->increment_id,
+                                    'productType' => $productCatFinal,
+                                    'productSku' => $orderItemEl->item_sku,
+                                    'productName' => $orderItemEl->item_name,
+                                    'productInfo' => $orderItemEl->item_info,
+                                    'quantity' => $orderItemEl->qty_ordered,
+                                    'sellingUnit' => $orderItemEl->selling_unit
+                                ];
+
+                                if ($record->shippingAddress) {
+                                    $shippingAddress = $record->shippingAddress;
+                                    $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [
+                                        'firstName' => $shippingAddress['first_name'],
+                                        'lastName' => $shippingAddress['last_name'],
+                                        'address1' => $shippingAddress['address_1'],
+                                        'address2' => $shippingAddress['address_2'],
+                                        'address3' => $shippingAddress['address_3'],
+                                        'city' => $shippingAddress['city'],
+                                        'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                                        'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                                        'countryId' => $shippingAddress['country_id'],
+                                        'postCode' => $shippingAddress['post_code'],
+                                        'contactNumber' => $shippingAddress['contact_number'],
+                                    ];
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                try {
+
+                    $pdfOrientation = 'P';
+                    $pdfPaperSize = 'A4';
+                    $pdfUseLang = 'en';
+                    $pdfDefaultFont = 'Arial';
+
+                    $path = public_path('ktmt/media/logos/aanacart-favicon-final.png');
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+                    $fulfilledBy = config('fms.fulfillment.done_by');
+
+                    $pdfContent = view('sales::print-picklist', compact('filteredOrderData', 'filteredOrderTotalWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();
+
+                    $pdfName = "print-sales-picklist-" . date('Ymd-His') . ".pdf";
+                    $outputMode = 'D';
+
+                    $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
+                    $html2pdf->setDefaultFont($pdfDefaultFont);
+                    $html2pdf->setTestTdInOnePage(false);
+                    $html2pdf->writeHTML($pdfContent);
+                    $pdfOutput = $html2pdf->output($pdfName, $outputMode);
+
+                } catch (Html2PdfException $e) {
+                    $html2pdf->clean();
+                    $formatter = new ExceptionFormatter($e);
+                    return back()
+                        ->with('error', $formatter->getMessage());
+                }
+
+            }
+        } else {
+            if ($methodAction == 'datatable') {
+                $returnData = [
+                    'draw' => $dtDraw,
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'data' => []
+                ];
+                return response()->json($returnData, 200);
+            } elseif ($methodAction == 'pdf_generator') {
+                return back()
+                    ->with('error', 'No Data to generate Picklist PDF file!');
+            }
+        }
 
     }
 
