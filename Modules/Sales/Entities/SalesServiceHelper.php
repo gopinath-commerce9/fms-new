@@ -125,12 +125,15 @@ class SalesServiceHelper
         $statusList = $this->getAvailableStatuses();
         $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
             ->groupBy('delivery_time_slot')
+            ->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc')
             ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
             ->get();
         $timeSlotArray = [];
         if ($orders && (count($orders) > 0)) {
             foreach ($orders as $orderEl) {
-                $timeSlotArray[] = $orderEl->delivery_time_slot;
+                if (trim($orderEl->delivery_time_slot) != '') {
+                    $timeSlotArray[] = $orderEl->delivery_time_slot;
+                }
             }
         }
         return $timeSlotArray;
@@ -198,11 +201,16 @@ class SalesServiceHelper
             $orderRequest->where('delivery_date', date('Y-m-d', strtotime(trim($deliveryDate))));
         }
 
-        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+        $givenTimeSlots = $this->getDeliveryTimeSlots();
+        if (!is_null($timeSlot) && (trim($timeSlot) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlot), $givenTimeSlots)) {
             $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        } elseif (count($givenTimeSlots) > 0) {
+            $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
         }
 
         $orderRequest->orderBy('delivery_date', 'asc');
+        $orderRequest->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc');
+        $orderRequest->orderBy('order_id', 'asc');
 
         return $orderRequest->get();
 
@@ -1073,12 +1081,15 @@ class SalesServiceHelper
             $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
         }
 
-        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+        $givenTimeSlots = $this->getDeliveryTimeSlots();
+        if (!is_null($timeSlot) && (trim($timeSlot) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlot), $givenTimeSlots)) {
             $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        } elseif (count($givenTimeSlots) > 0) {
+            $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
         }
 
         $orderRequest->orderBy('delivery_date', 'asc');
-        $orderRequest->orderBy('delivery_time_slot', 'asc');
+        $orderRequest->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc');
         $orderRequest->orderBy('increment_id', 'asc');
 
         return $orderRequest->get();

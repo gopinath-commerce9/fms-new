@@ -129,12 +129,15 @@ class UserRoleServiceHelper
         $statusList = $this->getPickersAllowedStatuses();
         $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
             ->groupBy('delivery_time_slot')
+            ->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc')
             ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
             ->get();
         $timeSlotArray = [];
         if ($orders && (count($orders) > 0)) {
             foreach ($orders as $orderEl) {
-                $timeSlotArray[] = $orderEl->delivery_time_slot;
+                if (trim($orderEl->delivery_time_slot) != '') {
+                    $timeSlotArray[] = $orderEl->delivery_time_slot;
+                }
             }
         }
         return $timeSlotArray;

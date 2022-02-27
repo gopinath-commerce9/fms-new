@@ -105,6 +105,24 @@ class DriverApiServiceHelper
         return $statusListClean;
     }
 
+    public function getDeliveryTimeSlots() {
+        $statusList = $this->getDriversAllowedStatuses();
+        $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->groupBy('delivery_time_slot')
+            ->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc')
+            ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
+            ->get();
+        $timeSlotArray = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                if (trim($orderEl->delivery_time_slot) != '') {
+                    $timeSlotArray[] = $orderEl->delivery_time_slot;
+                }
+            }
+        }
+        return $timeSlotArray;
+    }
+
     public function isValidApiUser($userId = 0) {
 
         if (is_null($userId) || !is_numeric($userId) || ((int)$userId <= 0)) {
@@ -213,11 +231,18 @@ class DriverApiServiceHelper
             $orderRequest->where('delivery_date', date('Y-m-d', strtotime(trim($deliveryDate))));
         }
 
-        if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
+        $givenTimeSlots = $this->getDeliveryTimeSlots();
+        if (!is_null($timeSlot) && (trim($timeSlot) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlot), $givenTimeSlots)) {
             $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        } elseif (count($givenTimeSlots) > 0) {
+            $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
         }
 
-        return $orderRequest->orderBy('delivery_date', 'asc')->get();
+        $orderRequest->orderBy('delivery_date', 'asc');
+        $orderRequest->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc');
+        $orderRequest->orderBy('order_id', 'asc');
+
+        return $orderRequest->get();
 
     }
 
