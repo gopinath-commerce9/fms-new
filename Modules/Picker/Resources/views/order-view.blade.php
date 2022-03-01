@@ -109,7 +109,7 @@
                                     <div class="d-flex flex-column flex-root">
                                         <span class="font-weight-bolder mb-2">Delivery Info.</span>
                                         <span class="opacity-70">
-                                            Delivery Date :<?php if(isset($saleOrderData['delivery_date'])){ echo $saleOrderData['delivery_date']; } ?><br>
+                                            Delivery Date :<?php if(isset($saleOrderData['delivery_date'])){ echo date('d-m-Y', strtotime($saleOrderData['delivery_date'])); } ?><br>
                                             Delivery Time Slot :<?php if(isset($saleOrderData['delivery_time_slot'])){ echo $saleOrderData['delivery_time_slot']; }?>
                                         </span>
                                     </div>

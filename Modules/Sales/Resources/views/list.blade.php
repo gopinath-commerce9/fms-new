@@ -87,7 +87,8 @@
 
                                     <div class="form-group row">
                                         <div class="col-lg-4">
-                                            <input type="text" class="form-control datatable-input" id="delivery_date_filter" name="delivery_date_filter" readonly placeholder="Select Delivery Date"/>
+                                            <input type="text" class="form-control datatable-input" id="delivery_date_picker" name="delivery_date_picker" readonly placeholder="Select Delivery Date"/>
+                                            <input type="hidden" name="delivery_date_filter" id="delivery_date_filter" value="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="col-lg-4">
                                             <select class="form-control datatable-input" id="delivery_slot_filter" name="delivery_slot_filter" >

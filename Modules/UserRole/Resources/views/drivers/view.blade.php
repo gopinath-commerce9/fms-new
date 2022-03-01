@@ -230,7 +230,7 @@
                                                         <td>{{ $availableApiChannels[$apiChannelId]['name'] }}</td>
                                                         <td>{{ $emirates[$emirateId] }}</td>
                                                         <td>{{ $shipAddress->first_name . ' ' . $shipAddress->last_name }}</td>
-                                                        <td>{{ $orderEl->delivery_date }}</td>
+                                                        <td>{{ date('d-m-Y', strtotime($orderEl->delivery_date)) }}</td>
                                                         <td>{{ $orderEl->delivery_time_slot }}</td>
                                                         <td>
                                                             @if(($orderPickerId == 0) || ($orderPickerId == $givenUserData->id))
@@ -309,10 +309,10 @@
 
 @section('custom-js-section')
 
-    <script src="{{ asset('js/supervisor.js') }}"></script>
+    <script src="{{ asset('js/role-drivers.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            SupervisorCustomJsBlocks.driverViewPage('{{ url('/') }}');
+            RoleDriversCustomJsBlocks.viewPage('{{ url('/') }}');
         });
     </script>
 

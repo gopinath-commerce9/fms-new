@@ -422,7 +422,7 @@ class UserRoleController extends Controller
                 'pickerId' => $record['pickerId'],
                 'picker' => $record['picker'],
                 'active' => $record['active'],
-                'date' => $record['date'],
+                'date' => date('d-m-Y', strtotime($record['date'])),
                 'assignedOrders' => $record['assignedOrders'],
                 'pickedOrders' => $record['pickedOrders'],
                 'holdedOrders' => $record['holdedOrders']
@@ -598,7 +598,7 @@ class UserRoleController extends Controller
                     'driverId' => $record['driverId'],
                     'driver' => $record['driver'],
                     'active' => $record['active'],
-                    'date' => $record['date'],
+                    'date' => date('d-m-Y', strtotime($record['date'])),
                     'assignedOrders' => $record['assignedOrders'],
                     'deliveryOrders' => $record['deliveryOrders'],
                     'deliveredOrders' => $record['deliveredOrders'],
@@ -642,7 +642,7 @@ class UserRoleController extends Controller
                         fputcsv($file, [
                             $row['driverId'],
                             $row['driver'],
-                            $row['date'],
+                            date('d-m-Y', strtotime($row['date'])),
                             $row['orderId'],
                             $row['orderStatus'],
                             $row['paymentMethod']

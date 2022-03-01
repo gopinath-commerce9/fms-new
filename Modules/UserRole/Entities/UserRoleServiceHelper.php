@@ -468,7 +468,7 @@ class UserRoleServiceHelper
                                 $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))][] = [
                                     'driverId' => $userEl->id,
                                     'driver' => $userEl->name,
-                                    'date' => date('d-m-Y', strtotime($processHistory->done_at)),
+                                    'date' => date('Y-m-d', strtotime($processHistory->done_at)),
                                     'orderId' => "#" . $saleOrderData['increment_id'],
                                     'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
                                     'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',

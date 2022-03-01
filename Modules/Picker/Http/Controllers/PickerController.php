@@ -224,7 +224,7 @@ class PickerController extends Controller
                 $tempRecord['region'] = $emirates[$emirateId];
                 $shipAddress = $record->shippingAddress;
                 $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
-                $tempRecord['deliveryDate'] = $record->delivery_date;
+                $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record->delivery_date));
                 $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
                 $tempRecord['deliveryPickerTime'] = '';
                 $orderStatusId = $record->order_status;

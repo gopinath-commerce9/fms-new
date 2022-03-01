@@ -83,7 +83,7 @@
                             <td id="order-details-table-date-data" style="width: 50%">
                                 <div id="order-details-table-date-data-label-div" style="text-align: center;">
                                     <label id="order-details-region-date-label-label" class="highlight-info-label" style="font-style: normal; font-weight: normal;">
-                                        <span class="font-weight-bolder mb-2">Expected Delivery : <?= date("F j, Y", strtotime($orderData['delivery_date'])) ?></span>
+                                        <span class="font-weight-bolder mb-2">Expected Delivery : <?= date("d-m-Y", strtotime($orderData['delivery_date'])) ?></span>
                                     </label>
                                 </div>
                             </td>

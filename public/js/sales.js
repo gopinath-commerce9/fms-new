@@ -14,11 +14,37 @@ var SalesCustomJsBlocks = function() {
                 rightArrow: '<i class="la la-angle-right"></i>'
             }
         }
-        $('#delivery_date_filter').datepicker({
+        $('#delivery_date_picker').datepicker({
             rtl: KTUtil.isRTL(),
             todayHighlight: true,
             orientation: "bottom left",
-            templates: arrows
+            templates: arrows,
+            format: {
+                toDisplay: function (date, format, language) {
+                    var dObj = new Date(date);
+                    var dayValue = dObj.getDate();
+                    var dayStr = (dayValue <= 9) ? '0' + dayValue : dayValue;
+                    var monthValue = dObj.getMonth() + 1;
+                    var monthStr = (monthValue <= 9) ? '0' + monthValue : monthValue;
+                    var yearString = dObj.getFullYear();
+                    var dateString = '' + yearString + '-' + monthStr + '-' + dayStr;
+                    var dateStringDisplay = '' + dayStr + '-' + monthStr + '-' + yearString;
+                    $('#delivery_date_filter').val(dateString);
+                    return dateStringDisplay;
+                },
+                toValue: function (date, format, language) {
+                    var dObj = new Date(date);
+                    var dayValue = dObj.getDate();
+                    var dayStr = (dayValue <= 9) ? '0' + dayValue : dayValue;
+                    var monthValue = dObj.getMonth() + 1;
+                    var monthStr = (monthValue <= 9) ? '0' + monthValue : monthValue;
+                    var yearString = dObj.getFullYear();
+                    var dateString = '' + yearString + '-' + monthStr + '-' + dayStr;
+                    var dateStringDisplay = '' + dayStr + '-' + monthStr + '-' + yearString;
+                    $('#delivery_date_filter').val(dateString);
+                    return dateStringDisplay;
+                }
+            }
         });
     };
 
@@ -100,22 +126,6 @@ var SalesCustomJsBlocks = function() {
             dataTable.table().draw();
         });
 
-    };
-
-    var initPicklistDeliveryDateRangePicker = function () {
-        var picklistDRPicker = $('#delivery_date_range_filter').daterangepicker({
-            buttonClasses: ' btn',
-            applyClass: 'btn-primary',
-            cancelClass: 'btn-secondary'
-        }, function(start, end, label) {
-            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
-            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
-        });
-        picklistDRPicker.on('show.daterangepicker', function(ev, picker) {
-            //do something, like clearing an input
-            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
-            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
-        });
     };
 
     var posHideOnlinePayment = function (orderSource, sourceList) {
@@ -316,7 +326,10 @@ var SalesCustomJsBlocks = function() {
         var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
             buttonClasses: ' btn',
             applyClass: 'btn-primary',
-            cancelClass: 'btn-secondary'
+            cancelClass: 'btn-secondary',
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
         }, function(start, end, label) {
             $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
             $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
@@ -338,6 +351,25 @@ var SalesCustomJsBlocks = function() {
             placeholder: "Select Product Categories",
         });
 
+    };
+
+    var initPicklistDeliveryDateRangePicker = function () {
+        var picklistDRPicker = $('#delivery_date_range_filter').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary',
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
+        }, function(start, end, label) {
+            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
+        });
+        picklistDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
+        });
     };
 
     var initSaleOrderItemPicklistTable = function() {

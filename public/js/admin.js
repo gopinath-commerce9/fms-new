@@ -5,7 +5,10 @@ var AdminCustomJsBlocks = function() {
         var apiDRPicker = $('#api_channel_dates').daterangepicker({
             buttonClasses: ' btn',
             applyClass: 'btn-primary',
-            cancelClass: 'btn-secondary'
+            cancelClass: 'btn-secondary',
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
         }, function(start, end, label) {
             $('input#api_channel_date_start').val(start.format('YYYY-MM-DD'));
             $('input#api_channel_date_end').val(end.format('YYYY-MM-DD'));
@@ -44,7 +47,10 @@ var AdminCustomJsBlocks = function() {
         var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
             buttonClasses: ' btn',
             applyClass: 'btn-primary',
-            cancelClass: 'btn-secondary'
+            cancelClass: 'btn-secondary',
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
         }, function(start, end, label) {
             $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
             $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));

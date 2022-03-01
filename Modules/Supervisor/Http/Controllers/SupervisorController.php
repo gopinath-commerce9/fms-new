@@ -202,7 +202,7 @@ class SupervisorController extends Controller
                     $tempRecord['region'] = $emirates[$emirateId];
                     $shipAddress = $record->shippingAddress;
                     $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
-                    $tempRecord['deliveryDate'] = $record->delivery_date;
+                    $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record->delivery_date));
                     $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
                     $tempRecord['deliveryPicker'] = '';
                     $tempRecord['deliveryPickerTime'] = '';
@@ -270,7 +270,7 @@ class SupervisorController extends Controller
             }
 
             foreach ($chartData as $dateKey => $dateData) {
-                $xAxisData[] = $dateKey;
+                $xAxisData[] = date('d-m-Y', strtotime($dateKey));
                 foreach ($seriesNameArray as $statusKey => $statusValue) {
                     $seriesPointsArray[$statusKey][] = (array_key_exists($statusKey, $dateData)) ? $dateData[$statusKey]['total_orders'] : 0;
                 }
@@ -304,7 +304,7 @@ class SupervisorController extends Controller
                 }
             }
             foreach ($chartData as $dateKey => $dateData) {
-                $xAxisData[] = $dateKey;
+                $xAxisData[] = date('d-m-Y', strtotime($dateKey));;
                 foreach ($seriesNameArray as $currencyKey => $currencyData) {
                     $seriesPointsArray[$currencyKey][] = (array_key_exists($currencyKey, $dateData)) ? $dateData[$currencyKey]['total_sum'] : 0;
                 }

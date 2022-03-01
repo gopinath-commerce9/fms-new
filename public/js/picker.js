@@ -14,11 +14,37 @@ var PickerCustomJsBlocks = function() {
                 rightArrow: '<i class="la la-angle-right"></i>'
             }
         }
-        $('#delivery_date_filter').datepicker({
+        $('#delivery_date_picker').datepicker({
             rtl: KTUtil.isRTL(),
             todayHighlight: true,
             orientation: "bottom left",
-            templates: arrows
+            templates: arrows,
+            format: {
+                toDisplay: function (date, format, language) {
+                    var dObj = new Date(date);
+                    var dayValue = dObj.getDate();
+                    var dayStr = (dayValue <= 9) ? '0' + dayValue : dayValue;
+                    var monthValue = dObj.getMonth() + 1;
+                    var monthStr = (monthValue <= 9) ? '0' + monthValue : monthValue;
+                    var yearString = dObj.getFullYear();
+                    var dateString = '' + yearString + '-' + monthStr + '-' + dayStr;
+                    var dateStringDisplay = '' + dayStr + '-' + monthStr + '-' + yearString;
+                    $('#delivery_date_filter').val(dateString);
+                    return dateStringDisplay;
+                },
+                toValue: function (date, format, language) {
+                    var dObj = new Date(date);
+                    var dayValue = dObj.getDate();
+                    var dayStr = (dayValue <= 9) ? '0' + dayValue : dayValue;
+                    var monthValue = dObj.getMonth() + 1;
+                    var monthStr = (monthValue <= 9) ? '0' + monthValue : monthValue;
+                    var yearString = dObj.getFullYear();
+                    var dateString = '' + yearString + '-' + monthStr + '-' + dayStr;
+                    var dateStringDisplay = '' + dayStr + '-' + monthStr + '-' + yearString;
+                    $('#delivery_date_filter').val(dateString);
+                    return dateStringDisplay;
+                }
+            }
         });
     };
 

@@ -221,7 +221,7 @@ class AdminController extends Controller
             }
 
             foreach ($chartData as $dateKey => $dateData) {
-                $xAxisData[] = $dateKey;
+                $xAxisData[] = date('d-m-Y', strtotime($dateKey));
                 foreach ($seriesNameArray as $statusKey => $statusValue) {
                     $seriesPointsArray[$statusKey][] = (array_key_exists($statusKey, $dateData)) ? $dateData[$statusKey]['total_orders'] : 0;
                 }
@@ -255,7 +255,7 @@ class AdminController extends Controller
                 }
             }
             foreach ($chartData as $dateKey => $dateData) {
-                $xAxisData[] = $dateKey;
+                $xAxisData[] = date('d-m-Y', strtotime($dateKey));
                 foreach ($seriesNameArray as $currencyKey => $currencyData) {
                     $seriesPointsArray[$currencyKey][] = (array_key_exists($currencyKey, $dateData)) ? $dateData[$currencyKey]['total_sum'] : 0;
                 }
