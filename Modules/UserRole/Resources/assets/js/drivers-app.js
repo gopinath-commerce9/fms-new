@@ -39,7 +39,7 @@ var RoleDriversCustomJsBlocks = function() {
         apiDRPicker.on('show.daterangepicker', function(ev, picker) {
             //do something, like clearing an input
             $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
-            $('input#delivery_date_end_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
         });
     };
 
@@ -65,7 +65,11 @@ var RoleDriversCustomJsBlocks = function() {
                 type: targetForm.attr('method'),
                 data: function(d) {
                     $.each(targetForm.serializeArray(), function(key, val) {
-                        d[val.name] = val.value;
+                        if (val.name === 'filter_action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            d[val.name] = val.value;
+                        }
                     });
                     d['columnsDef'] = [
                         'driverId', 'driver', 'active', 'date', 'assignedOrders', 'deliveryOrders',
@@ -106,6 +110,17 @@ var RoleDriversCustomJsBlocks = function() {
             dataTable.table().draw();
         });
 
+        $('button#filter_driver_report_excel_btn').on('click', function(e) {
+            e.preventDefault();
+            getDriverReportExcel();
+        });
+
+    };
+
+    var getDriverReportExcel = function () {
+        var targetForm = $('#filter_driver_report_form');
+        $('#filter_action').val('excel_sheet');
+        targetForm.submit();
     };
 
     return {

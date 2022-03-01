@@ -324,7 +324,7 @@ var SalesCustomJsBlocks = function() {
         filterDRPicker.on('show.daterangepicker', function(ev, picker) {
             //do something, like clearing an input
             $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
-            $('input#delivery_date_end_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
         });
     };
 

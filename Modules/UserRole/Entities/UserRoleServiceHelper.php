@@ -392,6 +392,113 @@ class UserRoleServiceHelper
 
     }
 
+    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '') {
+
+        $statsList = [];
+
+        $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
+        $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
+        $driverClean = (!is_null($driver) && (trim($driver) != '')) ? trim($driver) : null;
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $fromDate = null;
+        $toDate = null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+        }
+
+        $availableStatuses = $this->getAvailableStatuses();
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+        if(count($drivers->mappedUsers) > 0) {
+            foreach($drivers->mappedUsers as $userEl) {
+
+                if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0)) {
+
+                    foreach ($userEl->saleOrderProcessHistory as $processHistory) {
+                        if ($processHistory->saleOrder) {
+
+                            $currentSaleOrder = $processHistory->saleOrder;
+                            $canProceed = true;
+
+                            if (!is_null($regionClean) && ($currentSaleOrder->region_id != $regionClean)) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($apiChannelClean) && ($currentSaleOrder->channel != $apiChannelClean)) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($driverClean) && ($userEl->id != $driverClean)) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($processHistory->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($processHistory->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if ($canProceed) {
+
+                                $currentSaleOrder->paymentData;
+                                $saleOrderData = $currentSaleOrder->toArray();
+                                $paymentMethodTitle = '';
+                                $payInfoLoopTargetLabel = 'method_title';
+                                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+                                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+                                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                                $paymentMethodTitle = $paymentInfoEl['value'];
+                                            }
+                                        }
+                                    }
+                                }
+
+                                $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))][] = [
+                                    'driverId' => $userEl->id,
+                                    'driver' => $userEl->name,
+                                    'date' => date('d-m-Y', strtotime($processHistory->done_at)),
+                                    'orderId' => "#" . $saleOrderData['increment_id'],
+                                    'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
+                                    'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
+                                ];
+
+                            }
+
+                        }
+                    }
+
+                }
+
+            }
+
+            $tempStatsList = $statsList;
+            $statsList = [];
+            foreach ($tempStatsList as $pickerKey => $dateData) {
+                foreach ($dateData as $dateKey => $reportData) {
+                    foreach ($reportData as $recordKey => $recordData) {
+                        $statsList[] = $recordData;
+                    }
+                }
+            }
+
+        }
+
+        return $statsList;
+
+    }
+
     public function getFileUrl($path = '') {
         return $this->baseService->getFileUrl($path);
     }

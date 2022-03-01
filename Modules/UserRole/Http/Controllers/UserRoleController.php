@@ -523,7 +523,16 @@ class UserRoleController extends Controller
 
     public function driversReportFilter(Request $request) {
 
+        set_time_limit(600);
+
         $serviceHelper = new UserRoleServiceHelper();
+
+        $availableActions = ['datatable', 'excel_sheet'];
+        $methodAction = (
+            $request->has('filter_action')
+            && (trim($request->input('filter_action')) != '')
+            && in_array(trim($request->input('filter_action')), $availableActions)
+        ) ? trim($request->input('filter_action')) : 'datatable';
 
         $dtDraw = (
             $request->has('draw')
@@ -570,39 +579,82 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_date_end_filter')) != '')
         ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
 
-        $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate);
+        if ($methodAction == 'datatable') {
 
-        $filteredOrderData = [];
-        $totalRec = 0;
-        $collectRecStart = $dtStart;
-        $collectRecEnd = $collectRecStart + $dtPageLength;
-        $currentRec = -1;
-        foreach ($filteredOrderStats as $record) {
-            $totalRec++;
-            $currentRec++;
-            if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
-                continue;
+            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate);
+
+            $filteredOrderData = [];
+            $totalRec = 0;
+            $collectRecStart = $dtStart;
+            $collectRecEnd = $collectRecStart + $dtPageLength;
+            $currentRec = -1;
+            foreach ($filteredOrderStats as $record) {
+                $totalRec++;
+                $currentRec++;
+                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                    continue;
+                }
+                $filteredOrderData[] = [
+                    'driverId' => $record['driverId'],
+                    'driver' => $record['driver'],
+                    'active' => $record['active'],
+                    'date' => $record['date'],
+                    'assignedOrders' => $record['assignedOrders'],
+                    'deliveryOrders' => $record['deliveryOrders'],
+                    'deliveredOrders' => $record['deliveredOrders'],
+                    'canceledOrders' => $record['canceledOrders']
+                ];
             }
-            $filteredOrderData[] = [
-                'driverId' => $record['driverId'],
-                'driver' => $record['driver'],
-                'active' => $record['active'],
-                'date' => $record['date'],
-                'assignedOrders' => $record['assignedOrders'],
-                'deliveryOrders' => $record['deliveryOrders'],
-                'deliveredOrders' => $record['deliveredOrders'],
-                'canceledOrders' => $record['canceledOrders']
+
+            $returnData = [
+                'draw' => $dtDraw,
+                'recordsTotal' => $totalRec,
+                'recordsFiltered' => $totalRec,
+                'data' => $filteredOrderData
             ];
+
+            return response()->json($returnData, 200);
+
+        }  elseif ($methodAction == 'excel_sheet') {
+
+            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate);
+            if (count($filteredOrderStats) <= 0) {
+                return back()
+                    ->with('error', "There is no record to export the CSV file.");
+            }
+
+            $fileName =  "drivers_delivery_report_" . date('d-m-Y', strtotime($startDate)) . "_" . date('d-m-Y', strtotime($endDate)) . ".csv";
+            $headers = array(
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            );
+
+            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status","Payment Method"];
+
+            $callback = function() use($filteredOrderStats, $headingColumns) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, array_values($headingColumns));
+                if(!empty($filteredOrderStats)) {
+                    foreach($filteredOrderStats as $row) {
+                        fputcsv($file, [
+                            $row['driverId'],
+                            $row['driver'],
+                            $row['date'],
+                            $row['orderId'],
+                            $row['orderStatus'],
+                            $row['paymentMethod']
+                        ]);
+                    }
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
         }
-
-        $returnData = [
-            'draw' => $dtDraw,
-            'recordsTotal' => $totalRec,
-            'recordsFiltered' => $totalRec,
-            'data' => $filteredOrderData
-        ];
-
-        return response()->json($returnData, 200);
 
     }
 

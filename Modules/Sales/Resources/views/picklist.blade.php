@@ -98,7 +98,7 @@
                                                 <span><i class="la la-close"></i>Reset</span>
                                             </button>
                                             <button type="button" id="filter_item_picklist_pdf_btn" class="btn btn-primary btn-lg mr-2">
-                                                <span><i class="la la-print"></i>Print</span>
+                                                <span><i class="la la-print"></i>Export</span>
                                             </button>
                                         </div>
                                     </div>

@@ -153,7 +153,7 @@
                                 }
                             }
                             ?>
-                            <?= $paymentMethodTitle ?>
+                            <?= (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online' ?>
                         </label>
                     </div>
                 </td>

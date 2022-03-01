@@ -194,11 +194,15 @@
                                         </div>
                                         <div class="col-lg-4"></div>
                                         <div class="col-lg-4 text-right">
+                                            <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
                                             <button type="button" id="filter_driver_report_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>
                                             <button type="button" id="filter_driver_report_reset_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-close"></i>Reset</span>
+                                            </button>
+                                            <button type="button" id="filter_driver_report_excel_btn" class="btn btn-primary btn-lg mr-2">
+                                                <span><i class="la la-file-excel"></i>Export</span>
                                             </button>
                                         </div>
                                     </div>

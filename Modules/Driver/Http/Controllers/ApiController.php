@@ -201,7 +201,7 @@ class ApiController extends BaseController
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['orderDue'] = $totalDueValue;
-                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentMethod'] = (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online';
                 $tempRecord['paymentStatus'] = $paymentStatus;
                 $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
@@ -358,7 +358,7 @@ class ApiController extends BaseController
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['orderDue'] = $totalDueValue;
-                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentMethod'] = (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online';
                 $tempRecord['paymentStatus'] = $paymentStatus;
                 $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
@@ -515,7 +515,7 @@ class ApiController extends BaseController
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['orderDue'] = $totalDueValue;
-                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentMethod'] = (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online';
                 $tempRecord['paymentStatus'] = $paymentStatus;
                 $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
@@ -677,7 +677,7 @@ class ApiController extends BaseController
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['orderDue'] = $totalDueValue;
-                $tempRecord['paymentMethod'] = $paymentMethodTitle;
+                $tempRecord['paymentMethod'] = (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online';
                 $tempRecord['paymentStatus'] = $paymentStatus;
                 $tempRecord['shippingAddress'] = [];
                 $deliveryPickerData = $record->pickedData;
@@ -887,7 +887,7 @@ class ApiController extends BaseController
             'orderTotal' => $saleOrderData['order_total'],
             'orderDue' => $totalDueValue,
             'orderStatus' => (!is_null($saleOrderData['order_status']) && array_key_exists($saleOrderData['order_status'], $statusList)) ? $statusList[$saleOrderData['order_status']] : $saleOrderData['order_status'],
-            'paymentMethod' => $paymentMethodTitle,
+            'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
             'paymentStatus' => $paymentStatus,
             'orderItems' => [],
             'shippingAddress' => [],
