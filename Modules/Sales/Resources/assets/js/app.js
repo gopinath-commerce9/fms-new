@@ -419,11 +419,33 @@ var SalesCustomJsBlocks = function() {
             getItemPicklistPdf();
         });
 
+        $('button#filter_item_picklist_csv_btn').on('click', function(e) {
+            e.preventDefault();
+            getItemPicklistCsv();
+        });
+
     };
 
     var getItemPicklistPdf = function () {
         var targetForm = $('#filter_item_picklist_form');
         $('#filter_action').val('pdf_generator');
+        var orderStatusValues = '';
+        var productCatValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'order_status_filter') {
+                orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'product_category_filter') {
+                productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#order_status_values').val(orderStatusValues);
+        $('#product_category_values').val(productCatValues);
+        targetForm.submit();
+    };
+
+    var getItemPicklistCsv = function () {
+        var targetForm = $('#filter_item_picklist_form');
+        $('#filter_action').val('csv_generator');
         var orderStatusValues = '';
         var productCatValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {

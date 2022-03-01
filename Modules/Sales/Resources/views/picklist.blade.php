@@ -84,9 +84,6 @@
                                         <div class="col-4">
 
                                         </div>
-                                        <div class="col-lg-4">
-
-                                        </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
                                             <input type="hidden" name="order_status_values" id="order_status_values" value="" />
@@ -97,8 +94,13 @@
                                             <button type="button" id="filter_item_picklist_reset_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-close"></i>Reset</span>
                                             </button>
+                                        </div>
+                                        <div class="col-lg-4 text-right">
                                             <button type="button" id="filter_item_picklist_pdf_btn" class="btn btn-primary btn-lg mr-2">
-                                                <span><i class="la la-print"></i>Export</span>
+                                                <span><i class="la la-print"></i>Print</span>
+                                            </button>
+                                            <button type="button" id="filter_item_picklist_csv_btn" class="btn btn-primary btn-lg mr-2">
+                                                <span><i class="la la-file-excel"></i>Export</span>
                                             </button>
                                         </div>
                                     </div>

@@ -272,7 +272,7 @@ class SalesController extends Controller
             'regionsList',
             'areaList',
             'deliveryTimeSlots',
-            'paymentMethods',
+            'paymentMethods'
         ));
 
     }
@@ -975,7 +975,7 @@ class SalesController extends Controller
 
         $serviceHelper = new SalesServiceHelper();
 
-        $availableActions = ['datatable', 'pdf_generator'];
+        $availableActions = ['datatable', 'pdf_generator', 'csv_generator'];
         $methodAction = (
             $request->has('filter_action')
             && (trim($request->input('filter_action')) != '')
@@ -1241,6 +1241,120 @@ class SalesController extends Controller
                         ->with('error', $formatter->getMessage());
                 }
 
+            } elseif ($methodAction == 'csv_generator') {
+
+                $filteredOrderData = [];
+
+                foreach ($filteredOrders as $record) {
+
+                    $record->orderItems;
+                    $record->shippingAddress;
+
+                    if ($record->orderItems && (count($record->orderItems) > 0)) {
+
+                        $orderItems = $record->orderItems;
+                        foreach ($orderItems as $orderItemEl) {
+
+                            $productId = $orderItemEl->product_id;
+                            $productCat = null;
+                            if ($orderItemEl->productCategory) {
+                                $productCat = $orderItemEl->productCategory;
+                            }
+
+                            if (is_null($productCat)) {
+                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                if (!is_null($catApiResult)) {
+                                    $productCat = ProductCategory::firstOrCreate([
+                                        'env' => $record->env,
+                                        'channel' => $record->channel,
+                                        'product_id' => $productId
+                                    ], [
+                                        'product_sku' => $catApiResult['product_sku'],
+                                        'product_name' => $catApiResult['product_name'],
+                                        'category_id' => $catApiResult['category_id'],
+                                        'category_name' => $catApiResult['category_name']
+                                    ]);
+                                }
+                            }
+
+                            $productCatIdFinal = '0';
+                            $productCatFinal = 'UnCat';
+                            if (!is_null($productCat)) {
+                                $productCatIdFinal = strval($productCat->category_id);
+                                $productCatFinal = strval($productCat->category_name);
+                            }
+
+                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+
+                                $orderNumber = (!empty($record->increment_id)) ? "#" . $record->increment_id : "";
+                                $productCategory = (!empty($productCatFinal)) ? $productCatFinal : "";
+                                $productSku = (!empty($orderItemEl->item_sku)) ? $orderItemEl->item_sku : "";
+                                $productName = (!empty($orderItemEl->item_name)) ? $orderItemEl->item_name : "";
+                                $weightInfo = (!empty($orderItemEl->item_info)) ? $orderItemEl->item_info : "";
+                                $nameLabel = '';
+                                $nameLabel .= ($productName != '') ? $productName : '';
+                                $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
+                                $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
+                                $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
+                                $qtyLabel = '';
+                                $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
+                                $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
+
+                                $filteredOrderData[] = [
+                                    'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
+                                    'deliveryTimeSlot' => $record->delivery_time_slot,
+                                    'orderNumber' => $orderNumber,
+                                    'productCat' => $productCategory,
+                                    'productSku' => $productSku,
+                                    'productName' => $nameLabel,
+                                    'quantity' => $qtyLabel
+                                ];
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                if (count($filteredOrderData) <= 0) {
+                    return back()
+                        ->with('error', "No Data to export the Sales Picklist!");
+                }
+
+                $fileName =  "sales_picklist_" . date('Ymd-His') . ".csv";
+                $headers = array(
+                    "Content-type"        => "text/csv",
+                    "Content-Disposition" => "attachment; filename=$fileName",
+                    "Pragma"              => "no-cache",
+                    "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                    "Expires"             => "0"
+                );
+
+                $headingColumns = ["Delivery Date", "Time Slot", "Order Number", "Product Type", "Product SKU", "Product Name", "Quantity"];
+
+                $callback = function() use($filteredOrderData, $headingColumns) {
+                    $file = fopen('php://output', 'w');
+                    fputcsv($file, array_values($headingColumns));
+                    if(!empty($filteredOrderData)) {
+                        foreach($filteredOrderData as $row) {
+                            fputcsv($file, [
+                                $row['deliveryDate'],
+                                $row['deliveryTimeSlot'],
+                                $row['orderNumber'],
+                                $row['productCat'],
+                                $row['productSku'],
+                                $row['productName'],
+                                $row['quantity']
+                            ]);
+                        }
+                    }
+                    fclose($file);
+                };
+
+                return response()->stream($callback, 200, $headers);
+
             }
         } else {
             if ($methodAction == 'datatable') {
@@ -1253,7 +1367,10 @@ class SalesController extends Controller
                 return response()->json($returnData, 200);
             } elseif ($methodAction == 'pdf_generator') {
                 return back()
-                    ->with('error', 'No Data to generate Picklist PDF file!');
+                    ->with('error', 'No Data to print the Sales Picklist!');
+            } elseif ($methodAction == 'csv_generator') {
+                return back()
+                    ->with('error', 'No Data to export the Sales Picklist!');
             }
         }
 
