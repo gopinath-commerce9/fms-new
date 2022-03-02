@@ -632,7 +632,7 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status","Payment Method"];
+            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status", "Order Total", "Payment Method"];
 
             $callback = function() use($filteredOrderStats, $headingColumns) {
                 $file = fopen('php://output', 'w');
@@ -645,6 +645,7 @@ class UserRoleController extends Controller
                             date('d-m-Y', strtotime($row['date'])),
                             $row['orderId'],
                             $row['orderStatus'],
+                            $row['orderTotal'],
                             $row['paymentMethod']
                         ]);
                     }

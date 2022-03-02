@@ -452,6 +452,14 @@ class UserRoleServiceHelper
 
                                 $currentSaleOrder->paymentData;
                                 $saleOrderData = $currentSaleOrder->toArray();
+
+                                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                                $totalOrderValue = $saleOrderData['order_total'];
+                                $totalDueValue = $saleOrderData['order_due'];
+                                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                                    $totalDueValue = $totalOrderValue;
+                                }
+
                                 $paymentMethodTitle = '';
                                 $payInfoLoopTargetLabel = 'method_title';
                                 if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
@@ -465,12 +473,23 @@ class UserRoleServiceHelper
                                     }
                                 }
 
+                                $paymentStatus = '';
+                                $epsilon = 0.00001;
+                                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                                    if (abs($totalDueValue - 0) < $epsilon) {
+                                        $paymentStatus = 'paid';
+                                    } else {
+                                        $paymentStatus = 'due';
+                                    }
+                                }
+
                                 $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))][] = [
                                     'driverId' => $userEl->id,
                                     'driver' => $userEl->name,
                                     'date' => date('Y-m-d', strtotime($processHistory->done_at)),
                                     'orderId' => "#" . $saleOrderData['increment_id'],
                                     'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
+                                    'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
                                     'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
                                 ];
 
