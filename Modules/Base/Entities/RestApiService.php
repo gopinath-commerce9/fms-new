@@ -92,7 +92,7 @@ class RestApiService
     private function getApiUserBearerToken($force = false) {
 
         $sessionTokenKey = $this->getApiBearerTokenKey();
-        if(session()->has($sessionTokenKey) && !$force) {
+        if(session()->has($sessionTokenKey) && ($force === false)) {
             $cleanToken = trim(session()->get($sessionTokenKey));
             if (!is_null($cleanToken) && ($cleanToken != '')) {
                 return $cleanToken;
