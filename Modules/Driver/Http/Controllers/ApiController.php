@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\API\Entities\MobileAppUser;
 use Modules\API\Http\Controllers\BaseController;
+use Modules\Sales\Entities\SaleOrderAmountCollection;
 use Validator;
 use Hash;
 use Modules\Driver\Entities\DriverApiServiceHelper;
@@ -145,6 +146,7 @@ class ApiController extends BaseController
                 $record->orderItems;
                 $record->shippingAddress;
                 $record->paymentData;
+                $record->paidAmountCollections;
                 /*$record->saleCustomer;
                 $record->billingAddress;
                 $record->statusHistory;*/
@@ -155,6 +157,15 @@ class ApiController extends BaseController
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (
+                    isset($saleOrderData['paid_amount_collections'])
+                    && is_array($saleOrderData['paid_amount_collections'])
+                    && (count($saleOrderData['paid_amount_collections']) > 0)
+                ) {
+                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                        $totalDueValue -= (float) $paidCollEl['amount'];
+                    }
                 }
 
                 $paymentMethodTitle = '';
@@ -302,6 +313,7 @@ class ApiController extends BaseController
                 $record->orderItems;
                 $record->shippingAddress;
                 $record->paymentData;
+                $record->paidAmountCollections;
                 /*$record->saleCustomer;
                 $record->billingAddress;
                 $record->statusHistory;*/
@@ -312,6 +324,15 @@ class ApiController extends BaseController
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (
+                    isset($saleOrderData['paid_amount_collections'])
+                    && is_array($saleOrderData['paid_amount_collections'])
+                    && (count($saleOrderData['paid_amount_collections']) > 0)
+                ) {
+                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                        $totalDueValue -= (float) $paidCollEl['amount'];
+                    }
                 }
 
                 $paymentMethodTitle = '';
@@ -459,6 +480,7 @@ class ApiController extends BaseController
                 $record->orderItems;
                 $record->shippingAddress;
                 $record->paymentData;
+                $record->paidAmountCollections;
                 /*$record->saleCustomer;
                 $record->billingAddress;
                 $record->statusHistory;*/
@@ -469,6 +491,15 @@ class ApiController extends BaseController
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (
+                    isset($saleOrderData['paid_amount_collections'])
+                    && is_array($saleOrderData['paid_amount_collections'])
+                    && (count($saleOrderData['paid_amount_collections']) > 0)
+                ) {
+                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                        $totalDueValue -= (float) $paidCollEl['amount'];
+                    }
                 }
 
                 $paymentMethodTitle = '';
@@ -621,6 +652,7 @@ class ApiController extends BaseController
                 $record->orderItems;
                 $record->shippingAddress;
                 $record->paymentData;
+                $record->paidAmountCollections;
                 /*$record->saleCustomer;
                 $record->billingAddress;
                 $record->statusHistory;*/
@@ -631,6 +663,15 @@ class ApiController extends BaseController
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (
+                    isset($saleOrderData['paid_amount_collections'])
+                    && is_array($saleOrderData['paid_amount_collections'])
+                    && (count($saleOrderData['paid_amount_collections']) > 0)
+                ) {
+                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                        $totalDueValue -= (float) $paidCollEl['amount'];
+                    }
                 }
 
                 $paymentMethodTitle = '';
@@ -831,6 +872,7 @@ class ApiController extends BaseController
         $saleOrderObj->billingAddress;
         $saleOrderObj->shippingAddress;
         $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
         $saleOrderObj->statusHistory;
         $saleOrderData = $saleOrderObj->toArray();
 
@@ -839,6 +881,15 @@ class ApiController extends BaseController
         $totalDueValue = $saleOrderData['order_due'];
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             $totalDueValue = $totalOrderValue;
+        }
+        if (
+            isset($saleOrderData['paid_amount_collections'])
+            && is_array($saleOrderData['paid_amount_collections'])
+            && (count($saleOrderData['paid_amount_collections']) > 0)
+        ) {
+            foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                $totalDueValue -= (float) $paidCollEl['amount'];
+            }
         }
 
         $paymentMethodTitle = '';
@@ -1126,6 +1177,183 @@ class ApiController extends BaseController
         }
 
         return $this->sendResponse([], 'The Sale Order is canceled successfully!');
+
+    }
+
+    public function setOrderAmountCollected(Request $request) {
+
+        $serviceHelper = new DriverApiServiceHelper();
+
+        $user = auth()->user();
+        $userId = $user->id;
+        $validStatus = $serviceHelper->isValidApiUser($userId);
+        if ($validStatus['success'] === false) {
+            return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
+        }
+
+        $givenOrderId = (
+            $request->has('orderId')
+            && (trim($request->input('orderId')) != '')
+            && is_numeric($request->input('orderId'))
+            && ((int)trim($request->input('orderId')) > 0)
+        ) ? (int)trim($request->input('orderId')) : null;
+
+        $givenOrderCollections = (
+            $request->has('collections')
+            && (!is_null($request->input('collections')))
+            && is_array($request->input('collections'))
+            && (count($request->input('collections')) > 0)
+        ) ? $request->input('collections') : [];
+
+        if (is_null($givenOrderId)) {
+            $errMessage = 'Sale Order Not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        if (count($givenOrderCollections) == 0) {
+            $errMessage = 'Amount Collection details not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        $amountCollectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+        $methodsIncluded = false;
+        foreach ($givenOrderCollections as $collectionKey => $collectionEl) {
+            foreach ($collectionEl as $givenMethod => $givenAmount) {
+                if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+                    $methodsIncluded = true;
+                }
+            }
+        }
+        if ($methodsIncluded === false) {
+            $errMessage = 'Amount Collection details not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        $saleOrderObj = SaleOrder::find($givenOrderId);
+        if (!$saleOrderObj) {
+            $errMessage = 'Sale Order Not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        $allowedStatuses = [
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY
+        ];
+        if (!in_array($saleOrderObj->order_status, $allowedStatuses)) {
+            $errMessage = 'The Sale Order Amount Collection cannot be updated!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        $canProceed = false;
+        if ($saleOrderObj->currentDriver && (count($saleOrderObj->currentDriver) > 0)) {
+            $currentHistory = $saleOrderObj->currentDriver[0];
+            if ($currentHistory->done_by === $userId) {
+                $canProceed = true;
+            }
+        }
+        if (!$canProceed) {
+            $errMessage = 'The Sale Order is not assigned to the user!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
+        $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $totalOrderValue = $saleOrderData['order_total'];
+        $totalDueValue = $saleOrderData['order_due'];
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            $totalDueValue = $totalOrderValue;
+        }
+        if (
+            isset($saleOrderData['paid_amount_collections'])
+            && is_array($saleOrderData['paid_amount_collections'])
+            && (count($saleOrderData['paid_amount_collections']) > 0)
+        ) {
+            foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                $totalDueValue -= (float) $paidCollEl['amount'];
+            }
+        }
+
+        $paymentMethodTitle = '';
+        $payInfoLoopTargetLabel = 'method_title';
+        if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+            $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+            if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                foreach ($paymentAddInfo as $paymentInfoEl) {
+                    if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                        $paymentMethodTitle = $paymentInfoEl['value'];
+                    }
+                }
+            }
+        }
+
+        $paymentStatus = '';
+        $epsilon = 0.00001;
+        if (!(abs($totalOrderValue - 0) < $epsilon)) {
+            if (abs($totalDueValue - 0) < $epsilon) {
+                $paymentStatus = 'paid';
+            } else {
+                $paymentStatus = 'due';
+            }
+        }
+        if ($paymentStatus === 'paid') {
+            $errMessage = 'The Sale Order is fully paid already!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        foreach ($givenOrderCollections as $collectionKey => $collectionEl) {
+            foreach ($collectionEl as $givenMethod => $givenAmount) {
+                if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+                    $newAmountCollectionObj = new SaleOrderAmountCollection();
+                    $newAmountCollectionObj->order_id = $saleOrderData['id'];
+                    $newAmountCollectionObj->method = $givenMethod;
+                    $newAmountCollectionObj->amount = (float)trim($givenAmount);
+                    $newAmountCollectionObj->status = SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID;
+                    $newAmountCollectionObj->saveQuietly();
+                }
+            }
+        }
+
+        $saleOrderObj->refresh();
+        $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $totalOrderValue = $saleOrderData['order_total'];
+        $totalDueValue = $saleOrderData['order_due'];
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            $totalDueValue = $totalOrderValue;
+        }
+        if (
+            isset($saleOrderData['paid_amount_collections'])
+            && is_array($saleOrderData['paid_amount_collections'])
+            && (count($saleOrderData['paid_amount_collections']) > 0)
+        ) {
+            foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                $totalDueValue -= (float) $paidCollEl['amount'];
+            }
+        }
+        $totalPaidValue = $totalOrderValue - $totalDueValue;
+
+        if (!(abs($totalOrderValue - 0) < $epsilon)) {
+            if (abs($totalDueValue - 0) < $epsilon) {
+                $paymentStatus = 'paid';
+            } else {
+                $paymentStatus = 'due';
+            }
+        }
+
+        $returnData = [
+            'recordId' => $saleOrderData['id'],
+            'orderTotal' => $totalOrderValue,
+            'orderPaid' => $totalPaidValue,
+            'orderDue' => $totalDueValue,
+            'paymentStatus' => $paymentStatus
+        ];
+
+        return $this->sendResponse($returnData, 'The Sale Order Amount Collection is updated successfully!');
 
     }
 

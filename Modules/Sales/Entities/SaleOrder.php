@@ -272,4 +272,53 @@ class SaleOrder extends Model
             ->where('action',  SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED);
     }
 
+    /**
+     * Fetches the Data about the Payment collected during the Sale Order Customer Delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function paymentCollections() {
+        return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id');
+    }
+
+    /**
+     * Fetches the Data about the Amount paid and collected during the Sale Order Customer Delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function paidAmountCollections() {
+        return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id')
+            ->where('status',  SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID);
+    }
+
+    /**
+     * Fetches the Data about the Amount collected through Cash during the Sale Order Customer Delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function cashAmountCollections() {
+        return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id')
+            ->where('method',  SaleOrderAmountCollection::PAYMENT_COLLECTION_METHOD_CASH);
+    }
+
+    /**
+     * Fetches the Data about the Amount collected through Card during the Sale Order Customer Delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function cardAmountCollections() {
+        return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id')
+            ->where('method',  SaleOrderAmountCollection::PAYMENT_COLLECTION_METHOD_CARD);
+    }
+
+    /**
+     * Fetches the Data about the Amount collected through Online during the Sale Order Customer Delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function onlineAmountCollections() {
+        return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id')
+            ->where('method',  SaleOrderAmountCollection::PAYMENT_COLLECTION_METHOD_ONLINE);
+    }
+
 }

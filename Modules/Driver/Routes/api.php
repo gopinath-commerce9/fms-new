@@ -33,5 +33,7 @@ Route::prefix('V1')->group(function() {
             ->name('driverApi.setOrderAsDelivered');
         Route::post('/driver/set-order-as-canceled', 'ApiController@setOrderAsCanceled')
             ->name('driverApi.setOrderAsCanceled');
+        Route::post('/driver/set-order-amount-collected', 'ApiController@setOrderAmountCollected')
+            ->name('driverApi.setOrderAmountCollected');
     });
 });
