@@ -9,6 +9,7 @@ use DB;
 use \Exception;
 use Modules\Base\Entities\BaseServiceHelper;
 use App\Models\User;
+use Modules\Sales\Entities\SaleOrderAmountCollection;
 use Modules\Sales\Entities\SaleOrderPayment;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
 use Modules\Sales\Entities\SaleOrderStatusHistory;
@@ -229,22 +230,36 @@ class UserRoleServiceHelper
                                     $currentHoldedCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))]['holdedOrders'];
                                 }
 
+                                $historyObj = null;
                                 if ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED) {
                                     $currentPickedCount++;
+                                    $historyObj = $processHistory;
                                 } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP) {
-                                    if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
-                                        $currentAssignCount++;
-                                    } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
-                                        $currentHoldedCount++;
+                                    $deliveryPickerData = $currentSaleOrder->currentPicker;
+                                    $isCurrentPicker = false;
+                                    if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
+                                        foreach ($deliveryPickerData as $dDeliver) {
+                                            if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
+                                                $isCurrentPicker = true;
+                                                $historyObj = $dDeliver;
+                                            }
+                                        }
+                                    }
+                                    if (($isCurrentPicker) && ($historyObj->id == $processHistory->id)) {
+                                        if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
+                                            $currentAssignCount++;
+                                        } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
+                                            $currentHoldedCount++;
+                                        }
                                     }
                                 }
 
                                 if (($currentPickedCount > 0) || ($currentAssignCount > 0) || ($currentHoldedCount > 0)) {
-                                    $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))] = [
+                                    $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                         'pickerId' => $userEl->id,
                                         'picker' => $userEl->name,
                                         'active' => ($userEl->pivot->is_active == '1') ? 'Yes' : 'No',
-                                        'date' => date('Y-m-d', strtotime($processHistory->done_at)),
+                                        'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                         'assignedOrders' => $currentAssignCount,
                                         'pickedOrders' => $currentPickedCount,
                                         'holdedOrders' => $currentHoldedCount
@@ -344,24 +359,39 @@ class UserRoleServiceHelper
                                     $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))]['canceledOrders'];
                                 }
 
+                                $historyObj = null;
                                 if ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
                                     $currentDeliveredCount++;
+                                    $historyObj = $processHistory;
                                 } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED) {
                                     $currentCanceledCount++;
+                                    $historyObj = $processHistory;
                                 } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
-                                    if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
-                                        $currentAssignCount++;
-                                    } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
-                                        $currentDeliveryCount++;
+                                    $deliveryDriverData = $currentSaleOrder->currentDriver;
+                                    $isCurrentDriver = false;
+                                    if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                                        foreach ($deliveryDriverData as $dDeliver) {
+                                            if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
+                                                $isCurrentDriver = true;
+                                                $historyObj = $dDeliver;
+                                            }
+                                        }
+                                    }
+                                    if (($isCurrentDriver) && ($historyObj->id == $processHistory->id)) {
+                                        if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
+                                            $currentAssignCount++;
+                                        } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
+                                            $currentDeliveryCount++;
+                                        }
                                     }
                                 }
 
                                 if (($currentDeliveredCount > 0) || ($currentAssignCount > 0) || ($currentDeliveryCount > 0) || ($currentCanceledCount > 0)) {
-                                    $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))] = [
+                                    $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                         'driverId' => $userEl->id,
                                         'driver' => $userEl->name,
                                         'active' => ($userEl->pivot->is_active == '1') ? 'Yes' : 'No',
-                                        'date' => date('Y-m-d', strtotime($processHistory->done_at)),
+                                        'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                         'assignedOrders' => $currentAssignCount,
                                         'deliveryOrders' => $currentDeliveryCount,
                                         'deliveredOrders' => $currentDeliveredCount,
@@ -451,13 +481,16 @@ class UserRoleServiceHelper
                             if ($canProceed) {
 
                                 $currentSaleOrder->paymentData;
+                                $currentSaleOrder->paidAmountCollections;
                                 $saleOrderData = $currentSaleOrder->toArray();
 
                                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
                                 $totalOrderValue = $saleOrderData['order_total'];
                                 $totalDueValue = $saleOrderData['order_due'];
+                                $initialPaidValue = (float)$saleOrderData['order_total'] - (float)$saleOrderData['order_due'];
                                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                                     $totalDueValue = $totalOrderValue;
+                                    $initialPaidValue = 0;
                                 }
 
                                 $paymentMethodTitle = '';
@@ -473,6 +506,24 @@ class UserRoleServiceHelper
                                     }
                                 }
 
+                                $amountCollectionData = [];
+                                $totalCollectedAmount = 0;
+                                foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
+                                    $amountCollectionData[$cMethod] = 0;
+                                }
+
+                                if (
+                                    isset($saleOrderData['paid_amount_collections'])
+                                    && is_array($saleOrderData['paid_amount_collections'])
+                                    && (count($saleOrderData['paid_amount_collections']) > 0)
+                                ) {
+                                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                                        $amountCollectionData[$paidCollEl['method']] += (float) $paidCollEl['amount'];
+                                        $totalCollectedAmount += (float) $paidCollEl['amount'];
+                                        $totalDueValue -= (float) $paidCollEl['amount'];
+                                    }
+                                }
+
                                 $paymentStatus = '';
                                 $epsilon = 0.00001;
                                 if (!(abs($totalOrderValue - 0) < $epsilon)) {
@@ -483,15 +534,53 @@ class UserRoleServiceHelper
                                     }
                                 }
 
-                                $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))][] = [
-                                    'driverId' => $userEl->id,
-                                    'driver' => $userEl->name,
-                                    'date' => date('Y-m-d', strtotime($processHistory->done_at)),
-                                    'orderId' => "#" . $saleOrderData['increment_id'],
-                                    'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
-                                    'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
-                                    'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
-                                ];
+                                $addToRecords = false;
+                                $historyObj = null;
+                                if ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
+                                    $addToRecords = true;
+                                    $historyObj = $processHistory;
+                                } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED) {
+                                    $addToRecords = true;
+                                    $historyObj = $processHistory;
+                                } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
+                                    $deliveryDriverData = $currentSaleOrder->currentDriver;
+                                    $isCurrentDriver = false;
+                                    if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                                        foreach ($deliveryDriverData as $dDeliver) {
+                                            if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
+                                                $isCurrentDriver = true;
+                                                $historyObj = $dDeliver;
+                                            }
+                                        }
+                                    }
+                                    if ($isCurrentDriver) {
+                                        if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
+                                            $addToRecords = true;
+                                        } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
+                                            $addToRecords = true;
+                                        }
+                                    }
+                                }
+
+                                if ($addToRecords) {
+                                    $tempArrayRecord = [
+                                        'driverId' => $userEl->id,
+                                        'driver' => $userEl->name,
+                                        'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                        'orderId' => "#" . $saleOrderData['increment_id'],
+                                        'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
+                                        'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
+                                        'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
+                                        'initialPay' => $initialPaidValue . " " . $saleOrderData['order_currency'],
+                                        'collectedAmount' => $totalCollectedAmount . " " . $saleOrderData['order_currency'],
+                                        'totalPaid' => ($initialPaidValue + $totalCollectedAmount) . " " . $saleOrderData['order_currency'],
+                                        'paymentStatus' => $paymentStatus,
+                                    ];
+                                    foreach ($amountCollectionData as $collectionKey => $collectionValue) {
+                                        $tempArrayRecord[$collectionKey] = $collectionValue . " " . $saleOrderData['order_currency'];
+                                    }
+                                    $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))][$saleOrderData['id']] = $tempArrayRecord;
+                                }
 
                             }
 
@@ -504,7 +593,7 @@ class UserRoleServiceHelper
 
             $tempStatsList = $statsList;
             $statsList = [];
-            foreach ($tempStatsList as $pickerKey => $dateData) {
+            foreach ($tempStatsList as $driverKey => $dateData) {
                 foreach ($dateData as $dateKey => $reportData) {
                     foreach ($reportData as $recordKey => $recordData) {
                         $statsList[] = $recordData;

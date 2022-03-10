@@ -84,11 +84,28 @@
                                                             <?php $pickerOrderCount = 0; ?>
                                                             @foreach ($userEl->saleOrderProcessHistory as $processHistory)
                                                                 @if ($processHistory->action == \Modules\Sales\Entities\SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
-                                                                    @if (
-                                                                        ($processHistory->saleOrder)
-                                                                        && ($processHistory->saleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED)
-                                                                    )
-                                                                        <?php $pickerOrderCount++; ?>
+                                                                    @if($processHistory->saleOrder)
+                                                                        <?php
+                                                                            $currentSaleOrder = $processHistory->saleOrder;
+                                                                            $deliveryPickerData = $currentSaleOrder->currentPicker;
+                                                                            $isCurrentPicker = false;
+                                                                            $historyObj = null;
+                                                                            if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
+                                                                                foreach ($deliveryPickerData as $dDeliver) {
+                                                                                    if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
+                                                                                        $isCurrentPicker = true;
+                                                                                        $historyObj = $dDeliver;
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            if (($isCurrentPicker) && ($historyObj->id == $processHistory->id)) {
+                                                                                if ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
+                                                                                    $pickerOrderCount++;
+                                                                                } elseif ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
+                                                                                    $pickerOrderCount++;
+                                                                                }
+                                                                            }
+                                                                        ?>
                                                                     @endif
                                                                 @endif
                                                             @endforeach

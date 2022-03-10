@@ -85,14 +85,28 @@
                                                             <?php $driverOrderCount = 0; ?>
                                                             @foreach ($userEl->saleOrderProcessHistory as $processHistory)
                                                                 @if ($processHistory->action == \Modules\Sales\Entities\SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
-                                                                    @if (
-                                                                        ($processHistory->saleOrder)
-                                                                        && (
-                                                                            ($processHistory->saleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH)
-                                                                            || ($processHistory->saleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY)
-                                                                        )
-                                                                    )
-                                                                        <?php $driverOrderCount++; ?>
+                                                                    @if($processHistory->saleOrder)
+                                                                        <?php
+                                                                            $currentSaleOrder = $processHistory->saleOrder;
+                                                                            $deliveryDriverData = $currentSaleOrder->currentDriver;
+                                                                            $isCurrentDriver = false;
+                                                                            $historyObj = null;
+                                                                            if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+                                                                                foreach ($deliveryDriverData as $dDeliver) {
+                                                                                    if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
+                                                                                        $isCurrentDriver = true;
+                                                                                        $historyObj = $dDeliver;
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            if (($isCurrentDriver) && ($historyObj->id == $processHistory->id)) {
+                                                                                if ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
+                                                                                    $driverOrderCount++;
+                                                                                } elseif ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
+                                                                                    $driverOrderCount++;
+                                                                                }
+                                                                            }
+                                                                        ?>
                                                                     @endif
                                                                 @endif
                                                             @endforeach

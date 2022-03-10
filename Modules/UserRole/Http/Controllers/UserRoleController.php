@@ -5,6 +5,7 @@ namespace Modules\UserRole\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Input;
+use Modules\Sales\Entities\SaleOrderAmountCollection;
 use Modules\UserRole\Entities\Permission;
 use Modules\UserRole\Entities\PermissionMap;
 use Modules\UserRole\Entities\UserRoleMap;
@@ -632,22 +633,38 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status", "Order Total", "Payment Method"];
+            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status", "Payment Method", "Initial Pay"];
+            $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+            foreach ($collectionMethods as $methodEl) {
+                $headingColumns[] = ucwords($methodEl) . " Collected";
+            }
+            $headingColumns[] = "Amount Collected";
+            $headingColumns[] = "Total Paid";
+            $headingColumns[] = "Order Total";
+            $headingColumns[] = "Payment Status";
 
-            $callback = function() use($filteredOrderStats, $headingColumns) {
+            $callback = function() use($filteredOrderStats, $headingColumns, $collectionMethods) {
                 $file = fopen('php://output', 'w');
                 fputcsv($file, array_values($headingColumns));
                 if(!empty($filteredOrderStats)) {
                     foreach($filteredOrderStats as $row) {
-                        fputcsv($file, [
+                        $rowDataArray = [
                             $row['driverId'],
                             $row['driver'],
                             date('d-m-Y', strtotime($row['date'])),
                             $row['orderId'],
                             $row['orderStatus'],
-                            $row['orderTotal'],
-                            $row['paymentMethod']
-                        ]);
+                            $row['paymentMethod'],
+                            $row['initialPay'],
+                        ];
+                        foreach ($collectionMethods as $methodEl) {
+                            $rowDataArray[] = $row[$methodEl];
+                        }
+                        $rowDataArray[] = $row['collectedAmount'];
+                        $rowDataArray[] = $row['totalPaid'];
+                        $rowDataArray[] = $row['orderTotal'];
+                        $rowDataArray[] = $row['paymentStatus'];
+                        fputcsv($file, $rowDataArray);
                     }
                 }
                 fclose($file);
