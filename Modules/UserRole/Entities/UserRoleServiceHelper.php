@@ -535,7 +535,11 @@ class UserRoleServiceHelper
                                     if (abs($totalDueValue - 0) < $epsilon) {
                                         $paymentStatus = 'paid';
                                     } else {
-                                        $paymentStatus = 'due';
+                                        if ($totalDueValue < 0) {
+                                            $paymentStatus = 'overpaid';
+                                        } else {
+                                            $paymentStatus = 'due';
+                                        }
                                     }
                                 }
 

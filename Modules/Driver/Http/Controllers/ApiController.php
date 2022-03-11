@@ -187,7 +187,11 @@ class ApiController extends BaseController
                     if (abs($totalDueValue - 0) < $epsilon) {
                         $paymentStatus = 'paid';
                     } else {
-                        $paymentStatus = 'due';
+                        if ($totalDueValue < 0) {
+                            $paymentStatus = 'overpaid';
+                        } else {
+                            $paymentStatus = 'due';
+                        }
                     }
                 }
 
@@ -354,7 +358,11 @@ class ApiController extends BaseController
                     if (abs($totalDueValue - 0) < $epsilon) {
                         $paymentStatus = 'paid';
                     } else {
-                        $paymentStatus = 'due';
+                        if ($totalDueValue < 0) {
+                            $paymentStatus = 'overpaid';
+                        } else {
+                            $paymentStatus = 'due';
+                        }
                     }
                 }
 
@@ -521,7 +529,11 @@ class ApiController extends BaseController
                     if (abs($totalDueValue - 0) < $epsilon) {
                         $paymentStatus = 'paid';
                     } else {
-                        $paymentStatus = 'due';
+                        if ($totalDueValue < 0) {
+                            $paymentStatus = 'overpaid';
+                        } else {
+                            $paymentStatus = 'due';
+                        }
                     }
                 }
 
@@ -693,7 +705,11 @@ class ApiController extends BaseController
                     if (abs($totalDueValue - 0) < $epsilon) {
                         $paymentStatus = 'paid';
                     } else {
-                        $paymentStatus = 'due';
+                        if ($totalDueValue < 0) {
+                            $paymentStatus = 'overpaid';
+                        } else {
+                            $paymentStatus = 'due';
+                        }
                     }
                 }
 
@@ -911,7 +927,11 @@ class ApiController extends BaseController
             if (abs($totalDueValue - 0) < $epsilon) {
                 $paymentStatus = 'paid';
             } else {
-                $paymentStatus = 'due';
+                if ($totalDueValue < 0) {
+                    $paymentStatus = 'overpaid';
+                } else {
+                    $paymentStatus = 'due';
+                }
             }
         }
 
@@ -1217,10 +1237,12 @@ class ApiController extends BaseController
 
         $amountCollectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
         $methodsIncluded = false;
+        $currentAmountCollected = 0;
         foreach ($givenOrderCollections as $collectionKey => $collectionEl) {
             foreach ($collectionEl as $givenMethod => $givenAmount) {
                 if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
                     $methodsIncluded = true;
+                    $currentAmountCollected += (float)trim($givenAmount);
                 }
             }
         }
@@ -1294,13 +1316,34 @@ class ApiController extends BaseController
             if (abs($totalDueValue - 0) < $epsilon) {
                 $paymentStatus = 'paid';
             } else {
-                $paymentStatus = 'due';
+                if ($totalDueValue < 0) {
+                    $paymentStatus = 'overpaid';
+                } else {
+                    $paymentStatus = 'due';
+                }
             }
         }
-        if ($paymentStatus === 'paid') {
+        if ($paymentStatus !== 'due') {
             $errMessage = 'The Sale Order is fully paid already!';
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
         }
+
+        $totalDueValue -= $currentAmountCollected;
+        if (abs($totalDueValue - 0) < $epsilon) {
+            $paymentStatus = 'paid';
+        } else {
+            if ($totalDueValue < 0) {
+                $paymentStatus = 'overpaid';
+            } else {
+                $paymentStatus = 'due';
+            }
+        }
+        if ($paymentStatus === 'overpaid') {
+            $overPayAmount = number_format(abs($totalDueValue), 2) . " " . $saleOrderData['order_currency'];
+            $errMessage = 'The Sale Order will get overpaid by around ' . $overPayAmount . ' if proceeded with Collected Amount!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
 
         foreach ($givenOrderCollections as $collectionKey => $collectionEl) {
             foreach ($collectionEl as $givenMethod => $givenAmount) {
@@ -1341,7 +1384,11 @@ class ApiController extends BaseController
             if (abs($totalDueValue - 0) < $epsilon) {
                 $paymentStatus = 'paid';
             } else {
-                $paymentStatus = 'due';
+                if ($totalDueValue < 0) {
+                    $paymentStatus = 'overpaid';
+                } else {
+                    $paymentStatus = 'due';
+                }
             }
         }
 
