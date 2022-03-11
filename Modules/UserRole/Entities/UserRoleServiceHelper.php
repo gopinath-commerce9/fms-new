@@ -359,12 +359,15 @@ class UserRoleServiceHelper
                                     $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($processHistory->done_at))]['canceledOrders'];
                                 }
 
+                                $addToRecords = false;
                                 $historyObj = null;
                                 if ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
                                     $currentDeliveredCount++;
+                                    $addToRecords = true;
                                     $historyObj = $processHistory;
                                 } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED) {
                                     $currentCanceledCount++;
+                                    $addToRecords = true;
                                     $historyObj = $processHistory;
                                 } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
                                     $deliveryDriverData = $currentSaleOrder->currentDriver;
@@ -380,13 +383,15 @@ class UserRoleServiceHelper
                                     if (($isCurrentDriver) && ($historyObj->id == $processHistory->id)) {
                                         if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
                                             $currentAssignCount++;
+                                            $addToRecords = true;
                                         } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
                                             $currentDeliveryCount++;
+                                            $addToRecords = true;
                                         }
                                     }
                                 }
 
-                                if (($currentDeliveredCount > 0) || ($currentAssignCount > 0) || ($currentDeliveryCount > 0) || ($currentCanceledCount > 0)) {
+                                if ($addToRecords) {
                                     $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                         'driverId' => $userEl->id,
                                         'driver' => $userEl->name,
