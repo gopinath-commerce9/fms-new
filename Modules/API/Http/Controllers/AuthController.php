@@ -30,7 +30,7 @@ class AuthController extends BaseController
             'deviceName.required' => 'Device Name should be minimum :min characters.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -87,7 +87,7 @@ class AuthController extends BaseController
             'deviceName.required' => 'Device Name should be minimum :min characters.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -149,7 +149,7 @@ class AuthController extends BaseController
             'deviceName.required' => 'Device Name should be minimum :min characters.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -333,7 +333,7 @@ class AuthController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -361,7 +361,7 @@ class AuthController extends BaseController
             'playerId.string' => 'OneSignal Player Id should be a string.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -389,7 +389,7 @@ class AuthController extends BaseController
             'tokenId.string' => 'Firebase Token Id should be a string.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -420,7 +420,7 @@ class AuthController extends BaseController
             'longitude.numeric' => 'Longitude should be a numeric value.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
@@ -457,7 +457,7 @@ class AuthController extends BaseController
             'deviceName.required' => 'Device Name should not be empty.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 

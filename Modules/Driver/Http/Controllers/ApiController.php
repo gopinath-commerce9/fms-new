@@ -35,7 +35,7 @@ class ApiController extends BaseController
             'deviceName.required' => 'Device Name should be minimum :min characters.',
         ]);
         if ($validator->fails()) {
-            $errMessage = implode(" | ", $validator->errors());
+            $errMessage = implode(" | ", $validator->errors()->all());
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
         }
 
