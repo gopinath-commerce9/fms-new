@@ -160,8 +160,8 @@ class AdminController extends Controller
                     $tempRecord['deliveryDriverTime'] = '';
                     $orderStatusId = $record->order_status;
                     $tempRecord['orderStatus'] = $orderStatuses[$orderStatusId];
-                    $deliveryPickerData = $record->pickupData;
-                    $deliveryDriverData = $record->deliveryData;
+                    $deliveryPickerData = $record->currentPicker;
+                    $deliveryDriverData = $record->currentDriver;
                     $tempRecord['actions'] = url('/admin/order-view/' . $record->id);
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData[0];

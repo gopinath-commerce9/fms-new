@@ -210,8 +210,8 @@ class SupervisorController extends Controller
                     $tempRecord['deliveryDriverTime'] = '';
                     $orderStatusId = $record->order_status;
                     $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
-                    $deliveryPickerData = $record->pickupData;
-                    $deliveryDriverData = $record->deliveryData;
+                    $deliveryPickerData = $record->currentPicker;
+                    $deliveryDriverData = $record->currentDriver;
                     $tempRecord['actions'] = url('/supervisor/order-view/' . $record->id);
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData[0];

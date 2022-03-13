@@ -203,8 +203,8 @@ class SalesController extends Controller
             $tempRecord['deliveryDriverTime'] = '';
             $orderStatusId = $record->order_status;
             $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
-            $deliveryPickerData = $record->pickupData;
-            $deliveryDriverData = $record->deliveryData;
+            $deliveryPickerData = $record->currentPicker;
+            $deliveryDriverData = $record->currentDriver;
             $tempRecord['actions'] = (!is_null($currentRole)) ? url('/' . $currentRole . '/order-view/' . $record->id) : 'javascript:void(0);';
             if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                 $pickerDetail = $deliveryPickerData[0];
