@@ -94,15 +94,19 @@ class ApiController extends BaseController
             return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
         }
 
-        $pageStart = (
-            $request->has('page')
-            && (trim($request->input('page')) != '')
-        ) ? (int)trim($request->input('page')) : 0;
-
-        $pageLength = (
-            $request->has('limit')
-            && (trim($request->input('limit')) != '')
-        ) ? (int)trim($request->input('limit')) : 10;
+        $paginationEnabled = true;
+        $pageStart = 0;
+        $pageLength = 10;
+        if ($request->has('page') && (trim($request->input('page')) != '')) {
+            $pageStart = (int)trim($request->input('page'));
+        } else {
+            $paginationEnabled = false;
+        }
+        if ($request->has('limit') && (trim($request->input('limit')) != '')) {
+            $pageLength = (int)trim($request->input('limit'));
+        } else {
+            $paginationEnabled = false;
+        }
 
         $deliveryDate = (
             $request->has('deliveryDate')
@@ -128,7 +132,7 @@ class ApiController extends BaseController
             $deliveryDriverData = $record->currentDriver;
             $canProceed = false;
             $driverDetail = null;
-            if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
+            if (($deliveryDriverData && (count($deliveryDriverData) > 0))) {
                 foreach ($deliveryDriverData as $dDeliver) {
                     if (($userId > 0) && !is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userId)) {
                         $canProceed = true;
@@ -139,7 +143,7 @@ class ApiController extends BaseController
             if ($canProceed) {
                 $totalRec++;
                 $currentRec++;
-                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                if (($paginationEnabled === true) && (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd))) {
                     continue;
                 }
 
@@ -263,15 +267,19 @@ class ApiController extends BaseController
             return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
         }
 
-        $pageStart = (
-            $request->has('page')
-            && (trim($request->input('page')) != '')
-        ) ? (int)trim($request->input('page')) : 0;
-
-        $pageLength = (
-            $request->has('limit')
-            && (trim($request->input('limit')) != '')
-        ) ? (int)trim($request->input('limit')) : 10;
+        $paginationEnabled = true;
+        $pageStart = 0;
+        $pageLength = 10;
+        if ($request->has('page') && (trim($request->input('page')) != '')) {
+            $pageStart = (int)trim($request->input('page'));
+        } else {
+            $paginationEnabled = false;
+        }
+        if ($request->has('limit') && (trim($request->input('limit')) != '')) {
+            $pageLength = (int)trim($request->input('limit'));
+        } else {
+            $paginationEnabled = false;
+        }
 
         $deliveryDate = (
             $request->has('deliveryDate')
@@ -310,7 +318,7 @@ class ApiController extends BaseController
             if ($canProceed) {
                 $totalRec++;
                 $currentRec++;
-                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                if (($paginationEnabled === true) && (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd))) {
                     continue;
                 }
 
@@ -434,15 +442,19 @@ class ApiController extends BaseController
             return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
         }
 
-        $pageStart = (
-            $request->has('page')
-            && (trim($request->input('page')) != '')
-        ) ? (int)trim($request->input('page')) : 0;
-
-        $pageLength = (
-            $request->has('limit')
-            && (trim($request->input('limit')) != '')
-        ) ? (int)trim($request->input('limit')) : 10;
+        $paginationEnabled = true;
+        $pageStart = 0;
+        $pageLength = 10;
+        if ($request->has('page') && (trim($request->input('page')) != '')) {
+            $pageStart = (int)trim($request->input('page'));
+        } else {
+            $paginationEnabled = false;
+        }
+        if ($request->has('limit') && (trim($request->input('limit')) != '')) {
+            $pageLength = (int)trim($request->input('limit'));
+        } else {
+            $paginationEnabled = false;
+        }
 
         $deliveryDate = (
             $request->has('deliveryDate')
@@ -481,7 +493,7 @@ class ApiController extends BaseController
             if ($canProceed) {
                 $totalRec++;
                 $currentRec++;
-                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                if (($paginationEnabled === true) && (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd))) {
                     continue;
                 }
 
@@ -605,15 +617,19 @@ class ApiController extends BaseController
             return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
         }
 
-        $pageStart = (
-            $request->has('page')
-            && (trim($request->input('page')) != '')
-        ) ? (int)trim($request->input('page')) : 0;
-
-        $pageLength = (
-            $request->has('limit')
-            && (trim($request->input('limit')) != '')
-        ) ? (int)trim($request->input('limit')) : 10;
+        $paginationEnabled = true;
+        $pageStart = 0;
+        $pageLength = 10;
+        if ($request->has('page') && (trim($request->input('page')) != '')) {
+            $pageStart = (int)trim($request->input('page'));
+        } else {
+            $paginationEnabled = false;
+        }
+        if ($request->has('limit') && (trim($request->input('limit')) != '')) {
+            $pageLength = (int)trim($request->input('limit'));
+        } else {
+            $paginationEnabled = false;
+        }
 
         $deliveryDate = (
             $request->has('deliveryDate')
@@ -657,7 +673,7 @@ class ApiController extends BaseController
             if ($canProceed) {
                 $totalRec++;
                 $currentRec++;
-                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                if (($paginationEnabled === true) && (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd))) {
                     continue;
                 }
 
