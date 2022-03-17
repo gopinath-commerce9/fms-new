@@ -48,6 +48,20 @@ class RestApiService
     }
 
     /**
+     * Get the RESTFul API Authentication Access Token.
+     *
+     * @return mixed
+     */
+    private function getApiAccessToken() {
+        $channelSettings = $this->getApiChannelConfigs();
+        return (
+            array_key_exists('accessToken', $channelSettings)
+            && !is_null($channelSettings['accessToken'])
+            && (trim($channelSettings['accessToken']) != '')
+        ) ? trim($channelSettings['accessToken']) : null;
+    }
+
+    /**
      * Get the RESTFul API Authentication Credentials.
      *
      * @return array
@@ -97,6 +111,12 @@ class RestApiService
             if (!is_null($cleanToken) && ($cleanToken != '')) {
                 return $cleanToken;
             }
+        }
+
+        $accessToken = $this->getApiAccessToken();
+        if (!is_null($accessToken)) {
+            session()->put($sessionTokenKey, $accessToken);
+            return $accessToken;
         }
 
         $authUrl = $this->getRestApiAuthUrl();
