@@ -351,6 +351,10 @@ var SalesCustomJsBlocks = function() {
             placeholder: "Select Product Categories",
         });
 
+        $('#store_availability_filter').select2({
+            placeholder: "Select Store Availabilities",
+        });
+
     };
 
     var initPicklistDeliveryDateRangePicker = function () {
@@ -416,7 +420,7 @@ var SalesCustomJsBlocks = function() {
 
                     d['columnsDef'] = [
                         'deliveryDate', 'deliveryTimeSlot', 'orderId', 'productType',
-                        'productSku', 'productName', 'quantity'
+                        'productSku', 'productName', 'quantity', 'availability'
                     ];
 
                 },
@@ -428,7 +432,8 @@ var SalesCustomJsBlocks = function() {
                 {data: 'productType'},
                 {data: 'productSku'},
                 {data: 'productName'},
-                {data: 'quantity'}
+                {data: 'quantity'},
+                {data: 'availability'}
             ],
             columnDefs: [],
         });

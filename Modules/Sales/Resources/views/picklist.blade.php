@@ -82,7 +82,14 @@
 
                                     <div class="form-group row">
                                         <div class="col-4">
-
+                                            <select class="form-control datatable-input" id="store_availability_filter" name="store_availability_filter" multiple>
+                                                @foreach($storeAvailability as $categoryKey => $categoryEl)
+                                                    <option value="{{ $categoryKey }}" >{{ $categoryEl }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-4 text-right">
+                                            
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
@@ -94,8 +101,6 @@
                                             <button type="button" id="filter_item_picklist_reset_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-close"></i>Reset</span>
                                             </button>
-                                        </div>
-                                        <div class="col-lg-4 text-right">
                                             <button type="button" id="filter_item_picklist_pdf_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-print"></i>Print</span>
                                             </button>
@@ -127,6 +132,7 @@
                                                 <th>Product SKU</th>
                                                 <th>Product Name</th>
                                                 <th>Quantity</th>
+                                                <th>Availability Status</th>
                                             </tr>
                                         </thead>
 

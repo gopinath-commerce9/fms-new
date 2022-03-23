@@ -95,7 +95,29 @@ class SaleOrderItem extends Model
      * @return bool
      */
     public function isStoreAvailable() {
-        return ($this->store_availability == self::STORE_AVAILABLE_YES)
+        return ($this->store_availability === self::STORE_AVAILABLE_YES)
+            ? true
+            : false;
+    }
+
+    /**
+     * Checks whether the given Sale Order Item is Not Available at the Store.
+     *
+     * @return bool
+     */
+    public function isNotStoreAvailable() {
+        return ($this->store_availability === self::STORE_AVAILABLE_NO)
+            ? true
+            : false;
+    }
+
+    /**
+     * Checks whether the given Sale Order Item is Not Checked the Availability at the Store.
+     *
+     * @return bool
+     */
+    public function isNotCheckedStoreAvailable() {
+        return ($this->store_availability === self::STORE_AVAILABLE_NOT_CHECKED)
             ? true
             : false;
     }
