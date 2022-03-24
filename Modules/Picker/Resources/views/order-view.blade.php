@@ -433,7 +433,7 @@
     <script src="{{ asset('js/picker.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            PickerCustomJsBlocks.orderViewPage('{{ url('/') }}');
+            PickerCustomJsBlocks.orderViewPage('{{ url('/') }}', '{{ $saleOrderData['id'] }}');
         });
     </script>
 

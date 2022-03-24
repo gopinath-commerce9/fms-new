@@ -10,6 +10,7 @@ class SaleOrderProcessHistory extends Model
 
     const SALE_ORDER_PROCESS_ACTION_IMPORT = 'import';
     const SALE_ORDER_PROCESS_ACTION_REIMPORT = 're-import';
+    const SALE_ORDER_PROCESS_ACTION_RESYNC = 're-sync';
     const SALE_ORDER_PROCESS_ACTION_CREATED = 'created';
     const SALE_ORDER_PROCESS_ACTION_PROCESSING = 'processing';
     const SALE_ORDER_PROCESS_ACTION_PICKUP_ASSIGN = 'pickup_assign';

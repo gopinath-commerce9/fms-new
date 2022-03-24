@@ -164,6 +164,34 @@ var PickerCustomJsBlocks = function() {
 
     };
 
+    var resyncOrderData = function(orderId) {
+        $('#order_resync_btn').on('click', function(e){
+            e.preventDefault();
+            if (confirm('Do you want to re-sync and update the Sale Order details from the Server?')) {
+                $.ajax({
+                    url: $(this).attr('href'),
+                    method: 'GET',
+                    beforeSend: function() {
+                        KTApp.blockPage({
+                            overlayColor: '#000000',
+                            state: 'danger',
+                            message: 'Please wait...'
+                        });
+                    },
+                    success: function(data){
+                        KTApp.unblockPage();
+                        showAlertMessage(data.message);
+                        location.reload();
+                    },
+                    error: function (jqXhr, textStatus, errorMessage) {
+                        KTApp.unblockPage();
+                        showAlertMessage(errorMessage);
+                    }
+                });
+            }
+        });
+    };
+
     var showAlertMessage = function(message) {
         $("div.custom_alert_trigger_messages_area")
             .html('<div class="alert alert-custom alert-dark alert-light-dark fade show" role="alert">' +
@@ -182,8 +210,9 @@ var PickerCustomJsBlocks = function() {
             setDeliveryDateFilterDatePicker();
             initPickerSaleOrderTable();
         },
-        orderViewPage: function(hostUrl) {
+        orderViewPage: function(hostUrl, orderId) {
             orderFormActions();
+            resyncOrderData(orderId);
         },
     };
 

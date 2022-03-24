@@ -40,4 +40,6 @@ Route::prefix('admin')->middleware([
         ->name('admin.downloadItemsScheduleCsv');
     Route::post('/export-orderwise-items', 'AdminController@exportOrderWiseItems')
         ->name('admin.exportOrderWiseItems');
+    Route::get('/order-resync/{orderId}', 'AdminController@orderResync')
+        ->name('admin.orderResync');
 });

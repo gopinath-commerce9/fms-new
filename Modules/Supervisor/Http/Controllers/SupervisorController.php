@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\API\Entities\ApiServiceHelper;
 use Modules\Sales\Entities\SaleOrderItem;
 use Modules\Supervisor\Entities\SupervisorServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
@@ -392,6 +393,8 @@ class SupervisorController extends Controller
         $pickers = $userRoleObj->allPickers();
         $drivers = $userRoleObj->allDrivers();
 
+        $resyncStatuses = $serviceHelper->getResyncStatuses();
+
         if ($saleOrderObj->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
             return view('supervisor::prepare-order-view', compact(
                 'pageTitle',
@@ -403,7 +406,8 @@ class SupervisorController extends Controller
                 'serviceHelper',
                 'orderStatuses',
                 'pickers',
-                'drivers'
+                'drivers',
+                'resyncStatuses'
             ));
         } else {
             return view('supervisor::order-view', compact(
@@ -416,7 +420,8 @@ class SupervisorController extends Controller
                 'serviceHelper',
                 'orderStatuses',
                 'pickers',
-                'drivers'
+                'drivers',
+                'resyncStatuses'
             ));
         }
 
@@ -727,6 +732,56 @@ class SupervisorController extends Controller
             return back()
                 ->with('error', $formatter->getMessage());
         }
+
+    }
+
+    public function orderResync($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order Id input is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order does not exist!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $serviceHelper = new SupervisorServiceHelper();
+        $availableStatuses = $serviceHelper->getResyncStatuses();
+
+        if (!in_array($saleOrderObj->order_status, array_keys($availableStatuses))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order cannot resync!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $resyncResult = $serviceHelper->resyncSaleOrderFromServer($saleOrderObj, $processUserId);
+
+        if ($resyncResult['status'] === false) {
+            return response()->json([
+                'success' => false,
+                'message' => $resyncResult['message'],
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [],
+            'message' => 'The Sale Order resynced and updated!',
+        ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
 
     }
 

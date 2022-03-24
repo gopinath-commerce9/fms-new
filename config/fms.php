@@ -155,6 +155,15 @@ return [
         'order_updated'
     ],
 
+    'resync_statuses' => [
+        'pending',
+        'pending_payment',
+        'processing',
+        'being_prepared',
+        'holded',
+        'order_updated'
+    ],
+
     'role_allowed_statuses' => [
         'supervisor' => [
             'pending',

@@ -11,11 +11,18 @@
             <div class="card card-custom overflow-hidden">
 
                 <div class="card-header flex-wrap py-3">
-                    <div class="card-toolbar">
+                    <div class="card-toolbar w-100" >
                         <div class="col text-left">
                             <a href="{{ url()->previous() }}" class="btn btn-outline-primary">
                                 <i class="flaticon2-back"></i> Back
                             </a>
+                        </div>
+                        <div class="col text-right">
+                            @if(in_array($saleOrderData['order_status'], array_keys($resyncStatuses)))
+                                <a href="{{ url('/admin/order-resync/' . $saleOrderData['id']) }}" id="order_resync_btn" class="btn btn-primary">
+                                    <i class="flaticon2-refresh-arrow"></i> Re-Sync From Server
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -370,7 +377,7 @@
     <script src="{{ asset('js/admin.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            AdminCustomJsBlocks.orderViewPage('{{ url('/') }}');
+            AdminCustomJsBlocks.orderViewPage('{{ url('/') }}', '{{ $saleOrderData['id'] }}');
         });
     </script>
 

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Input;
 use Modules\Admin\Entities\AdminServiceHelper;
+use Modules\API\Entities\ApiServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Jobs\SaleOrderChannelImport;
 
@@ -399,6 +400,8 @@ class AdminController extends Controller
             session()->put('salesOrderVendorList', $vendorList);
         }
 
+        $resyncStatuses = $serviceHelper->getResyncStatuses();
+
         $saleOrderObj->saleCustomer;
         $saleOrderObj->orderItems;
         $saleOrderObj->billingAddress;
@@ -421,7 +424,8 @@ class AdminController extends Controller
             'customerGroups',
             'vendorList',
             'serviceHelper',
-            'orderStatuses'
+            'orderStatuses',
+            'resyncStatuses'
         ));
 
     }
@@ -695,6 +699,56 @@ class AdminController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+
+    }
+
+    public function orderResync($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order Id input is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order does not exist!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $serviceHelper = new AdminServiceHelper();
+        $availableStatuses = $serviceHelper->getResyncStatuses();
+
+        if (!in_array($saleOrderObj->order_status, array_keys($availableStatuses))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order cannot resync!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $resyncResult = $serviceHelper->resyncSaleOrderFromServer($saleOrderObj, $processUserId);
+
+        if ($resyncResult['status'] === false) {
+            return response()->json([
+                'success' => false,
+                'message' => $resyncResult['message'],
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [],
+            'message' => 'The Sale Order resynced and updated!',
+        ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
 
     }
 
