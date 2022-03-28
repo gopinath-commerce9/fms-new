@@ -70,6 +70,17 @@ return [
             'children' => null,
         ],
         [
+            'name' => 'Regions',
+            'path' => '/sales/regions',
+            'icon' => 'fas fa-map-marked',
+            'customIcon' => false,
+            'toolTip' => 'Regions',
+            'permission_type' => 'role',
+            'permission' => ['admin', 'supervisor'],
+            'active' => true,
+            'children' => null,
+        ],
+        [
             'name' => 'Update Stock',
             'path' => '/sales/stock-update',
             'icon' => 'fas fa-redo',

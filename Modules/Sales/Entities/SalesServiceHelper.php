@@ -154,10 +154,13 @@ class SalesServiceHelper
         return $categoryArray;
     }
 
-    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '') {
+    public function getAvailableRegionsList($countryId = '', $env = '', $channel = '', $forceFetch = false, $fullData = false) {
+
+        $fetchClean = (!is_null($forceFetch) && is_bool($forceFetch)) ? $forceFetch : false;
+        $fullDataClean = (!is_null($fullData) && is_bool($fullData)) ? $fullData : false;
 
         $baseServiceHelper = new BaseServiceHelper();
-        $regionList = $baseServiceHelper->getRegionList($env, $channel);
+        $regionList = $baseServiceHelper->getRegionList($env, $channel, $fetchClean);
 
         if (count($regionList) == 0) {
             return [];
@@ -165,7 +168,7 @@ class SalesServiceHelper
 
         $returnData = [];
         foreach ($regionList as $regionEl) {
-            $returnData[$regionEl['region_id']] = $regionEl['name'];
+            $returnData[$regionEl['region_id']] = ($fullDataClean) ? $regionEl : $regionEl['name'];
         }
 
         return $returnData;

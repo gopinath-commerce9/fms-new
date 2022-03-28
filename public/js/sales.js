@@ -497,6 +497,19 @@ var SalesCustomJsBlocks = function() {
         targetForm.submit();
     };
 
+    var initRegionsListTable = function() {
+        var table = $('#regions_list_table');
+        var dataTable = table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [5, 10, 25, 50],
+            pageLength: 5,
+            order: [[0, 'asc']],
+            columnDefs: []
+        });
+    };
+
     var showAlertMessage = function(message) {
         $("div.custom_alert_trigger_messages_area")
             .html('<div class="alert alert-custom alert-dark alert-light-dark fade show" role="alert">' +
@@ -645,6 +658,9 @@ var SalesCustomJsBlocks = function() {
             initPicklistDeliveryDateRangePicker();
             select2ElementsInitiator();
             initSaleOrderItemPicklistTable();
+        },
+        regionslistPage: function(hostUrl){
+            initRegionsListTable();
         },
     };
 

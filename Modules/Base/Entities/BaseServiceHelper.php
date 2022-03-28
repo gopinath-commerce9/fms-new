@@ -5,6 +5,7 @@ namespace Modules\Base\Entities;
 
 use Illuminate\Support\Facades\Storage;
 use Modules\Base\Entities\RestApiService;
+use Modules\Sales\Entities\SalesRegion;
 
 class BaseServiceHelper
 {
@@ -33,16 +34,42 @@ class BaseServiceHelper
      *
      * @param string $env
      * @param string $channel
+     * @param bool $forceFetch
      *
      * @return array
      */
-    public function getRegionList($env = '', $channel = '') {
+    public function getRegionList($env = '', $channel = '', $forceFetch = false) {
+
+        $regionData = [];
 
         $apiService = $this->restApiService;
         if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
             $apiService = new RestApiService();
             $apiService->setApiEnvironment($env);
             $apiService->setApiChannel($channel);
+        }
+
+        $envClean = $apiService->getApiEnvironment();
+        $channelClean = $apiService->getCurrentApiChannel();
+        $fetchClean = (!is_null($forceFetch) && is_bool($forceFetch)) ? $forceFetch : false;
+
+        if ($fetchClean === false) {
+
+            $regionQuery = SalesRegion::select('*');
+            $regionQuery->where('env', $envClean);
+            if (!is_null($channel) && (trim($channel) != '')) {
+                $regionQuery->where('channel', $channelClean);
+            }
+
+            $regionResult = $regionQuery->get();
+            if ($regionResult) {
+                $regionData = $regionResult->toArray();
+            }
+
+            if (count($regionData) > 0) {
+                return $regionData;
+            }
+
         }
 
         $uri = $apiService->getRestApiUrl() . 'region';
@@ -56,7 +83,35 @@ class BaseServiceHelper
             return [];
         }
 
-        return $apiResult['response'];
+        foreach ($apiResult['response'] as $regionEl) {
+            SalesRegion::updateOrCreate([
+                'env' => $envClean,
+                'channel' => $channelClean,
+                'region_id' => $regionEl['region_id']
+            ], [
+                'entity_id' => $regionEl['entity_id'],
+                'country_id' => $regionEl['country_id'],
+                'name' => $regionEl['name'],
+            ]);
+        }
+
+        $regionQuery = SalesRegion::select('*');
+        $regionQuery->where('env', $envClean);
+        if (!is_null($channel) && (trim($channel) != '')) {
+            $regionQuery->where('channel', $channelClean);
+        }
+
+
+        $regionResult = $regionQuery->get();
+        if ($regionResult) {
+            $regionData = $regionResult->toArray();
+        }
+
+        if (count($regionData) > 0) {
+            return $regionData;
+        }
+
+        return [];
 
     }
 

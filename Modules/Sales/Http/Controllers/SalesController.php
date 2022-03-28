@@ -1447,4 +1447,35 @@ class SalesController extends Controller
 
     }
 
+    public function regionsList(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Sales Regions List';
+
+        $serviceHelper = new SalesServiceHelper();
+        $emirates = $serviceHelper->getAvailableRegionsList('', '', '', false, true);
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+
+        return view('sales::regionslist', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'availableApiChannels',
+            'serviceHelper'
+        ));
+
+    }
+
+    public function regionsListUpdate(Request $request) {
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Sales Regions List';
+
+        $serviceHelper = new SalesServiceHelper();
+        $emirates = $serviceHelper->getAvailableRegionsList('', '', '', true);
+
+        return redirect()->route('sales.regionsList')->with('success', 'The Sales Regions updated successfully!');
+
+    }
+
 }

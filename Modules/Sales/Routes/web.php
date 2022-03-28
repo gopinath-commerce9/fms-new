@@ -44,4 +44,8 @@ Route::prefix('sales')->middleware([
         ->name('sales.picklist');
     Route::post('/filter-picklist', 'SalesController@filterPicklist')
         ->name('sales.filterPicklist');
+    Route::get('/regions', 'SalesController@regionsList')
+        ->name('sales.regionsList');
+    Route::get('/regions-update', 'SalesController@regionsListUpdate')
+        ->name('sales.regionsListUpdate');
 });
