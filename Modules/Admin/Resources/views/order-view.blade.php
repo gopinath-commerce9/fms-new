@@ -127,7 +127,8 @@
                                 <div class="d-flex flex-column flex-root">
                                     <span class="font-weight-bolder mb-2">Order Info.</span>
                                     <span class="opacity-70">
-                                        <?php echo $customerGroups[$saleOrderData['sale_customer']['customer_group_id']] ?>
+                                        <?php $orderCustomerGroup = $saleOrderData['sale_customer']['customer_group_id']; ?>
+                                        <?php echo (array_key_exists($orderCustomerGroup, $customerGroups) ? $customerGroups[$orderCustomerGroup] : '') ?>
                                     </span>
                                 </div>
                                 <div class="d-flex flex-column flex-root">
