@@ -289,12 +289,12 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
      */
     private function getOrderDetailsById($orderId = '') {
 
-        /*$uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
+        $uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
         $apiResult = $this->restApiService->processGetApi($uri);
 
-        return ($apiResult['status']) ? $apiResult['response'] : [];*/
+        return ($apiResult['status']) ? $apiResult['response'] : [];
 
-        $uri = $this->restApiService->getRestApiUrl() . 'orders';
+        /*$uri = $this->restApiService->getRestApiUrl() . 'orders';
         $qParams = [
             'searchCriteria[filter_groups][0][filters][0][field]' => 'entity_id',
             'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
@@ -313,7 +313,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
             array_key_exists('items', $apiResult['response'])
             && is_array($apiResult['response']['items'])
             && (count($apiResult['response']['items']) > 0)
-        ) ? $apiResult['response']['items'][0] : [];
+        ) ? $apiResult['response']['items'][0] : [];*/
 
     }
 

@@ -996,12 +996,12 @@ class SupervisorServiceHelper
         $apiService->setApiEnvironment($env);
         $apiService->setApiChannel($apiChannel);
 
-        /*$uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
+        $uri = $apiService->getRestApiUrl() . 'orders/' . $orderId;
         $apiResult = $this->restApiService->processGetApi($uri);
 
-        return ($apiResult['status']) ? $apiResult['response'] : [];*/
+        return ($apiResult['status']) ? $apiResult['response'] : [];
 
-        $uri = $apiService->getRestApiUrl() . 'orders';
+        /*$uri = $apiService->getRestApiUrl() . 'orders';
         $qParams = [
             'searchCriteria[filter_groups][0][filters][0][field]' => 'entity_id',
             'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
@@ -1020,7 +1020,7 @@ class SupervisorServiceHelper
             array_key_exists('items', $apiResult['response'])
             && is_array($apiResult['response']['items'])
             && (count($apiResult['response']['items']) > 0)
-        ) ? $apiResult['response']['items'][0] : [];
+        ) ? $apiResult['response']['items'][0] : [];*/
 
     }
 
