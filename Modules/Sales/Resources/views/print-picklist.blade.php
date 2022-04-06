@@ -167,7 +167,7 @@
 
                     ?>
 
-                                        <tr id="order-item-list-table-item-row-<?= $orderItemIterator ?>" style="width: 100%; background-color: <?= ($orderIterator % 2 == 0) ? '#e7e9eb' : '#ffffff' ?>">
+                                        <tr id="order-item-list-table-item-row-<?= $orderItemIterator ?>" style="width: 100%; background-color: <?= ($orderIterator % 2 == 0) ? '#9a9c9e' : '#ffffff' ?>">
                                             <td style="width: 12%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" style="font-style: normal; font-weight: normal; word-break: break-all;">
