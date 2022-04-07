@@ -127,6 +127,7 @@
                                             <th>Channel</th>
                                             <th>Emirates</th>
                                             <th>Customer Name</th>
+                                            <th>Customer Address</th>
                                             <th>Delivery Date</th>
                                             <th>Delivery Schedule Interval</th>
                                             <th>Picker</th>

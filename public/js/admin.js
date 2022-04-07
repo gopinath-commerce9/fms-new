@@ -266,7 +266,7 @@ var AdminCustomJsBlocks = function() {
                     });
                     d['action'] = 'datatable';
                     d['columnsDef'] = [
-                        'incrementId', 'channel', 'region', 'customerName', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
+                        'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryPickerTime', 'deliveryDriver', 'deliveryDriverTime', 'orderStatus', 'actions'
                     ];
                 },
@@ -276,6 +276,7 @@ var AdminCustomJsBlocks = function() {
                 {data: 'channel'},
                 {data: 'region'},
                 {data: 'customerName'},
+                {data: 'customerAddress'},
                 {data: 'deliveryDate'},
                 {data: 'deliveryTimeSlot'},
                 {data: 'deliveryPicker'},
@@ -293,7 +294,7 @@ var AdminCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 10,
+                targets: 11,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

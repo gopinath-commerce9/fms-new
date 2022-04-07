@@ -77,7 +77,7 @@ var DriverCustomJsBlocks = function() {
                         d[val.name] = val.value;
                     });
                     d['columnsDef'] = [
-                        'incrementId', 'channel', 'region', 'customerName', 'deliveryDate', 'deliveryTimeSlot',
+                        'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot',
                         'deliveryPickerTime', 'deliveryDriverTime', 'orderStatus', 'actions'
                     ];
                 },
@@ -87,6 +87,7 @@ var DriverCustomJsBlocks = function() {
                 {data: 'channel'},
                 {data: 'region'},
                 {data: 'customerName'},
+                {data: 'customerAddress'},
                 {data: 'deliveryDate'},
                 {data: 'deliveryTimeSlot'},
                 {data: 'deliveryPickerTime'},
@@ -102,7 +103,7 @@ var DriverCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 8,
+                targets: 9,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

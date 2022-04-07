@@ -202,7 +202,16 @@ class SupervisorController extends Controller
                     $emirateId = $record->region_id;
                     $tempRecord['region'] = $emirates[$emirateId];
                     $shipAddress = $record->shippingAddress;
+                    $shipAddressString = '';
+                    $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
+                    $shipAddressString .= (isset($shipAddress->address_1)) ? $shipAddress->address_1 : '';
+                    $shipAddressString .= (isset($shipAddress->address_2)) ? ', ' . $shipAddress->address_2 : '';
+                    $shipAddressString .= (isset($shipAddress->address_3)) ? ', ' . $shipAddress->address_3 : '';
+                    $shipAddressString .= (isset($shipAddress->city)) ? ', ' . $shipAddress->city : '';
+                    $shipAddressString .= (isset($shipAddress->region)) ? ', ' . $shipAddress->region : '';
+                    $shipAddressString .= (isset($shipAddress->post_code)) ? ', ' . $shipAddress->post_code : '';
                     $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
+                    $tempRecord['customerAddress'] = $shipAddressString;
                     $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record->delivery_date));
                     $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
                     $tempRecord['deliveryPicker'] = '';
@@ -633,6 +642,12 @@ class SupervisorController extends Controller
             $saleOrderObj->paymentData;
             $saleOrderObj->statusHistory;
             $saleOrderObj->processHistory;
+            $saleOrderObj->currentPicker;
+            if ($saleOrderObj->currentPicker && (count($saleOrderObj->currentPicker) > 0)) {
+                foreach ($saleOrderObj->currentPicker as $dPicker) {
+                    $dPicker->actionDoer;
+                }
+            }
             if ($saleOrderObj->processHistory && (count($saleOrderObj->processHistory) > 0)) {
                 foreach($saleOrderObj->processHistory as $processHistory) {
                     $processHistory->actionDoer;

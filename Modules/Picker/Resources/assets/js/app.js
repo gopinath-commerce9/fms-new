@@ -77,7 +77,7 @@ var PickerCustomJsBlocks = function() {
                         d[val.name] = val.value;
                     });
                     d['columnsDef'] = [
-                        'incrementId', 'channel', 'region', 'customerName', 'deliveryDate', 'deliveryTimeSlot',
+                        'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot',
                         'deliveryPickerTime', 'orderStatus', 'actions'
                     ];
                 },
@@ -87,6 +87,7 @@ var PickerCustomJsBlocks = function() {
                 {data: 'channel'},
                 {data: 'region'},
                 {data: 'customerName'},
+                {data: 'customerAddress'},
                 {data: 'deliveryDate'},
                 {data: 'deliveryTimeSlot'},
                 {data: 'deliveryPickerTime'},
@@ -101,7 +102,7 @@ var PickerCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 7,
+                targets: 8,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

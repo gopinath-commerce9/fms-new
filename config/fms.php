@@ -138,6 +138,7 @@ return [
         'processing' => 'Processing',
         'returned' => 'Returned',
         'delivered' => 'Delivered',
+        'shipped' => 'Shipped',
     ],
 
     /*'emirates' => [

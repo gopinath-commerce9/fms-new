@@ -194,7 +194,16 @@ class SalesController extends Controller
             $emirateId = $record->region_id;
             $tempRecord['region'] = $emirates[$emirateId];
             $shipAddress = $record->shippingAddress;
+            $shipAddressString = '';
+            $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
+            $shipAddressString .= (isset($shipAddress->address_1)) ? $shipAddress->address_1 : '';
+            $shipAddressString .= (isset($shipAddress->address_2)) ? ', ' . $shipAddress->address_2 : '';
+            $shipAddressString .= (isset($shipAddress->address_3)) ? ', ' . $shipAddress->address_3 : '';
+            $shipAddressString .= (isset($shipAddress->city)) ? ', ' . $shipAddress->city : '';
+            $shipAddressString .= (isset($shipAddress->region)) ? ', ' . $shipAddress->region : '';
+            $shipAddressString .= (isset($shipAddress->post_code)) ? ', ' . $shipAddress->post_code : '';
             $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
+            $tempRecord['customerAddress'] = $shipAddressString;
             $tempRecord['deliveryDate'] = (!is_null($record->delivery_date)) ? date('d-m-Y', strtotime($record->delivery_date)) : '';
             $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
             $tempRecord['deliveryPicker'] = '';
@@ -1234,6 +1243,7 @@ class SalesController extends Controller
                                         'sellingUnit' => $orderItemEl->selling_unit
                                     ];
 
+                                    $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
                                     if ($record->shippingAddress) {
                                         $shippingAddress = $record->shippingAddress;
                                         $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [

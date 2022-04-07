@@ -147,6 +147,70 @@
                             foreach ($slotOrderEl as $idOrderKey => $idOrderEl) {
                                 $orderIterator++;
                                 $orderItems = $idOrderEl['items'];
+                                $shipAddress = $idOrderEl['shippingAddress'];
+                                $customerName = '';
+                                $customerName .= (isset($shipAddress['firstName'])) ? $shipAddress['firstName'] : '';
+                                $customerName .= (isset($shipAddress['lastName'])) ? ' ' . $shipAddress['lastName'] : '';
+                                $shipAddressString = '';
+                                $shipAddressString .= (isset($shipAddress['address1'])) ? $shipAddress['address1'] : '';
+                                $shipAddressString .= (isset($shipAddress['address2'])) ? ', ' . $shipAddress['address2'] : '';
+                                $shipAddressString .= (isset($shipAddress['address3'])) ? ', ' . $shipAddress['address3'] : '';
+                                $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+                                $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+                                $shipAddressString .= (isset($shipAddress['postCode'])) ? ', ' . $shipAddress['postCode'] : '';
+
+                    ?>
+
+                                        <tr id="order-item-list-table-customer-name-row-<?= $orderIterator ?>" style="width: 100%; background-color: <?= ($orderIterator % 2 == 0) ? '#9a9c9e' : '#ffffff' ?>">
+                                            <td style="width: 12%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td style="width: 10%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-size: medium; font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+                                                        <?= 'Customer Name : ' . $customerName ?>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr id="order-item-list-table-customer-address-row-<?= $orderIterator ?>" style="width: 100%; background-color: <?= ($orderIterator % 2 == 0) ? '#9a9c9e' : '#ffffff' ?>">
+                                            <td style="width: 12%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td style="width: 10%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-size: medium; font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+                                                        <?= 'Customer Address : ' . $shipAddressString ?>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                    <?php
+
                                 foreach ($orderItems as $itemTypeKey => $itemTypeEl) {
                                     foreach ($itemTypeEl as $itemKey => $itemEl) {
 

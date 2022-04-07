@@ -472,6 +472,7 @@ class UserRoleController extends Controller
         /*$emirates = config('fms.emirates');*/
         $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $allAvailableStatuses = $serviceHelper->getAvailableStatuses();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
 
         $currentRole = null;
@@ -487,6 +488,7 @@ class UserRoleController extends Controller
             'serviceHelper',
             'emirates',
             'availableApiChannels',
+            'allAvailableStatuses',
             'availableStatuses',
             'currentRole'
         ));
@@ -707,6 +709,7 @@ class UserRoleController extends Controller
         /*$emirates = config('fms.emirates');*/
         $emirates = $serviceHelper->getAvailableRegionsList();
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $allAvailableStatuses = $serviceHelper->getAvailableStatuses();
         $availableStatuses = $serviceHelper->getAvailableStatuses();
 
         $currentRole = null;
@@ -722,6 +725,7 @@ class UserRoleController extends Controller
             'serviceHelper',
             'emirates',
             'availableApiChannels',
+            'allAvailableStatuses',
             'availableStatuses',
             'currentRole'
         ));

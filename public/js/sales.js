@@ -77,7 +77,7 @@ var SalesCustomJsBlocks = function() {
                         d[val.name] = val.value;
                     });
                     d['columnsDef'] = [
-                        'incrementId', 'channel', 'region', 'customerName', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
+                        'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryPickerTime', 'deliveryDriver', 'deliveryDriverTime', 'orderStatus', 'actions'
                     ];
                 },
@@ -87,6 +87,7 @@ var SalesCustomJsBlocks = function() {
                 {data: 'channel'},
                 {data: 'region'},
                 {data: 'customerName'},
+                {data: 'customerAddress'},
                 {data: 'deliveryDate'},
                 {data: 'deliveryTimeSlot'},
                 {data: 'deliveryPicker'},
@@ -104,7 +105,7 @@ var SalesCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 10,
+                targets: 11,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

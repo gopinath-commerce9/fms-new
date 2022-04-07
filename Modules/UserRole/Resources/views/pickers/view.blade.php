@@ -181,6 +181,7 @@
                                                     <th>Channel</th>
                                                     <th>Emirates</th>
                                                     <th>Customer Name</th>
+                                                    <th>Customer Address</th>
                                                     <th>Delivery Date</th>
                                                     <th>Delivery Schedule Interval</th>
                                                     <th>Picker</th>
@@ -199,6 +200,14 @@
                                                     $apiChannelId = $orderEl->channel;
                                                     $emirateId = $orderEl->region_id;
                                                     $shipAddress = $orderEl->shippingAddress;
+                                                    $shipAddressString = '';
+                                                    $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
+                                                    $shipAddressString .= (isset($shipAddress->address_1)) ? $shipAddress->address_1 : '';
+                                                    $shipAddressString .= (isset($shipAddress->address_2)) ? ', ' . $shipAddress->address_2 : '';
+                                                    $shipAddressString .= (isset($shipAddress->address_3)) ? ', ' . $shipAddress->address_3 : '';
+                                                    $shipAddressString .= (isset($shipAddress->city)) ? ', ' . $shipAddress->city : '';
+                                                    $shipAddressString .= (isset($shipAddress->region)) ? ', ' . $shipAddress->region : '';
+                                                    $shipAddressString .= (isset($shipAddress->post_code)) ? ', ' . $shipAddress->post_code : '';
                                                     $orderStatusId = $orderEl->order_status;
                                                     $pickerName = '';
                                                     $orderPickerId = 0;
@@ -230,6 +239,7 @@
                                                         <td>{{ $availableApiChannels[$apiChannelId]['name'] }}</td>
                                                         <td>{{ $emirates[$emirateId] }}</td>
                                                         <td>{{ $shipAddress->first_name . ' ' . $shipAddress->last_name }}</td>
+                                                        <td>{{ $shipAddressString }}</td>
                                                         <td>{{ date('d-m-Y', strtotime($orderEl->delivery_date)) }}</td>
                                                         <td>{{ $orderEl->delivery_time_slot }}</td>
                                                         <td>
@@ -254,7 +264,7 @@
                                                         <td>{{ $deliveredAt }}</td>
                                                         <td>
                                                             <span class="label label-lg font-weight-bold label-light-primary label-inline">
-                                                                {{ $availableStatuses[$orderStatusId] }}
+                                                                {{ $allAvailableStatuses[$orderStatusId] }}
                                                             </span>
                                                         </td>
                                                         <td>
