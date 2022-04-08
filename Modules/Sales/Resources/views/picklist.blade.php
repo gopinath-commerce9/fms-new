@@ -89,10 +89,11 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-                                            
+
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
+                                            <input type="hidden" name="items_selected_values" id="items_selected_values" value="" />
                                             <input type="hidden" name="order_status_values" id="order_status_values" value="" />
                                             <input type="hidden" name="product_category_values" id="product_category_values" value="" />
                                             <button type="button" id="filter_item_picklist_filter_btn" class="btn btn-primary btn-lg mr-2">
@@ -101,12 +102,48 @@
                                             <button type="button" id="filter_item_picklist_reset_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-close"></i>Reset</span>
                                             </button>
-                                            <button type="button" id="filter_item_picklist_pdf_btn" class="btn btn-primary btn-lg mr-2">
-                                                <span><i class="la la-print"></i>Print</span>
-                                            </button>
-                                            <button type="button" id="filter_item_picklist_csv_btn" class="btn btn-primary btn-lg mr-2">
-                                                <span><i class="la la-file-excel"></i>Export</span>
-                                            </button>
+                                            <div class="dropdown dropdown-inline mr-2" id="filter-item-picklist-print-dropdown-area">
+                                                <button type="button" class="btn btn-light-primary font-weight-bolder dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="la la-print"></i>Print
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-sm dropdown-menu-right">
+                                                    <ul class="nav flex-column nav-hover">
+                                                        <li class="nav-item">
+                                                            <a href="#" class="nav-link" id="filter_item_picklist_pdf_all_btn">
+                                                                <i class="nav-icon la la-print"></i>
+                                                                <span class="nav-text">Print All</span>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a href="#" class="nav-link" id="filter_item_picklist_pdf_selected_btn">
+                                                                <i class="nav-icon la la-print"></i>
+                                                                <span class="nav-text">Print Selected</span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown dropdown-inline mr-2" id="filter-item-picklist-export-dropdown-area">
+                                                <button type="button" class="btn btn-light-primary font-weight-bolder dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="la la-file-excel"></i>Export
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-sm dropdown-menu-right">
+                                                    <ul class="nav flex-column nav-hover">
+                                                        <li class="nav-item">
+                                                            <a href="#" class="nav-link" id="filter_item_picklist_csv_all_btn">
+                                                                <i class="nav-icon la la-file-excel"></i>
+                                                                <span class="nav-text">Export All</span>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a href="#" class="nav-link" id="filter_item_picklist_csv_selected_btn">
+                                                                <i class="nav-icon la la-file-excel"></i>
+                                                                <span class="nav-text">Export Selected</span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -125,6 +162,7 @@
 
                                         <thead>
                                             <tr>
+                                                <th>Select</th>
                                                 <th>Delivery Date</th>
                                                 <th>Delivery TimeSlot</th>
                                                 <th>Order Id</th>

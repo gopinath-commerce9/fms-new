@@ -1065,6 +1065,11 @@ class SalesController extends Controller
             && (trim($request->input('store_availability_filter')) != '')
         ) ? explode(',', trim($request->input('store_availability_filter'))) : [];
 
+        $itemSelectedFilter = (
+            $request->has('items_selected_values')
+            && (trim($request->input('items_selected_values')) != '')
+        ) ? explode(',', trim($request->input('items_selected_values'))) : [];
+
         $filteredOrders = $serviceHelper->getSaleOrderPickList($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
         if ($filteredOrders) {
             if ($methodAction == 'datatable') {
@@ -1131,7 +1136,12 @@ class SalesController extends Controller
                                     $currentRec++;
                                     if (($currentRec >= $collectRecStart) && ($currentRec < $collectRecEnd)) {
 
+                                        $itemSelector = '<label class="checkbox checkbox-single checkbox-solid checkbox-primary mb-0 justify-content-center">';
+                                        $itemSelector .= '<input type="checkbox" value="" class="checkable sales-picklist-item" id="sales-picklist-item-' . $orderItemEl->id;
+                                        $itemSelector .= '" name="sales-picklist-item-' . $orderItemEl->id .'" data-item-id="' . $orderItemEl->id . '"/><span></span></label>';
+
                                         $filteredOrderData[] = [
+                                            'itemSelector' => $itemSelector,
                                             'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
                                             'deliveryTimeSlot' => $record->delivery_time_slot,
                                             'orderId' => $record->increment_id,
@@ -1222,43 +1232,47 @@ class SalesController extends Controller
 
                                 if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
 
-                                    $productWeight = 0;
-                                    if (array_key_exists($productCatIdFinal, $filteredOrderTotalWeight)) {
-                                        $productWeight = (float) $filteredOrderTotalWeight[$productCatIdFinal]['weight'];
-                                    }
-                                    $filteredOrderTotalWeight[$productCatIdFinal]['id'] = $productCatIdFinal;
-                                    $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
-                                    $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
+                                    if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
 
-                                    $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
-                                        'deliveryDate' => $record->delivery_date,
-                                        'deliveryTimeSlot' => $record->delivery_time_slot,
-                                        'orderId' => $record->order_id,
-                                        'orderNumber' => $record->increment_id,
-                                        'productType' => $productCatFinal,
-                                        'productSku' => $orderItemEl->item_sku,
-                                        'productName' => $orderItemEl->item_name,
-                                        'productInfo' => $orderItemEl->item_info,
-                                        'quantity' => $orderItemEl->qty_ordered,
-                                        'sellingUnit' => $orderItemEl->selling_unit
-                                    ];
+                                        $productWeight = 0;
+                                        if (array_key_exists($productCatIdFinal, $filteredOrderTotalWeight)) {
+                                            $productWeight = (float) $filteredOrderTotalWeight[$productCatIdFinal]['weight'];
+                                        }
+                                        $filteredOrderTotalWeight[$productCatIdFinal]['id'] = $productCatIdFinal;
+                                        $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
+                                        $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
 
-                                    $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
-                                    if ($record->shippingAddress) {
-                                        $shippingAddress = $record->shippingAddress;
-                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [
-                                            'firstName' => $shippingAddress['first_name'],
-                                            'lastName' => $shippingAddress['last_name'],
-                                            'address1' => $shippingAddress['address_1'],
-                                            'address2' => $shippingAddress['address_2'],
-                                            'address3' => $shippingAddress['address_3'],
-                                            'city' => $shippingAddress['city'],
-                                            'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
-                                            'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
-                                            'countryId' => $shippingAddress['country_id'],
-                                            'postCode' => $shippingAddress['post_code'],
-                                            'contactNumber' => $shippingAddress['contact_number'],
+                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
+                                            'deliveryDate' => $record->delivery_date,
+                                            'deliveryTimeSlot' => $record->delivery_time_slot,
+                                            'orderId' => $record->order_id,
+                                            'orderNumber' => $record->increment_id,
+                                            'productType' => $productCatFinal,
+                                            'productSku' => $orderItemEl->item_sku,
+                                            'productName' => $orderItemEl->item_name,
+                                            'productInfo' => $orderItemEl->item_info,
+                                            'quantity' => $orderItemEl->qty_ordered,
+                                            'sellingUnit' => $orderItemEl->selling_unit
                                         ];
+
+                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
+                                        if ($record->shippingAddress) {
+                                            $shippingAddress = $record->shippingAddress;
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [
+                                                'firstName' => $shippingAddress['first_name'],
+                                                'lastName' => $shippingAddress['last_name'],
+                                                'address1' => $shippingAddress['address_1'],
+                                                'address2' => $shippingAddress['address_2'],
+                                                'address3' => $shippingAddress['address_3'],
+                                                'city' => $shippingAddress['city'],
+                                                'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                                                'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                                                'countryId' => $shippingAddress['country_id'],
+                                                'postCode' => $shippingAddress['post_code'],
+                                                'contactNumber' => $shippingAddress['contact_number'],
+                                            ];
+                                        }
+
                                     }
 
                                 }
@@ -1363,30 +1377,34 @@ class SalesController extends Controller
 
                                 if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
 
-                                    $orderNumber = (!empty($record->increment_id)) ? "#" . $record->increment_id : "";
-                                    $productCategory = (!empty($productCatFinal)) ? $productCatFinal : "";
-                                    $productSku = (!empty($orderItemEl->item_sku)) ? $orderItemEl->item_sku : "";
-                                    $productName = (!empty($orderItemEl->item_name)) ? $orderItemEl->item_name : "";
-                                    $weightInfo = (!empty($orderItemEl->item_info)) ? $orderItemEl->item_info : "";
-                                    $nameLabel = '';
-                                    $nameLabel .= ($productName != '') ? $productName : '';
-                                    $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
-                                    $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
-                                    $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
-                                    $qtyLabel = '';
-                                    $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
-                                    $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
+                                    if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
 
-                                    $filteredOrderData[] = [
-                                        'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
-                                        'deliveryTimeSlot' => $record->delivery_time_slot,
-                                        'orderNumber' => $orderNumber,
-                                        'productCat' => $productCategory,
-                                        'productSku' => $productSku,
-                                        'productName' => $nameLabel,
-                                        'quantity' => $qtyLabel,
-                                        'availability' => $storeAvailabilityStatusLabel
-                                    ];
+                                        $orderNumber = (!empty($record->increment_id)) ? "#" . $record->increment_id : "";
+                                        $productCategory = (!empty($productCatFinal)) ? $productCatFinal : "";
+                                        $productSku = (!empty($orderItemEl->item_sku)) ? $orderItemEl->item_sku : "";
+                                        $productName = (!empty($orderItemEl->item_name)) ? $orderItemEl->item_name : "";
+                                        $weightInfo = (!empty($orderItemEl->item_info)) ? $orderItemEl->item_info : "";
+                                        $nameLabel = '';
+                                        $nameLabel .= ($productName != '') ? $productName : '';
+                                        $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
+                                        $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
+                                        $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
+                                        $qtyLabel = '';
+                                        $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
+                                        $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
+
+                                        $filteredOrderData[] = [
+                                            'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
+                                            'deliveryTimeSlot' => $record->delivery_time_slot,
+                                            'orderNumber' => $orderNumber,
+                                            'productCat' => $productCategory,
+                                            'productSku' => $productSku,
+                                            'productName' => $nameLabel,
+                                            'quantity' => $qtyLabel,
+                                            'availability' => $storeAvailabilityStatusLabel
+                                        ];
+
+                                    }
 
                                 }
 
