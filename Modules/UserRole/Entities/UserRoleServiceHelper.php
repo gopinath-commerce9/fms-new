@@ -575,7 +575,8 @@ class UserRoleServiceHelper
                                     $tempArrayRecord = [
                                         'driverId' => $userEl->id,
                                         'driver' => $userEl->name,
-                                        'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                        'orderDeliveryDate' => date('Y-m-d', strtotime($saleOrderData['delivery_date'])),
+                                        'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                                         'orderId' => "#" . $saleOrderData['increment_id'],
                                         'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
                                         'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],

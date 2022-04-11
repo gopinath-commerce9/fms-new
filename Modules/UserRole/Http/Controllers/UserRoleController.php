@@ -635,7 +635,7 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Driver Id", "Driver Name", "Delivery Date", "Order Number", "Order Status", "Payment Method", "Initial Pay"];
+            $headingColumns = ["Driver Id", "Driver Name", "Order Delivery Date", "Driver Delivery Date", "Order Number", "Order Status", "Payment Method", "Initial Pay"];
             $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
             foreach ($collectionMethods as $methodEl) {
                 $headingColumns[] = ucwords($methodEl) . " Collected";
@@ -653,7 +653,8 @@ class UserRoleController extends Controller
                         $rowDataArray = [
                             $row['driverId'],
                             $row['driver'],
-                            date('d-m-Y', strtotime($row['date'])),
+                            date('d-m-Y', strtotime($row['orderDeliveryDate'])),
+                            date('d-m-Y', strtotime($row['driverDeliveryDate'])),
                             $row['orderId'],
                             $row['orderStatus'],
                             $row['paymentMethod'],
