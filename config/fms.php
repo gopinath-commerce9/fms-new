@@ -176,6 +176,7 @@ return [
             'out_for_delivery',
             'delivered',
             'canceled',
+            'closed',
         ],
         'picker' => [
             'being_prepared',

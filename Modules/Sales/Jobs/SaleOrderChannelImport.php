@@ -64,6 +64,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
         'being_prepared',
         /*'holded',
         'order_updated',*/
+        'closed',
         'ready_to_dispatch',
         /*'out_for_delivery',
         'delivered',
