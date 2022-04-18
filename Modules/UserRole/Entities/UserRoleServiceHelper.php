@@ -485,9 +485,20 @@ class UserRoleServiceHelper
 
                             if ($canProceed) {
 
+                                $currentSaleOrder->shippingAddress;
                                 $currentSaleOrder->paymentData;
                                 $currentSaleOrder->paidAmountCollections;
                                 $saleOrderData = $currentSaleOrder->toArray();
+
+                                $shipAddress = $saleOrderData['shipping_address'];
+                                $shipAddressString = '';
+                                $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
+                                $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
+                                $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+                                $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+                                $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
 
                                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
                                 $totalOrderValue = $saleOrderData['order_total'];
@@ -578,6 +589,8 @@ class UserRoleServiceHelper
                                         'orderDeliveryDate' => date('Y-m-d', strtotime($saleOrderData['delivery_date'])),
                                         'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                                         'orderId' => "#" . $saleOrderData['increment_id'],
+                                        'emirates' => $saleOrderData['region'],
+                                        'shippingAddress' => $shipAddressString,
                                         'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
                                         'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
                                         'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
