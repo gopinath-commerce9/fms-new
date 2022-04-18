@@ -248,8 +248,8 @@ var AdminCustomJsBlocks = function() {
             responsive: true,
             dom: `<'row'<'col-sm-12'tr>>
 			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
-            lengthMenu: [5, 10, 25, 50],
-            pageLength: 5,
+            lengthMenu: [50, 100, 200],
+            pageLength: 50,
             order: [[0, 'asc']],
             searchDelay: 500,
             processing: true,
