@@ -206,7 +206,14 @@
                                             <input  type="hidden" class="datatable-date-input" value="{{ date('Y-m-d') }}" id="delivery_date_start_filter" name="delivery_date_start_filter" />
                                             <input  type="hidden" class="datatable-date-input" value="{{ date('Y-m-d') }}" id="delivery_date_end_filter" name="delivery_date_end_filter" />
                                         </div>
-                                        <div class="col-lg-4"></div>
+                                        <div class="col-lg-4">
+                                            <select class="form-control datatable-input" id="delivery_slot_filter" name="delivery_slot_filter" >
+                                                <option value="" >Select a Time Slot</option>
+                                                @foreach($deliveryTimeSlots as $deliveryEl)
+                                                    <option value="{{ $deliveryEl }}" >{{ $deliveryEl }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
                                             <button type="button" id="filter_driver_report_filter_btn" class="btn btn-primary btn-lg mr-2">

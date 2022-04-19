@@ -126,6 +126,24 @@ class UserRoleServiceHelper
 
     }
 
+    public function getDeliveryTimeSlots() {
+        $statusList = $this->getAvailableStatuses();
+        $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->groupBy('delivery_time_slot')
+            ->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc')
+            ->select('delivery_time_slot', DB::raw('count(*) as total_orders'))
+            ->get();
+        $timeSlotArray = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                if (trim($orderEl->delivery_time_slot) != '') {
+                    $timeSlotArray[] = $orderEl->delivery_time_slot;
+                }
+            }
+        }
+        return $timeSlotArray;
+    }
+
     public function getPickerDeliveryTimeSlots() {
         $statusList = $this->getPickersAllowedStatuses();
         $orders = SaleOrder::whereIn('order_status', array_keys($statusList))
@@ -289,7 +307,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '') {
+    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
         $statsList = [];
 
@@ -298,6 +316,7 @@ class UserRoleServiceHelper
         $driverClean = (!is_null($driver) && (trim($driver) != '')) ? trim($driver) : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
         $fromDate = null;
         $toDate = null;
         if (!is_null($startDateClean) && !is_null($endDateClean)) {
@@ -340,6 +359,10 @@ class UserRoleServiceHelper
                             }
 
                             if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($processHistory->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($timeSlotClean) && ($currentSaleOrder->delivery_time_slot != $timeSlotClean)) {
                                 $canProceed = false;
                             }
 
@@ -427,7 +450,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '') {
+    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
         $statsList = [];
 
@@ -436,6 +459,7 @@ class UserRoleServiceHelper
         $driverClean = (!is_null($driver) && (trim($driver) != '')) ? trim($driver) : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
         $fromDate = null;
         $toDate = null;
         if (!is_null($startDateClean) && !is_null($endDateClean)) {
@@ -480,6 +504,10 @@ class UserRoleServiceHelper
                             }
 
                             if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($processHistory->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($timeSlotClean) && ($currentSaleOrder->delivery_time_slot != $timeSlotClean)) {
                                 $canProceed = false;
                             }
 

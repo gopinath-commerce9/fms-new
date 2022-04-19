@@ -511,6 +511,7 @@ class UserRoleController extends Controller
         $todayDate = date('Y-m-d');
 
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
 
         return view('userrole::drivers.list', compact(
             'pageTitle',
@@ -518,6 +519,7 @@ class UserRoleController extends Controller
             'emirates',
             'todayDate',
             'availableApiChannels',
+            'deliveryTimeSlots',
             'serviceHelper',
             'drivers'
         ));
@@ -582,9 +584,14 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_date_end_filter')) != '')
         ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
 
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
         if ($methodAction == 'datatable') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
 
             $filteredOrderData = [];
             $totalRec = 0;
@@ -620,7 +627,7 @@ class UserRoleController extends Controller
 
         }  elseif ($methodAction == 'excel_sheet') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
             if (count($filteredOrderStats) <= 0) {
                 return back()
                     ->with('error', "There is no record to export the CSV file.");
