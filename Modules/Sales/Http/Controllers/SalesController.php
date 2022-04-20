@@ -1255,6 +1255,7 @@ class SalesController extends Controller
                                             'sellingUnit' => $orderItemEl->selling_unit
                                         ];
 
+                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['deliveryNotes'] = $record->delivery_notes;
                                         $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
                                         if ($record->shippingAddress) {
                                             $shippingAddress = $record->shippingAddress;

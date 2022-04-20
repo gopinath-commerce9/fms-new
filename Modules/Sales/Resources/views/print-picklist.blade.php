@@ -209,6 +209,30 @@
                                             </td>
                                         </tr>
 
+                                        <tr id="order-item-list-table-customer-address-row-<?= $orderIterator ?>" style="width: 100%; background-color: <?= ($orderIterator % 2 == 0) ? '#9a9c9e' : '#ffffff' ?>">
+                                            <td style="width: 12%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td style="width: 10%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" style="font-size: medium; font-style: normal; font-weight: normal; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+                                                        <?= 'Delivery Notes : ' . $idOrderEl['deliveryNotes'] ?>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+
                     <?php
 
                                 foreach ($orderItems as $itemTypeKey => $itemTypeEl) {
