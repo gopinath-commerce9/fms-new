@@ -14,6 +14,19 @@ var RoleDriversCustomJsBlocks = function() {
         });
     };
 
+    var initRoleDriversReportViewTable = function() {
+        var table = $('#role_driver_report_view_table');
+        var dataTable = table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [10, 25, 50, 100],
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: []
+        });
+    };
+
     var initRoleDriverOrderListTable = function() {
         var table = $('#driver_view_orders_table');
         var dataTable = table.DataTable({
@@ -76,7 +89,7 @@ var RoleDriversCustomJsBlocks = function() {
                     });
                     d['columnsDef'] = [
                         'driverId', 'driver', 'active', 'date', 'assignedOrders', 'deliveryOrders',
-                        'deliveredOrders', 'canceledOrders'
+                        'deliveredOrders', 'canceledOrders', 'actions'
                     ];
                 },
             },
@@ -89,8 +102,16 @@ var RoleDriversCustomJsBlocks = function() {
                 {data: 'deliveryOrders'},
                 {data: 'deliveredOrders'},
                 {data: 'canceledOrders'},
+                {data: 'actions', className: 'text-wrap', responsivePriority: -1},
             ],
             columnDefs: [{
+                targets: -1,
+                title: 'Actions',
+                orderable: false,
+                render: function(data, type, full, meta) {
+                    return '<a href="' + data + '" target="_blank">View More</a>';
+                },
+            }, {
                 targets: 2,
                 title: 'Active',
                 orderable: true,
@@ -134,6 +155,9 @@ var RoleDriversCustomJsBlocks = function() {
         },
         viewPage: function(hostUrl) {
             initRoleDriverOrderListTable();
+        },
+        reportViewPage: function(hostUrl) {
+            initRoleDriversReportViewTable();
         },
     };
 

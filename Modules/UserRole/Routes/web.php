@@ -77,6 +77,8 @@ Route::prefix('userrole')->middleware([
         ->name('roles.driversList');
     Route::post('/drivers-report-filter', 'UserRoleController@driversReportFilter')
         ->name('roles.driversReportFilter');
+    Route::get('/drivers-report-view-more', 'UserRoleController@driversReportViewMore')
+        ->name('roles.driversReportViewMore');
     Route::get('/drivers/view/{driverId}', 'UserRoleController@driverView')
         ->name('roles.driverView');
 

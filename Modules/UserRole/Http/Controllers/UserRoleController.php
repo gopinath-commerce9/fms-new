@@ -604,6 +604,13 @@ class UserRoleController extends Controller
                 if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                     continue;
                 }
+                $actionLinkUrl = route('roles.driversReportViewMore', [
+                    'region' => $region,
+                    'channel' => $apiChannel,
+                    'driver' => $record['driverId'],
+                    'delivery_date' => date('Y-m-d', strtotime($record['date'])),
+                    'delivery_slot' => $deliverySlot,
+                ]);
                 $filteredOrderData[] = [
                     'driverId' => $record['driverId'],
                     'driver' => $record['driver'],
@@ -612,7 +619,8 @@ class UserRoleController extends Controller
                     'assignedOrders' => $record['assignedOrders'],
                     'deliveryOrders' => $record['deliveryOrders'],
                     'deliveredOrders' => $record['deliveredOrders'],
-                    'canceledOrders' => $record['canceledOrders']
+                    'canceledOrders' => $record['canceledOrders'],
+                    'actions' => $actionLinkUrl
                 ];
             }
 
@@ -662,7 +670,7 @@ class UserRoleController extends Controller
                             $row['driver'],
                             date('d-m-Y', strtotime($row['orderDeliveryDate'])),
                             date('d-m-Y', strtotime($row['driverDeliveryDate'])),
-                            $row['orderId'],
+                            $row['orderNumber'],
                             $row['emirates'],
                             $row['shippingAddress'],
                             $row['orderStatus'],
@@ -685,6 +693,99 @@ class UserRoleController extends Controller
             return response()->stream($callback, 200, $headers);
 
         }
+
+    }
+
+    public function driversReportViewMore(Request $request) {
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $region = (
+            $request->has('region')
+            && (trim($request->input('region')) != '')
+            && array_key_exists(trim($request->input('region')), $emirates)
+        ) ? trim($request->input('region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel')
+            && (trim($request->input('channel')) != '')
+            && array_key_exists(trim($request->input('channel')), $availableApiChannels)
+        ) ? trim($request->input('channel')) : '';
+
+        $driver = (
+            $request->has('driver')
+            && (trim($request->input('driver')) != '')
+        ) ? trim($request->input('driver')) : '';
+
+        $startDate = (
+            $request->has('delivery_date')
+            && (trim($request->input('delivery_date')) != '')
+        ) ? trim($request->input('delivery_date')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date')
+            && (trim($request->input('delivery_date')) != '')
+        ) ? trim($request->input('delivery_date')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot')
+            && (trim($request->input('delivery_slot')) != '')
+        ) ? trim($request->input('delivery_slot')) : '';
+
+        if (is_null($driver) || !is_numeric($driver) || ((int)$driver <= 0)) {
+            return back()
+                ->with('error', 'The Driver Id input is invalid!');
+        }
+
+        $driverObject = User::find($driver);
+        if (!$driverObject) {
+            return back()
+                ->with('error', 'The Driver does not exist!');
+        }
+
+        if (is_null($driverObject->mappedRole) || (count($driverObject->mappedRole) == 0)) {
+            return back()
+                ->with('error', 'The given User is not a Driver!');
+        }
+
+        $mappedRole = $driverObject->mappedRole[0];
+        if (!$mappedRole->isDriver()) {
+            return back()
+                ->with('error', 'The given User is not a Driver!');
+        }
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Driver (' . $driverObject->name . ') Activities on ' . date('d-m-Y', strtotime($startDate)) . '';
+
+        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
+        if (count($filteredOrderStats) <= 0) {
+            return back()
+                ->with('error', "There is no record of Activities of the Driver.");
+        }
+
+        $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        $givenUserData = $driverObject;
+
+        return view('userrole::drivers.report-view', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'givenUserData',
+            'serviceHelper',
+            'emirates',
+            'availableApiChannels',
+            'collectionMethods',
+            'filteredOrderStats',
+            'currentRole'
+        ));
 
     }
 

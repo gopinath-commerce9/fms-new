@@ -251,6 +251,7 @@
                                                 <th>Orders Out-For-Delivery</th>
                                                 <th>Orders Delivered</th>
                                                 <th>Orders Canceled</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
 
