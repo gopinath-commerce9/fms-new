@@ -8,6 +8,7 @@
     <div class="card card-custom">
         <div class="row border-bottom mb-7">
 
+            <?php /* ?>
             <div class="col-md-6">
                 <div class="card card-custom">
                     <form name="searchorder" action="{{ url('/admin/fetch-channel-orders') }}" method="POST" id="fetch_api_orders_form">
@@ -38,8 +39,9 @@
                     </form>
                 </div>
             </div>
+            <?php */ ?>
 
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="card card-custom">
                     <form name="searchorder" action="{{ url('/admin/find-order') }}" method="POST">
                         @csrf
