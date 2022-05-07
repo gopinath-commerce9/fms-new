@@ -10,6 +10,7 @@ use Modules\Admin\Entities\AdminServiceHelper;
 use Modules\API\Entities\ApiServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Jobs\SaleOrderChannelImport;
+use Modules\Sales\Jobs\SalesOrderIndividualImport;
 
 class AdminController extends Controller
 {
@@ -486,6 +487,27 @@ class AdminController extends Controller
 
         $sessionUser = session('authUserData');
         SaleOrderChannelImport::dispatch($apiChannel, date('Y-m-d 00:00:00', strtotime($startDate)), date('Y-m-d 23:59:59', strtotime($endDate)), $sessionUser['id']);
+
+        return response()->json([ 'message' => 'The sale orders will be fetched in the background' ], 200);
+
+    }
+
+    public function fetchChannelIndividualOrders(Request $request) {
+
+        $serviceHelper = new AdminServiceHelper();
+
+        $apiChannel = (
+            $request->has('api_channel')
+            && (trim($request->input('api_channel')) != '')
+        ) ? trim($request->input('api_channel')) : $serviceHelper->getApiChannel();
+
+        $orderNumberString = (
+            $request->has('api_channel_order_numbers')
+            && (trim($request->input('api_channel_order_numbers')) != '')
+        ) ? trim($request->input('api_channel_order_numbers')) : '';
+
+        $sessionUser = session('authUserData');
+        SalesOrderIndividualImport::dispatch($apiChannel, $orderNumberString, $sessionUser['id']);
 
         return response()->json([ 'message' => 'The sale orders will be fetched in the background' ], 200);
 

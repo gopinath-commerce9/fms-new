@@ -43,6 +43,29 @@ var AdminCustomJsBlocks = function() {
         });
     };
 
+    var fetchApiIndividualOrdersFromServer = function () {
+        $('#fetch_api_individual_orders_form').on('submit', function(e){
+            e.preventDefault();
+            var data = $(this).serialize();
+            $.ajax({
+                url: $(this).attr('action'),
+                data: data,
+                method: 'POST',
+                beforeSend: function() {
+                    KTApp.blockPage({
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Please wait...'
+                    });
+                },
+                success: function(data){
+                    KTApp.unblockPage();
+                    showAlertMessage(data.message);
+                }
+            });
+        });
+    };
+
     var initFilterDeliveryDateRangePicker = function () {
         var filterDRPicker = $('#delivery_date_range_filter').daterangepicker({
             buttonClasses: ' btn',
@@ -398,6 +421,7 @@ var AdminCustomJsBlocks = function() {
             getStatusChartData(saleOrderStatusChart);
             initAdminSaleOrderTable(saleOrderSalesChart, saleOrderStatusChart);
             fetchApiOrdersFromServer();
+            fetchApiIndividualOrdersFromServer();
         },
         deliveryDetailsPage: function(hostUrl, orderIds, token) {
             $( document ).ready(function() {

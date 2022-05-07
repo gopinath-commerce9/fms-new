@@ -41,7 +41,36 @@
             </div>
             <?php */ ?>
 
-            <div class="col-md-12">
+            <div class="col-md-6">
+                <div class="card card-custom">
+                    <form name="searchIndividualOrder" action="{{ url('/admin/fetch-channel-individual-orders') }}" method="POST" id="fetch_api_individual_orders_form">
+                        @csrf
+                        <div class="card-body">
+                            <div class="form-group mb-8">
+                                <div class="form-group row">
+                                    <div class="col-4">
+                                        <select class="form-control" id="api_channel" name="api_channel" >
+                                            @foreach($availableApiChannels as $apiChannel)
+                                                <option value="{{ $apiChannel['id'] }}">
+                                                    {{ $apiChannel['name'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type='text' class="form-control" name="api_channel_order_numbers" id="api_channel_order_numbers" placeholder="Give Individual Order Number" />
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="submit" class="btn btn-primary mr-2">Fetch Order From Server</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6">
                 <div class="card card-custom">
                     <form name="searchorder" action="{{ url('/admin/find-order') }}" method="POST">
                         @csrf

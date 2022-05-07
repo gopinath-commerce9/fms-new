@@ -30,6 +30,8 @@ Route::prefix('admin')->middleware([
         ->name('admin.getVendorStatus');
     Route::post('/fetch-channel-orders', 'AdminController@fetchChannelOrders')
         ->name('admin.fetchChannelOrders');
+    Route::post('/fetch-channel-individual-orders', 'AdminController@fetchChannelIndividualOrders')
+        ->name('admin.fetchChannelIndividualOrders');
     Route::post('/find-order', 'AdminController@searchOrderByIncrementId')
         ->name('admin.searchOrderByIncrementId');
     Route::post('/filter-orders', 'AdminController@filterOrders')
