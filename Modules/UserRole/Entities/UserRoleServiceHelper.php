@@ -201,7 +201,104 @@ class UserRoleServiceHelper
             }
         }
 
-        $userRoleObj = new UserRole();
+        $orderRequest = SaleOrder::select('*');
+        $emirates = $this->getAvailableRegionsList();
+        if (!is_null($regionClean) && (trim($regionClean) != '')) {
+            $orderRequest->where('region_id', trim($regionClean));
+        } else {
+            $orderRequest->whereIn('region_id', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannelClean) && (trim($apiChannelClean) != '')) {
+            $orderRequest->where('channel', trim($apiChannelClean));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $orderList = $orderRequest->get();
+
+        if ($orderList && (count($orderList) > 0)) {
+            foreach ($orderList as $orderEl) {
+
+                $historyObj = null;
+                if ($orderEl->pickedData) {
+                    $historyObj = $orderEl->pickedData;
+                } elseif ($orderEl->currentPicker && (count($orderEl->currentPicker) > 0)) {
+                    $historyObjColl = $orderEl->currentPicker;
+                    $historyObj = $historyObjColl->first();
+                }
+
+                if (!is_null($historyObj)) {
+
+                    $canProceed = true;
+                    if (!is_null($historyObj->done_by) && !is_null($pickerClean) && ((int)$historyObj->done_by != $pickerClean)) {
+                        $canProceed = false;
+                    }
+
+                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($historyObj->done_at)))) {
+                        $canProceed = false;
+                    }
+
+                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($historyObj->done_at)))) {
+                        $canProceed = false;
+                    }
+
+                    if ($canProceed) {
+
+                        $userEl = $historyObj->actionDoer;
+
+                        $currentAssignCount = 0;
+                        $currentPickedCount = 0;
+                        $currentHoldedCount = 0;
+                        if (
+                            array_key_exists($userEl->id, $statsList)
+                            && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$userEl->id])
+                        ) {
+                            $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
+                            $currentPickedCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['pickedOrders'];
+                            $currentHoldedCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['holdedOrders'];
+                        }
+
+                        if ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED) {
+                            $currentPickedCount++;
+                        } elseif ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP) {
+                            if ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
+                                $currentAssignCount++;
+                            } elseif ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
+                                $currentHoldedCount++;
+                            }
+                        }
+
+                        if (($currentPickedCount > 0) || ($currentAssignCount > 0) || ($currentHoldedCount > 0)) {
+                            $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
+                                'pickerId' => $userEl->id,
+                                'picker' => $userEl->name,
+                                'active' => ($userEl->pivot->is_active == '1') ? 'Yes' : 'No',
+                                'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                'assignedOrders' => $currentAssignCount,
+                                'pickedOrders' => $currentPickedCount,
+                                'holdedOrders' => $currentHoldedCount
+                            ];
+                        }
+
+                    }
+
+                }
+
+            }
+        }
+
+        $tempStatsList = $statsList;
+        $statsList = [];
+        foreach ($tempStatsList as $pickerKey => $dateData) {
+            foreach ($dateData as $dateKey => $reportData) {
+                $statsList[] = $reportData;
+            }
+        }
+
+
+        /*$userRoleObj = new UserRole();
         $pickers = $userRoleObj->allPickers();
         if(count($pickers->mappedUsers) > 0) {
             foreach($pickers->mappedUsers as $userEl) {
@@ -308,7 +405,7 @@ class UserRoleServiceHelper
                 }
             }
 
-        }
+        }*/
 
         return $statsList;
 
@@ -336,7 +433,123 @@ class UserRoleServiceHelper
             }
         }
 
-        $userRoleObj = new UserRole();
+        $orderRequest = SaleOrder::select('*');
+        $emirates = $this->getAvailableRegionsList();
+        if (!is_null($regionClean) && (trim($regionClean) != '')) {
+            $orderRequest->where('region_id', trim($regionClean));
+        } else {
+            $orderRequest->whereIn('region_id', array_keys($emirates));
+        }
+
+        $availableApiChannels = $this->getAllAvailableChannels();
+        if (!is_null($apiChannelClean) && (trim($apiChannelClean) != '')) {
+            $orderRequest->where('channel', trim($apiChannelClean));
+        } else {
+            $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+        }
+
+        $givenTimeSlots = $this->getDeliveryTimeSlots();
+        if (!is_null($timeSlotClean) && (trim($timeSlotClean) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlotClean), $givenTimeSlots)) {
+            $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
+        } elseif (count($givenTimeSlots) > 0) {
+            $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+        }
+
+        $orderList = $orderRequest->get();
+
+        if ($orderList && (count($orderList) > 0)) {
+            foreach($orderList as $orderEl) {
+
+                $historyObj = null;
+                if ($orderEl->deliveredData) {
+                    $historyObj = $orderEl->deliveredData;
+                } elseif ($orderEl->canceledData) {
+                    $historyObj = $orderEl->canceledData;
+                } elseif ($orderEl->currentDriver && (count($orderEl->currentDriver) > 0)) {
+                    $historyObjColl = $orderEl->currentDriver;
+                    $historyObj = $historyObjColl->first();
+                }
+
+                if (!is_null($historyObj)) {
+
+                    $canProceed = true;
+                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && ((int)$historyObj->done_by != $driverClean)) {
+                        $canProceed = false;
+                    }
+
+                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($historyObj->done_at)))) {
+                        $canProceed = false;
+                    }
+
+                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($historyObj->done_at)))) {
+                        $canProceed = false;
+                    }
+
+                    if ($canProceed) {
+
+                        $userEl = $historyObj->actionDoer;
+
+                        $currentAssignCount = 0;
+                        $currentDeliveryCount = 0;
+                        $currentDeliveredCount = 0;
+                        $currentCanceledCount = 0;
+                        if (
+                            array_key_exists($userEl->id, $statsList)
+                            && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$userEl->id])
+                        ) {
+                            $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
+                            $currentDeliveryCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['deliveryOrders'];
+                            $currentDeliveredCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['deliveredOrders'];
+                            $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['canceledOrders'];
+                        }
+
+                        $addToRecords = false;
+                        if ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
+                            $currentDeliveredCount++;
+                            $addToRecords = true;
+                        } elseif ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED) {
+                            $currentCanceledCount++;
+                            $addToRecords = true;
+                        } elseif ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
+                            if ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
+                                $currentAssignCount++;
+                                $addToRecords = true;
+                            } elseif ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
+                                $currentDeliveryCount++;
+                                $addToRecords = true;
+                            }
+                        }
+
+                        if ($addToRecords) {
+                            $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
+                                'driverId' => $userEl->id,
+                                'driver' => $userEl->name,
+                                'active' => ($userEl->pivot->is_active == '1') ? 'Yes' : 'No',
+                                'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                'assignedOrders' => $currentAssignCount,
+                                'deliveryOrders' => $currentDeliveryCount,
+                                'deliveredOrders' => $currentDeliveredCount,
+                                'canceledOrders' => $currentCanceledCount
+                            ];
+                        }
+
+                    }
+
+                }
+
+            }
+        }
+
+        $tempStatsList = $statsList;
+        $statsList = [];
+        foreach ($tempStatsList as $pickerKey => $dateData) {
+            foreach ($dateData as $dateKey => $reportData) {
+                $statsList[] = $reportData;
+            }
+        }
+
+
+        /*$userRoleObj = new UserRole();
         $drivers = $userRoleObj->allDrivers();
         if(count($drivers->mappedUsers) > 0) {
             foreach($drivers->mappedUsers as $userEl) {
@@ -412,7 +625,6 @@ class UserRoleServiceHelper
                                     }
 
                                     $addToRecords = false;
-                                    $historyObj = null;
                                     if ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
                                         $currentDeliveredCount++;
                                         $addToRecords = true;
@@ -463,7 +675,7 @@ class UserRoleServiceHelper
                 }
             }
 
-        }
+        }*/
 
         return $statsList;
 
