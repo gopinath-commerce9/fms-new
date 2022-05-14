@@ -112,6 +112,8 @@ var RolePickersCustomJsBlocks = function() {
     return {
         listPage: function(hostUrl){
             initRolePickersListTable();
+        },
+        reportPage: function(hostUrl){
             initPickerReportDateRangePicker();
             initPickerSaleOrderReportTable();
         },

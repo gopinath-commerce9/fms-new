@@ -150,6 +150,8 @@ var RoleDriversCustomJsBlocks = function() {
     return {
         listPage: function(hostUrl){
             initRoleDriversListTable();
+        },
+        reportPage: function(hostUrl){
             initDriverReportDateRangePicker();
             initDriverSaleOrderReportTable();
         },

@@ -357,6 +357,39 @@ class UserRoleController extends Controller
 
     }
 
+    public function pickersReportList() {
+
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Pickers Report';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $availableStatuses = $serviceHelper->getPickersAllowedStatuses();
+        $deliveryTimeSlots = $serviceHelper->getPickerDeliveryTimeSlots();
+
+        return view('userrole::pickers.report', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'availableStatuses',
+            'deliveryTimeSlots',
+            'serviceHelper',
+            'pickers'
+        ));
+
+    }
+
     public function pickersReportFilter(Request $request) {
 
         $serviceHelper = new UserRoleServiceHelper();
@@ -514,6 +547,37 @@ class UserRoleController extends Controller
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
 
         return view('userrole::drivers.list', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'deliveryTimeSlots',
+            'serviceHelper',
+            'drivers'
+        ));
+
+    }
+
+    public function driversReportList() {
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Drivers Detailed Report';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+
+        return view('userrole::drivers.report', compact(
             'pageTitle',
             'pageSubTitle',
             'emirates',
