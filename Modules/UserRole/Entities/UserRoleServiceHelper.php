@@ -274,7 +274,7 @@ class UserRoleServiceHelper
                             $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                 'pickerId' => $userEl->id,
                                 'picker' => $userEl->name,
-                                'active' => ($userEl->mappedRole->pivot->is_active == '1') ? 'Yes' : 'No',
+                                'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
                                 'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                 'assignedOrders' => $currentAssignCount,
                                 'pickedOrders' => $currentPickedCount,
@@ -411,10 +411,11 @@ class UserRoleServiceHelper
                         }
 
                         if ($addToRecords) {
+
                             $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                 'driverId' => $userEl->id,
                                 'driver' => $userEl->name,
-                                'active' => ($userEl->mappedRole->pivot->is_active == '1') ? 'Yes' : 'No',
+                                'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
                                 'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                 'assignedOrders' => $currentAssignCount,
                                 'deliveryOrders' => $currentDeliveryCount,
