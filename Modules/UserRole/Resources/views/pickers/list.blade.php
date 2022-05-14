@@ -37,7 +37,7 @@
                                             <th>Name</th>
                                             <th>EMail</th>
                                             <th>Contact</th>
-                                            <th>Assigned Order Count</th>
+                                            <?php /* ?><th>Assigned Order Count</th><?php */ ?>
                                             <th>Action</th>
                                         </tr>
                                         </thead>
@@ -79,6 +79,7 @@
                                                     <td>{{ $userDisplayName }}</td>
                                                     <td>{{ $userEl->email }}</td>
                                                     <td>{{ $userEl->contact_number }}</td>
+                                                    <?php /* ?>
                                                     <td>
                                                         @if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0))
                                                             <?php $pickerOrderCount = 0; ?>
@@ -116,6 +117,7 @@
                                                             <span class="label label-lg font-weight-bold label-light-primary label-inline">No Orders</span>
                                                         @endif
                                                     </td>
+                                                    <?php */ ?>
                                                     <td nowrap="nowrap">
                                                         <a href="{{ url('/userrole/pickers/view/' . $userEl->id) }}" class="btn btn-primary btn-clean mr-2" title="View Picker">
                                                             <span>View</span>
@@ -125,7 +127,7 @@
 
                                             @endforeach
                                         @else
-                                            <tr><td colspan="7">No Pickers found!</td></tr>
+                                            <tr><td colspan="6">No Pickers found!</td></tr>
                                         @endif
 
                                         </tbody>

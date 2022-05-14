@@ -38,7 +38,7 @@
                                             <th>Name</th>
                                             <th>EMail</th>
                                             <th>Contact</th>
-                                            <th>Order Assigned</th>
+                                            <?php /* ?><th>Assigned Order Count</th><?php */ ?>
                                             <th>Action</th>
                                         </tr>
                                         </thead>
@@ -80,6 +80,7 @@
                                                     <td>{{ $userDisplayName }}</td>
                                                     <td>{{ $userEl->email }}</td>
                                                     <td>{{ $userEl->contact_number }}</td>
+                                                    <?php /* ?>
                                                     <td>
                                                         @if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0))
                                                             <?php $driverOrderCount = 0; ?>
@@ -117,6 +118,7 @@
                                                             <span class="label label-lg font-weight-bold label-light-primary label-inline">No Orders</span>
                                                         @endif
                                                     </td>
+                                                    <?php */ ?>
                                                     <td nowrap="nowrap">
                                                         <a href="{{ url('/userrole/drivers/view/' . $userEl->id) }}" class="btn btn-primary btn-clean mr-2" title="View Driver">
                                                             <span>View</span>
@@ -126,7 +128,7 @@
 
                                             @endforeach
                                         @else
-                                            <tr><td colspan="7">No Drivers found!</td></tr>
+                                            <tr><td colspan="6">No Drivers found!</td></tr>
                                         @endif
 
                                         </tbody>
