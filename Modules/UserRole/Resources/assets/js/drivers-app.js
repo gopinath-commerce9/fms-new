@@ -79,6 +79,7 @@ var RoleDriversCustomJsBlocks = function() {
             ajax: {
                 url: targetForm.attr('action'),
                 type: targetForm.attr('method'),
+                timeout:600000,
                 data: function(d) {
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'filter_action') {
