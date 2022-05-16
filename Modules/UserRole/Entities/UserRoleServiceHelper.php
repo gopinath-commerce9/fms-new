@@ -219,14 +219,25 @@ class UserRoleServiceHelper
         $orderList = $orderRequest->get();
 
         if ($orderList && (count($orderList) > 0)) {
-            foreach ($orderList as $orderEl) {
+            $orderListArray = $orderList->toArray();
+            foreach ($orderListArray as $orderEl) {
+
+                $pickedData = SaleOrderProcessHistory::select('*')
+                    ->where('order_id', $orderEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED)
+                    ->limit(1)->get();
+
+                $currentPicker = SaleOrderProcessHistory::select('*')
+                    ->where('order_id', $orderEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                    ->orderBy('done_at', 'desc')
+                    ->limit(1)->get();
 
                 $historyObj = null;
-                if ($orderEl->pickedData) {
-                    $historyObj = $orderEl->pickedData;
-                } elseif ($orderEl->currentPicker && (count($orderEl->currentPicker) > 0)) {
-                    $historyObjColl = $orderEl->currentPicker;
-                    $historyObj = $historyObjColl->first();
+                if ($pickedData && (count($pickedData) > 0)) {
+                    $historyObj = $pickedData->first();
+                } elseif ($currentPicker && (count($currentPicker) > 0)) {
+                    $historyObj = $currentPicker->first();
                 }
 
                 if (!is_null($historyObj)) {
@@ -246,7 +257,9 @@ class UserRoleServiceHelper
 
                     if ($canProceed) {
 
-                        $userEl = $historyObj->actionDoer;
+                        $userElQ = User::select('*')
+                            ->where('id', $historyObj->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
 
                         $currentAssignCount = 0;
                         $currentPickedCount = 0;
@@ -263,9 +276,9 @@ class UserRoleServiceHelper
                         if ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED) {
                             $currentPickedCount++;
                         } elseif ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP) {
-                            if ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
+                            if ($orderEl['order_status'] == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
                                 $currentAssignCount++;
-                            } elseif ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
+                            } elseif ($orderEl['order_status'] == SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
                                 $currentHoldedCount++;
                             }
                         }
@@ -348,16 +361,32 @@ class UserRoleServiceHelper
         $orderList = $orderRequest->get();
 
         if ($orderList && (count($orderList) > 0)) {
-            foreach($orderList as $orderEl) {
+            $orderListArray = $orderList->toArray();
+            foreach($orderListArray as $orderEl) {
+
+                $deliveredData = SaleOrderProcessHistory::select('*')
+                    ->where('order_id', $orderEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED)
+                    ->limit(1)->get();
+
+                $canceledData = SaleOrderProcessHistory::select('*')
+                    ->where('order_id', $orderEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED)
+                    ->limit(1)->get();
+
+                $currentDriver = SaleOrderProcessHistory::select('*')
+                    ->where('order_id', $orderEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                    ->orderBy('done_at', 'desc')
+                    ->limit(1)->get();
 
                 $historyObj = null;
-                if ($orderEl->deliveredData) {
-                    $historyObj = $orderEl->deliveredData;
-                } elseif ($orderEl->canceledData) {
-                    $historyObj = $orderEl->canceledData;
-                } elseif ($orderEl->currentDriver && (count($orderEl->currentDriver) > 0)) {
-                    $historyObjColl = $orderEl->currentDriver;
-                    $historyObj = $historyObjColl->first();
+                if ($deliveredData && (count($deliveredData) > 0)) {
+                    $historyObj = $deliveredData->first();
+                } elseif ($canceledData && (count($canceledData) > 0)) {
+                    $historyObj = $canceledData->first();
+                } elseif ($currentDriver && (count($currentDriver) > 0)) {
+                    $historyObj = $currentDriver->first();
                 }
 
                 if (!is_null($historyObj)) {
@@ -377,7 +406,9 @@ class UserRoleServiceHelper
 
                     if ($canProceed) {
 
-                        $userEl = $historyObj->actionDoer;
+                        $userElQ = User::select('*')
+                            ->where('id', $historyObj->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
 
                         $currentAssignCount = 0;
                         $currentDeliveryCount = 0;
@@ -401,10 +432,10 @@ class UserRoleServiceHelper
                             $currentCanceledCount++;
                             $addToRecords = true;
                         } elseif ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
-                            if ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
+                            if ($orderEl['order_status'] == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
                                 $currentAssignCount++;
                                 $addToRecords = true;
-                            } elseif ($orderEl->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
+                            } elseif ($orderEl['order_status'] == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
                                 $currentDeliveryCount++;
                                 $addToRecords = true;
                             }
