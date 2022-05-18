@@ -82,7 +82,7 @@ class SaleOrder extends Model
         'is_synced',
         'is_active',
         'is_amount_verified',
-        'amount_verified__at',
+        'amount_verified_at',
         'amount_verified_by',
     ];
 

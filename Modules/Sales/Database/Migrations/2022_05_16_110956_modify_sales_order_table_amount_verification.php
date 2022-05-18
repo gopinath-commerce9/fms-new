@@ -15,7 +15,7 @@ class ModifySalesOrderTableAmountVerification extends Migration
     {
         Schema::table('sale_orders', function (Blueprint $table) {
             $table->boolean('is_amount_verified')->default(0)->after('is_active');
-            $table->dateTime('amount_verified__at')->nullable()->after('is_amount_verified');
+            $table->dateTime('amount_verified_at')->nullable()->after('is_amount_verified');
             $table->foreignId('amount_verified_by')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
         });
     }
@@ -29,7 +29,7 @@ class ModifySalesOrderTableAmountVerification extends Migration
     {
         Schema::table('sale_orders', function (Blueprint $table) {
             $table->dropColumn('is_amount_verified');
-            $table->dropColumn('amount_verified__at');
+            $table->dropColumn('amount_verified_at');
             $table->dropForeign(['amount_verified_by']);
             $table->dropColumn('amount_verified_by');
         });

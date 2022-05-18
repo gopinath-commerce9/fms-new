@@ -13,7 +13,7 @@ class SaleOrderAmountCollection extends Model
     const PAYMENT_COLLECTION_METHODS = [
         self::PAYMENT_COLLECTION_METHOD_CASH,
         self::PAYMENT_COLLECTION_METHOD_CARD,
-        /*self::PAYMENT_COLLECTION_METHOD_ONLINE*/
+        self::PAYMENT_COLLECTION_METHOD_ONLINE
     ];
 
     const PAYMENT_COLLECTION_STATUS_PAID = 'paid';

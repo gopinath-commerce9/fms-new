@@ -1117,7 +1117,7 @@ class UserRoleController extends Controller
 
         $affectedRows = SaleOrder::where("id", $saleOrderData['id'])->update([
             "is_amount_verified" => 1,
-            "amount_verified__at" => date('Y-m-d H:i:s'),
+            "amount_verified_at" => date('Y-m-d H:i:s'),
             "amount_verified_by" => $processUserId
         ]);
 

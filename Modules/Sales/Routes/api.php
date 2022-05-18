@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/sales', function (Request $request) {
-    return $request->user();
+Route::prefix('V1')->group(function() {
+    Route::get('/sales/get-collection-verified-orders', 'ApiController@getCollectionVerifiedOrders')
+        ->name('salesApi.getCollectionVerifiedOrders');
 });
