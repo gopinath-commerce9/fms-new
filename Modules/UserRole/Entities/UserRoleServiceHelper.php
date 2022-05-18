@@ -202,7 +202,48 @@ class UserRoleServiceHelper
             }
         }
 
+        $filterableSaleOrderIds = [];
+
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+        if(count($pickers->mappedUsers) > 0) {
+            $pickersArray = $pickers->mappedUsers->toArray();
+            foreach($pickersArray as $userEl) {
+
+                $pickedDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                $currentPickupOrders = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                if ($pickedDataList && (count($pickedDataList) > 0)) {
+                    $pickedDataArray = $pickedDataList->toArray();
+                    $pickedOrderIds = array_column($pickedDataArray, 'order_id');
+                    foreach($pickedOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                    }
+                }
+
+                if ($currentPickupOrders && (count($currentPickupOrders) > 0)) {
+                    $currentPickupArray = $currentPickupOrders->toArray();
+                    $currentPickupOrderIds = array_column($currentPickupArray, 'order_id');
+                    foreach($currentPickupOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                    }
+                }
+
+            }
+        }
+
         $orderRequest = SaleOrder::select('*');
+        $orderRequest->whereIn('id', $filterableSaleOrderIds);
+
         $emirates = $this->getAvailableRegionsList();
         if (!is_null($regionClean) && (trim($regionClean) != '')) {
             $orderRequest->where('region_id', trim($regionClean));
@@ -814,195 +855,6 @@ class UserRoleServiceHelper
                 }
             }
         }
-
-
-
-
-        /*$userRoleObj = new UserRole();
-        $drivers = $userRoleObj->allDrivers();
-        if(count($drivers->mappedUsers) > 0) {
-            foreach($drivers->mappedUsers as $userEl) {
-
-                if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0)) {
-
-                    foreach ($userEl->saleOrderProcessHistory as $processHistory) {
-                        if ($processHistory->saleOrder) {
-
-                            $currentSaleOrder = $processHistory->saleOrder;
-                            $canProceed = true;
-
-                            if (!is_null($regionClean) && ($currentSaleOrder->region_id != $regionClean)) {
-                                $canProceed = false;
-                            }
-
-                            if (!is_null($apiChannelClean) && ($currentSaleOrder->channel != $apiChannelClean)) {
-                                $canProceed = false;
-                            }
-
-                            if (!is_null($driverClean) && ($userEl->id != $driverClean)) {
-                                $canProceed = false;
-                            }
-
-                            if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($processHistory->done_at)))) {
-                                $canProceed = false;
-                            }
-
-                            if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($processHistory->done_at)))) {
-                                $canProceed = false;
-                            }
-
-                            if (!is_null($timeSlotClean) && ($currentSaleOrder->delivery_time_slot != $timeSlotClean)) {
-                                $canProceed = false;
-                            }
-
-                            if ($canProceed) {
-
-                                $currentSaleOrder->shippingAddress;
-                                $currentSaleOrder->paymentData;
-                                $currentSaleOrder->paidAmountCollections;
-                                $saleOrderData = $currentSaleOrder->toArray();
-
-                                $shipAddress = $saleOrderData['shipping_address'];
-                                $shipAddressString = '';
-                                $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
-                                $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
-                                $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
-                                $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
-                                $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
-                                $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
-                                $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
-
-                                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                                $totalOrderValue = $saleOrderData['order_total'];
-                                $totalDueValue = $saleOrderData['order_due'];
-                                $initialPaidValue = (float)$saleOrderData['order_total'] - (float)$saleOrderData['order_due'];
-                                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
-                                    $totalDueValue = $totalOrderValue;
-                                    $initialPaidValue = 0;
-                                }
-
-                                $paymentMethodTitle = '';
-                                $payInfoLoopTargetLabel = 'method_title';
-                                if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
-                                    $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
-                                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
-                                        foreach ($paymentAddInfo as $paymentInfoEl) {
-                                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
-                                                $paymentMethodTitle = $paymentInfoEl['value'];
-                                            }
-                                        }
-                                    }
-                                }
-
-                                $amountCollectionData = [];
-                                $totalCollectedAmount = 0;
-                                foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
-                                    $amountCollectionData[$cMethod] = 0;
-                                }
-
-                                if (
-                                    isset($saleOrderData['paid_amount_collections'])
-                                    && is_array($saleOrderData['paid_amount_collections'])
-                                    && (count($saleOrderData['paid_amount_collections']) > 0)
-                                ) {
-                                    foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
-                                        $amountCollectionData[$paidCollEl['method']] += (float) $paidCollEl['amount'];
-                                        $totalCollectedAmount += (float) $paidCollEl['amount'];
-                                        $totalDueValue -= (float) $paidCollEl['amount'];
-                                    }
-                                }
-
-                                $paymentStatus = '';
-                                $epsilon = 0.00001;
-                                if (!(abs($totalOrderValue - 0) < $epsilon)) {
-                                    if (abs($totalDueValue - 0) < $epsilon) {
-                                        $paymentStatus = 'paid';
-                                    } else {
-                                        if ($totalDueValue < 0) {
-                                            $paymentStatus = 'overpaid';
-                                        } else {
-                                            $paymentStatus = 'due';
-                                        }
-                                    }
-                                }
-
-                                $addToRecords = false;
-                                $historyObj = null;
-                                if ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED) {
-                                    $addToRecords = true;
-                                    $historyObj = $processHistory;
-                                } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED) {
-                                    $addToRecords = true;
-                                    $historyObj = $processHistory;
-                                } elseif ($processHistory->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY) {
-                                    $deliveryDriverData = $currentSaleOrder->currentDriver;
-                                    $isCurrentDriver = false;
-                                    if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
-                                        foreach ($deliveryDriverData as $dDeliver) {
-                                            if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
-                                                $isCurrentDriver = true;
-                                                $historyObj = $dDeliver;
-                                            }
-                                        }
-                                    }
-                                    if ($isCurrentDriver) {
-                                        if ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
-                                            $addToRecords = true;
-                                        } elseif ($currentSaleOrder->order_status == SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
-                                            $addToRecords = true;
-                                        }
-                                    }
-                                }
-
-                                if ($addToRecords) {
-                                    $tempArrayRecord = [
-                                        'driverId' => $userEl->id,
-                                        'driver' => $userEl->name,
-                                        'orderDeliveryDate' => date('Y-m-d', strtotime($saleOrderData['delivery_date'])),
-                                        'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
-                                        'orderRecordId' => $saleOrderData['id'],
-                                        'orderId' => $saleOrderData['order_id'],
-                                        'orderNumber' => "#" . $saleOrderData['increment_id'],
-                                        'emirates' => $saleOrderData['region'],
-                                        'shippingAddress' => $shipAddressString,
-                                        'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
-                                        'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
-                                        'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
-                                        'paymentMethodCode' => $saleOrderData['payment_data'][0]['method'],
-                                        'initialPay' => $initialPaidValue . " " . $saleOrderData['order_currency'],
-                                        'collectedAmount' => $totalCollectedAmount . " " . $saleOrderData['order_currency'],
-                                        'totalPaid' => ($initialPaidValue + $totalCollectedAmount) . " " . $saleOrderData['order_currency'],
-                                        'paymentStatus' => $paymentStatus,
-                                        'collectionVerified' => $saleOrderData['is_amount_verified'],
-                                        'collectionVerifiedAt' => $saleOrderData['amount_verified_at'],
-                                        'collectionVerifiedBy' => $saleOrderData['amount_verified_by'],
-                                    ];
-                                    foreach ($amountCollectionData as $collectionKey => $collectionValue) {
-                                        $tempArrayRecord[$collectionKey] = $collectionValue . " " . $saleOrderData['order_currency'];
-                                    }
-                                    $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))][$saleOrderData['id']] = $tempArrayRecord;
-                                }
-
-                            }
-
-                        }
-                    }
-
-                }
-
-            }
-
-            $tempStatsList = $statsList;
-            $statsList = [];
-            foreach ($tempStatsList as $driverKey => $dateData) {
-                foreach ($dateData as $dateKey => $reportData) {
-                    foreach ($reportData as $recordKey => $recordData) {
-                        $statsList[] = $recordData;
-                    }
-                }
-            }
-
-        }*/
 
         return $statsList;
 
