@@ -119,6 +119,9 @@ class SalesApiServiceHelper
         return $timeSlotArray;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getCollectionVerifiedSaleOrders($verifiedDate = null, $limit = 100) {
 
         if (is_null($verifiedDate) || (trim($verifiedDate) == '') || ((bool)strtotime(trim($verifiedDate)) === false)) {
@@ -131,12 +134,17 @@ class SalesApiServiceHelper
         $lastVerifiedDate = date('Y-m-d H:i:s', strtotime($verifiedDate));
         $limitClean = (is_numeric($limit)) ? (int)$limit : 100;
 
+        $channelTimeZone = $this->restApiService->getApiTimezone();
+        $newDateTime = new \DateTime($lastVerifiedDate, new \DateTimeZone($channelTimeZone));
+        $newDateTime->setTimezone(new \DateTimeZone("UTC"));
+        $dateTimeUTC = $newDateTime->format("Y-m-d H:i:s");
+
         $orderRequest = SaleOrder::select('*');
 
         $orderRequest->where('env', $this->getApiEnvironment());
         $orderRequest->where('channel', $this->getApiChannel());
         $orderRequest->where('is_amount_verified', 1);
-        $orderRequest->where('amount_verified_at', '>', $lastVerifiedDate);
+        $orderRequest->where('amount_verified_at', '>', $dateTimeUTC);
 
         $orderRequest->orderBy('amount_verified_at', 'asc');
 
@@ -183,6 +191,17 @@ class SalesApiServiceHelper
                     $orderEl->paidAmountCollections;
                     $saleOrderData = $orderEl->toArray();
 
+                    $paymentMethodString = 'Online';
+                    $totalOrderValue = (float)$saleOrderData['order_total'];
+                    $totalDueValue = (float)$saleOrderData['order_due'];
+
+                    $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                    if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                        $paymentMethodString = '';
+                        $totalDueValue = $totalOrderValue;
+                    }
+                    $collectedAmount = $totalOrderValue - $totalDueValue;
+
                     $amountCollectionData = [];
                     foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
                         $amountCollectionData[$cMethod] = 0;
@@ -207,15 +226,13 @@ class SalesApiServiceHelper
                                 'orderNumber' => $saleOrderData['increment_id'],
                                 'collectionAmount' => $cAmount,
                                 'collectionCurrency' => $saleOrderData['order_currency'],
-                                'collectionDate' => date('Y-m-d', strtotime($historyObj->done_at)),
-                                'collectionVerificationDate' => date('Y-m-d H:i:s', strtotime($saleOrderData['amount_verified_at'])),
+                                'collectionDate' => $this->getFormattedTime($historyObj->done_at, 'Y-m-d'),
+                                'collectionVerificationDate' => $this->getFormattedTime($saleOrderData['amount_verified_at'], 'Y-m-d H:i:s'),
                             ];
                             $returnDataCount++;
                         }
                     }*/
 
-                    $paymentMethodString = '';
-                    $collectedAmount = 0;
                     foreach ($amountCollectionData as $cMethod => $cAmount) {
                         if ((float)$cAmount > 0) {
                             $paymentMethodString .= ((trim($paymentMethodString) == '') ? '' : ' and ') . ucwords($cMethod);
@@ -230,8 +247,8 @@ class SalesApiServiceHelper
                         'orderNumber' => $saleOrderData['increment_id'],
                         'collectionAmount' => $collectedAmount,
                         'collectionCurrency' => $saleOrderData['order_currency'],
-                        'collectionDate' => date('Y-m-d', strtotime($historyObj->done_at)),
-                        'collectionVerificationDate' => date('Y-m-d H:i:s', strtotime($saleOrderData['amount_verified_at'])),
+                        'collectionDate' => $this->getFormattedTime($historyObj->done_at, 'Y-m-d'),
+                        'collectionVerificationDate' => $this->getFormattedTime($saleOrderData['amount_verified_at'], 'Y-m-d H:i:s'),
                     ];
                     $returnDataCount++;
 

@@ -1094,13 +1094,13 @@ class UserRoleController extends Controller
         $saleOrderObj->statusHistory;
         $saleOrderData = $saleOrderObj->toArray();
 
-        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        /*$fixTotalDueArray = ['cashondelivery', 'banktransfer'];
         if (!in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             return response()->json([
                 'success' => false,
                 'message' => 'The Sale Order cannot be verified for Driver Amount Collection!',
             ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
-        }
+        }*/
 
         if ((int)$saleOrderData['is_amount_verified'] === 1) {
             return response()->json([

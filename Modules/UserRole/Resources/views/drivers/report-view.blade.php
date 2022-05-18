@@ -43,9 +43,9 @@
                                                 <th>Driver Delivery Date</th>
                                                 <th>Order Number</th>
                                                 <th>Emirates</th>
-                                                <th>Address</th>
                                                 <th>Order Status</th>
                                                 <th>Payment Method</th>
+                                                <th>Collection Verified</th>
                                                 <th>Initial Pay</th>
                                                 @foreach($collectionMethods as $methodEl)
                                                     <th>{{ ucwords($methodEl) . ' Collected' }}</th>
@@ -54,8 +54,8 @@
                                                 <th>Total Paid</th>
                                                 <th>Order Total</th>
                                                 <th>Payment Status</th>
-                                                <th>Collection Verified</th>
                                                 <th>Collection Verified At</th>
+                                                <th>Address</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -89,19 +89,30 @@
                                                             $amountCollectionVerified = true;
                                                         }
                                                     }
+                                                    if ($amountCollectable === false) {
+                                                        if ($statEl['collectionVerified'] == '1') {
+                                                            $amountCollectionVerified = true;
+                                                        }
+                                                    }
 
                                                 ?>
 
                                                 <tr>
                                                     <td class="text-wrap">{{ $statEl['driverId'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['driver'] }}</td>
-                                                    <td class="text-wrap">{{ date('d-m-Y', strtotime($statEl['orderDeliveryDate'])) }}</td>
-                                                    <td class="text-wrap">{{ date('d-m-Y', strtotime($statEl['driverDeliveryDate'])) }}</td>
+                                                    <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['orderDeliveryDate'], 'd-m-Y') }}</td>
+                                                    <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['driverDeliveryDate'], 'd-m-Y') }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderNumber'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['emirates'] }}</td>
-                                                    <td class="text-wrap">{{ $statEl['shippingAddress'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderStatus'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['paymentMethod'] }}</td>
+                                                    <td class="text-wrap">
+                                                        @if($amountCollectionVerified)
+                                                            <i class="flaticon2-check-mark text-success"></i>
+                                                        @else
+                                                            {{ '-' }}
+                                                        @endif
+                                                    </td>
                                                     <td class="text-wrap">{{ $statEl['initialPay'] }}</td>
                                                     @foreach($collectionMethods as $methodEl)
                                                         <td class="text-wrap">{{ $statEl[$methodEl] }}</td>
@@ -111,25 +122,21 @@
                                                     <td class="text-wrap">{{ $statEl['orderTotal'] }}</td>
                                                     <td class="text-wrap">{{ ucwords($statEl['paymentStatus']) }}</td>
                                                     <td class="text-wrap">
-                                                        @if($amountCollectable)
-                                                            {{ ($amountCollectionVerified) ? 'Yes' : 'No' }}
-                                                        @else
-                                                            {{ '-' }}
-                                                        @endif
+                                                        {{ (!is_null($statEl['collectionVerifiedAt'])) ? $serviceHelper->getFormattedTime($statEl['collectionVerifiedAt'], 'F d, Y, h:i:s A') : '-' }}
                                                     </td>
-                                                    <td class="text-wrap">
-                                                        {{ (!is_null($statEl['collectionVerifiedAt'])) ? date('d-m-Y H:i:s', strtotime($statEl['collectionVerifiedAt'])) : '-' }}
-                                                    </td>
+                                                    <td class="text-wrap">{{ $statEl['shippingAddress'] }}</td>
                                                     <td nowrap="nowrap">
-                                                        <a href="{{ url('/' . $roleUrlFragment . '/order-view/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-view-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="View Order">
-                                                            <i class="flaticon2-list-2 text-info"></i>
+                                                        <a href="{{ url('/' . $roleUrlFragment . '/order-view/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-primary mr-2 driver-report-single-order-view-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="View Order">
+                                                            View
                                                         </a>
                                                         @if($amountCollectionEditable === true)
-                                                            <a href="{{ url('/userrole/driver-collection-edit/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-edit-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Edit Order Amount Collection">
-                                                                <i class="flaticon2-pen text-warning"></i>
+                                                            <a href="{{ url('/userrole/driver-collection-edit/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-primary mr-2 driver-report-single-order-edit-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Edit Order Amount Collection">
+                                                                Edit
                                                             </a>
-                                                            <a href="{{ url('/userrole/driver-collection-verify/' . $statEl['orderRecordId']) }}" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-verify-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Verify Order Amount Collection">
-                                                                <i class="flaticon2-check-mark text-danger"></i>
+                                                        @endif
+                                                        @if($amountCollectionVerified === false)
+                                                            <a href="{{ url('/userrole/driver-collection-verify/' . $statEl['orderRecordId']) }}" class="btn btn-sm btn-clean btn-primary driver-report-single-order-verify-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Verify Order Amount Collection">
+                                                                Verify
                                                             </a>
                                                         @endif
                                                     </td>
