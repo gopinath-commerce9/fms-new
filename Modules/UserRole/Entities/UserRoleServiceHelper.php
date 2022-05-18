@@ -336,7 +336,62 @@ class UserRoleServiceHelper
             }
         }
 
+        $filterableSaleOrderIds = [];
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+        if(count($drivers->mappedUsers) > 0) {
+            $driversArray = $drivers->mappedUsers->toArray();
+            foreach($driversArray as $userEl) {
+
+                $deliveredDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                $canceledDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                if ($deliveredDataList && (count($deliveredDataList) > 0)) {
+                    $deliveredDataArray = $deliveredDataList->toArray();
+                    $deliveredOrderIds = array_column($deliveredDataArray, 'order_id');
+                    foreach($deliveredOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                    }
+                }
+
+                if ($canceledDataList && (count($canceledDataList) > 0)) {
+                    $canceledDataArray = $canceledDataList->toArray();
+                    $canceledOrderIds = array_column($canceledDataArray, 'order_id');
+                    foreach($canceledOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                    }
+                }
+
+                if ($currentDeliveryOrders && (count($currentDeliveryOrders) > 0)) {
+                    $currentDeliveryArray = $currentDeliveryOrders->toArray();
+                    $currentDeliveryOrderIds = array_column($currentDeliveryArray, 'order_id');
+                    foreach($currentDeliveryOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                    }
+                }
+
+            }
+        }
+
         $orderRequest = SaleOrder::select('*');
+        $orderRequest->whereIn('id', $filterableSaleOrderIds);
+
         $emirates = $this->getAvailableRegionsList();
         if (!is_null($regionClean) && (trim($regionClean) != '')) {
             $orderRequest->where('region_id', trim($regionClean));
