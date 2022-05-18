@@ -207,7 +207,7 @@ class SalesApiServiceHelper
                                 'orderNumber' => $saleOrderData['increment_id'],
                                 'collectionAmount' => $cAmount,
                                 'collectionCurrency' => $saleOrderData['order_currency'],
-                                'collectionDate' => date('Y-m-d H:i:s', strtotime($historyObj->done_at)),
+                                'collectionDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                                 'collectionVerificationDate' => date('Y-m-d H:i:s', strtotime($saleOrderData['amount_verified_at'])),
                             ];
                             $returnDataCount++;
@@ -230,7 +230,7 @@ class SalesApiServiceHelper
                         'orderNumber' => $saleOrderData['increment_id'],
                         'collectionAmount' => $collectedAmount,
                         'collectionCurrency' => $saleOrderData['order_currency'],
-                        'collectionDate' => date('Y-m-d H:i:s', strtotime($historyObj->done_at)),
+                        'collectionDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                         'collectionVerificationDate' => date('Y-m-d H:i:s', strtotime($saleOrderData['amount_verified_at'])),
                     ];
                     $returnDataCount++;

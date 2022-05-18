@@ -654,7 +654,7 @@ class UserRoleServiceHelper
                                         'totalPaid' => ($initialPaidValue + $totalCollectedAmount) . " " . $saleOrderData['order_currency'],
                                         'paymentStatus' => $paymentStatus,
                                         'collectionVerified' => $saleOrderData['is_amount_verified'],
-                                        'collectionVerifiedAt' => $saleOrderData['amount_verified__at'],
+                                        'collectionVerifiedAt' => $saleOrderData['amount_verified_at'],
                                         'collectionVerifiedBy' => $saleOrderData['amount_verified_by'],
                                     ];
                                     foreach ($amountCollectionData as $collectionKey => $collectionValue) {
