@@ -148,6 +148,78 @@ var RoleDriversCustomJsBlocks = function() {
         targetForm.submit();
     };
 
+    var reportViewActions = function (hostUrl, token) {
+
+        $(document).on('click', 'a.driver-report-single-order-verify-btn', function(e) {
+            e.preventDefault();
+            var targetHref = $(this).attr('href');
+            var orderId = $(this).data('order-id');
+            var orderNumber = $(this).data('order-number');
+            if (confirm('You are verifying the amount collected by driver for Order#"' + orderNumber + '". Do you want to continue?')) {
+                var data = {
+                    _token: token
+                };
+                $.ajax({
+                    url: targetHref,
+                    data: data,
+                    method: 'POST',
+                    beforeSend: function() {
+                        KTApp.blockPage({
+                            overlayColor: '#000000',
+                            state: 'danger',
+                            message: 'Please wait...'
+                        });
+                    },
+                    success: function(data){
+                        KTApp.unblockPage();
+                        showAlertMessage(data.message);
+                        location.reload();
+                    }
+                });
+            } else {
+
+            }
+        });
+
+    };
+
+    var reportEditViewFormActions = function() {
+        var form = jQuery('#driver_report_single_order_edit_form');
+        $('input.amount_collected_input').on("keyup", function(evt) {
+            var amountStr = $(this).val();
+            var allowedChars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
+            var cleanStr = '';
+            var dotCount = 0;
+            var amountStrArray = amountStr.toString().split('');
+            amountStrArray.forEach(function(letter, index) {
+                if (allowedChars.indexOf(letter.toString()) >= 0) {
+                    if ((letter.toString() === '.')) {
+                        if ((dotCount === 0) && (index > 0)) {
+                            cleanStr = cleanStr + letter.toString();
+                            dotCount = 1;
+                        }
+                    } else {
+                        cleanStr = cleanStr + letter.toString();
+                    }
+                }
+            });
+            $(this).val(cleanStr);
+        });
+    };
+
+    var showAlertMessage = function(message) {
+        $("div.custom_alert_trigger_messages_area")
+            .html('<div class="alert alert-custom alert-dark alert-light-dark fade show" role="alert">' +
+                '<div class="alert-icon"><i class="flaticon-information"></i></div>' +
+                '<div class="alert-text">' + message + '</div>' +
+                '<div class="alert-close">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true"><i class="ki ki-close"></i></span>' +
+                '</button>' +
+                '</div>' +
+                '</div>');
+    };
+
     return {
         listPage: function(hostUrl){
             initRoleDriversListTable();
@@ -159,8 +231,12 @@ var RoleDriversCustomJsBlocks = function() {
         viewPage: function(hostUrl) {
             initRoleDriverOrderListTable();
         },
-        reportViewPage: function(hostUrl) {
+        reportViewPage: function(hostUrl, token) {
             initRoleDriversReportViewTable();
+            reportViewActions(hostUrl, token);
+        },
+        reportEditViewPage: function(hostUrl) {
+            reportEditViewFormActions();
         },
     };
 

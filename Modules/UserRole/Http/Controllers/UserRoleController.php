@@ -5,6 +5,8 @@ namespace Modules\UserRole\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Input;
+use Modules\API\Entities\ApiServiceHelper;
+use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderAmountCollection;
 use Modules\UserRole\Entities\Permission;
 use Modules\UserRole\Entities\PermissionMap;
@@ -850,6 +852,279 @@ class UserRoleController extends Controller
             'filteredOrderStats',
             'currentRole'
         ));
+
+    }
+
+    public function driverCollectionEditView($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        $filterStatus = [
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
+            SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+        ];
+        if (!in_array($saleOrderObj->order_status, $filterStatus)) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
+        $saleOrderObj->statusHistory;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        if (!in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        if ((int)$saleOrderData['is_amount_verified'] === 1) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Driver Amount Collection Order #' . $saleOrderObj->increment_id;
+
+        $serviceHelper = new UserRoleServiceHelper();
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $allAvailableStatuses = $serviceHelper->getAvailableStatuses();
+        $availableStatuses = $serviceHelper->getAvailableStatuses();
+        $collectionMethodList = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+
+        $totalOrderValue = $saleOrderData['order_total'];
+        $totalDueValue = $saleOrderData['order_due'];
+        $initialPaidValue = (float)$saleOrderData['order_total'] - (float)$saleOrderData['order_due'];
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            $totalDueValue = $totalOrderValue;
+            $initialPaidValue = 0;
+        }
+        $amountCollectionData = [];
+        $totalCollectedAmount = 0;
+        foreach($collectionMethodList as $cMethod) {
+            $amountCollectionData[$cMethod] = 0;
+        }
+
+        if (
+            isset($saleOrderData['paid_amount_collections'])
+            && is_array($saleOrderData['paid_amount_collections'])
+            && (count($saleOrderData['paid_amount_collections']) > 0)
+        ) {
+            foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                $amountCollectionData[$paidCollEl['method']] += (float) $paidCollEl['amount'];
+                $totalCollectedAmount += (float) $paidCollEl['amount'];
+                $totalDueValue -= (float) $paidCollEl['amount'];
+            }
+        }
+
+        $paymentStatus = '';
+        $epsilon = 0.00001;
+        if (!(abs($totalOrderValue - 0) < $epsilon)) {
+            if (abs($totalDueValue - 0) < $epsilon) {
+                $paymentStatus = 'paid';
+            } else {
+                if ($totalDueValue < 0) {
+                    $paymentStatus = 'overpaid';
+                } else {
+                    $paymentStatus = 'due';
+                }
+            }
+        }
+
+        $paymentMethodTitle = '';
+        $payInfoLoopTargetLabel = 'method_title';
+        if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+            $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+            if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                foreach ($paymentAddInfo as $paymentInfoEl) {
+                    if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                        $paymentMethodTitle = $paymentInfoEl['value'];
+                    }
+                }
+            }
+        }
+
+        return view('userrole::drivers.report-edit-view', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'saleOrderObj',
+            'saleOrderData',
+            'serviceHelper',
+            'emirates',
+            'availableApiChannels',
+            'allAvailableStatuses',
+            'availableStatuses',
+            'totalOrderValue',
+            'totalDueValue',
+            'paymentMethodTitle',
+            'paymentStatus',
+            'initialPaidValue',
+            'totalCollectedAmount',
+            'collectionMethodList',
+            'amountCollectionData',
+        ));
+
+    }
+
+    public function driverCollectionEditSave(Request $request, $orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        $filterStatus = [
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
+            SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+        ];
+        if (!in_array($saleOrderObj->order_status, $filterStatus)) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
+        $saleOrderObj->statusHistory;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        if (!in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        if ((int)$saleOrderData['is_amount_verified'] === 1) {
+            return back()
+                ->with('error', 'The Sale Order cannot be edited for Driver Amount Collection!');
+        }
+
+        $givenOrderCollections = (
+            $request->has('collections')
+            && (!is_null($request->input('collections')))
+            && is_array($request->input('collections'))
+            && (count($request->input('collections')) > 0)
+        ) ? $request->input('collections') : [];
+
+        if (count($givenOrderCollections) == 0) {
+            return back()
+                ->with('error', 'Amount Collection details not found!');
+        }
+
+        $amountCollectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+        $methodsIncluded = false;
+        $currentAmountCollected = 0;
+        foreach ($givenOrderCollections as $givenMethod => $givenAmount) {
+            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+                $methodsIncluded = true;
+                $currentAmountCollected += (float)trim($givenAmount);
+            }
+        }
+        if ($methodsIncluded === false) {
+            return back()
+                ->with('error', 'Amount Collection details not found!');
+        }
+
+        foreach ($givenOrderCollections as $givenMethod => $givenAmount) {
+            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+                $amountCollectionDeleteExec = SaleOrderAmountCollection::where('order_id', $saleOrderData['id'])
+                    ->where('method', $givenMethod)
+                    ->delete();
+                $newAmountCollectionObj = SaleOrderAmountCollection::updateOrCreate([
+                    'order_id' => $saleOrderData['id'],
+                    'method' => $givenMethod,
+                ], [
+                    'amount' => (float)trim($givenAmount),
+                    'status' => SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID,
+                ]);
+            }
+        }
+
+        return back()
+            ->with('success', 'The Driver Amount Collection of Sale Order #' . $saleOrderData['increment_id'] . ' is updated successfully!');
+
+    }
+
+    public function driverCollectionVerification(Request $request, ?int $orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order Id input is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order does not exist!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $filterStatus = [
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
+            SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+        ];
+        if (!in_array($saleOrderObj->order_status, $filterStatus)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order cannot be verified for Driver Amount Collection!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $saleOrderObj->paymentData;
+        $saleOrderObj->paidAmountCollections;
+        $saleOrderObj->statusHistory;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        if (!in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order cannot be verified for Driver Amount Collection!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        if ((int)$saleOrderData['is_amount_verified'] === 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order is already verified for Driver Amount Collection!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $affectedRows = SaleOrder::where("id", $saleOrderData['id'])->update([
+            "is_amount_verified" => 1,
+            "amount_verified__at" => date('Y-m-d H:i:s'),
+            "amount_verified_by" => $processUserId
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The Sale Order is set as verified for Driver Amount Collection!',
+        ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
 
     }
 

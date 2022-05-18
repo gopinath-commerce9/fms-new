@@ -54,6 +54,8 @@
                                                 <th>Total Paid</th>
                                                 <th>Order Total</th>
                                                 <th>Payment Status</th>
+                                                <th>Collection Verified</th>
+                                                <th>Collection Verified At</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -62,6 +64,33 @@
 
                                         @if(count($filteredOrderStats) > 0)
                                             @foreach($filteredOrderStats as $statEl)
+                                                <?php
+
+                                                    $roleUrlFragment = '';
+                                                    if (!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_ADMIN)) {
+                                                        $roleUrlFragment = 'admin';
+                                                    } elseif (!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_SUPERVISOR)) {
+                                                        $roleUrlFragment = 'supervisor';
+                                                    } elseif (!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_PICKER)) {
+                                                        $roleUrlFragment = 'picker';
+                                                    } elseif (!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_DRIVER)) {
+                                                        $roleUrlFragment = 'driver';
+                                                    }
+
+                                                    $amountCollectable = false;
+                                                    $amountCollectionEditable = false;
+                                                    $amountCollectionVerified = false;
+                                                    $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                                                    if (in_array($statEl['paymentMethodCode'], $fixTotalDueArray)) {
+                                                        $amountCollectable = true;
+                                                        if ($statEl['collectionVerified'] == '0') {
+                                                            $amountCollectionEditable = true;
+                                                        } elseif ($statEl['collectionVerified'] == '1') {
+                                                            $amountCollectionVerified = true;
+                                                        }
+                                                    }
+
+                                                ?>
 
                                                 <tr>
                                                     <td class="text-wrap">{{ $statEl['driverId'] }}</td>
@@ -81,22 +110,34 @@
                                                     <td class="text-wrap">{{ $statEl['totalPaid'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderTotal'] }}</td>
                                                     <td class="text-wrap">{{ ucwords($statEl['paymentStatus']) }}</td>
+                                                    <td class="text-wrap">
+                                                        @if($amountCollectable)
+                                                            {{ ($amountCollectionVerified) ? 'Yes' : 'No' }}
+                                                        @else
+                                                            {{ '-' }}
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-wrap">
+                                                        {{ (!is_null($statEl['collectionVerifiedAt'])) ? date('d-m-Y H:i:s', strtotime($statEl['collectionVerifiedAt'])) : '-' }}
+                                                    </td>
                                                     <td nowrap="nowrap">
-                                                        @if(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_ADMIN))
-                                                            <a href="{{ url('/admin/order-view/' . $statEl['orderRecordId']) }}" target="_blank">View Order</a>
-                                                        @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_SUPERVISOR))
-                                                            <a href="{{ url('/supervisor/order-view/' . $statEl['orderRecordId']) }}" target="_blank">View Order</a>
-                                                        @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_PICKER))
-                                                            <a href="{{ url('/picker/order-view/' . $statEl['orderRecordId']) }}" target="_blank">View Order</a>
-                                                        @elseif(!is_null($currentRole) && ($currentRole === \Modules\UserRole\Entities\UserRole::USER_ROLE_DRIVER))
-                                                            <a href="{{ url('/driver/order-view/' . $statEl['orderRecordId']) }}" target="_blank">View Order</a>
+                                                        <a href="{{ url('/' . $roleUrlFragment . '/order-view/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-view-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="View Order">
+                                                            <i class="flaticon2-list-2 text-info"></i>
+                                                        </a>
+                                                        @if($amountCollectionEditable === true)
+                                                            <a href="{{ url('/userrole/driver-collection-edit/' . $statEl['orderRecordId']) }}" target="_blank" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-edit-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Edit Order Amount Collection">
+                                                                <i class="flaticon2-pen text-warning"></i>
+                                                            </a>
+                                                            <a href="{{ url('/userrole/driver-collection-verify/' . $statEl['orderRecordId']) }}" class="btn btn-sm btn-clean btn-icon mr-2 driver-report-single-order-verify-btn" data-order-id="{{ $statEl['orderRecordId'] }}" data-order-number="{{ $statEl['orderNumber'] }}" title="Verify Order Amount Collection">
+                                                                <i class="flaticon2-check-mark text-danger"></i>
+                                                            </a>
                                                         @endif
                                                     </td>
                                                 </tr>
 
                                             @endforeach
                                         @else
-                                            <tr><td colspan="{{ (count($collectionMethods) + 15) }}">No Driver Activity data found!</td></tr>
+                                            <tr><td colspan="{{ (count($collectionMethods) + 17) }}">No Driver Activity data found!</td></tr>
                                         @endif
 
                                         </tbody>
@@ -124,7 +165,7 @@
     <script src="{{ asset('js/role-drivers.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            RoleDriversCustomJsBlocks.reportViewPage('{{ url('/') }}');
+            RoleDriversCustomJsBlocks.reportViewPage('{{ url('/') }}', '{{ csrf_token() }}');
         });
     </script>
 

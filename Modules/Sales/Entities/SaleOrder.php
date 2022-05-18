@@ -2,6 +2,7 @@
 
 namespace Modules\Sales\Entities;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class SaleOrder extends Model
@@ -80,6 +81,9 @@ class SaleOrder extends Model
         'to_be_synced',
         'is_synced',
         'is_active',
+        'is_amount_verified',
+        'amount_verified__at',
+        'amount_verified_by',
     ];
 
     /**
@@ -319,6 +323,15 @@ class SaleOrder extends Model
     public function onlineAmountCollections() {
         return $this->hasMany(SaleOrderAmountCollection::class, 'order_id', 'id')
             ->where('method',  SaleOrderAmountCollection::PAYMENT_COLLECTION_METHOD_ONLINE);
+    }
+
+    /**
+     * Fetches the User data who executed the Driver Amount Collection Verification.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function collectionVerifier() {
+        return $this->belongsTo(User::class, 'amount_verified_by', 'id');
     }
 
 }

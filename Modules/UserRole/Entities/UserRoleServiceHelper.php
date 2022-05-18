@@ -648,10 +648,14 @@ class UserRoleServiceHelper
                                         'orderStatus' => (array_key_exists($saleOrderData['order_status'], $availableStatuses)) ? $availableStatuses[$saleOrderData['order_status']] : $saleOrderData['order_status'],
                                         'orderTotal' => $totalOrderValue . " " . $saleOrderData['order_currency'],
                                         'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
+                                        'paymentMethodCode' => $saleOrderData['payment_data'][0]['method'],
                                         'initialPay' => $initialPaidValue . " " . $saleOrderData['order_currency'],
                                         'collectedAmount' => $totalCollectedAmount . " " . $saleOrderData['order_currency'],
                                         'totalPaid' => ($initialPaidValue + $totalCollectedAmount) . " " . $saleOrderData['order_currency'],
                                         'paymentStatus' => $paymentStatus,
+                                        'collectionVerified' => $saleOrderData['is_amount_verified'],
+                                        'collectionVerifiedAt' => $saleOrderData['amount_verified__at'],
+                                        'collectionVerifiedBy' => $saleOrderData['amount_verified_by'],
                                     ];
                                     foreach ($amountCollectionData as $collectionKey => $collectionValue) {
                                         $tempArrayRecord[$collectionKey] = $collectionValue . " " . $saleOrderData['order_currency'];

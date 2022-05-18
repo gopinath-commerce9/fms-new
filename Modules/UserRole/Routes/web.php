@@ -83,6 +83,12 @@ Route::prefix('userrole')->middleware([
         ->name('roles.driversReportFilter');
     Route::get('/drivers-report-view-more', 'UserRoleController@driversReportViewMore')
         ->name('roles.driversReportViewMore');
+    Route::get('/driver-collection-edit/{orderId}', 'UserRoleController@driverCollectionEditView')
+        ->name('roles.driverCollectionEditView');
+    Route::post('/driver-collection-edit-save/{orderId}', 'UserRoleController@driverCollectionEditSave')
+        ->name('roles.driverCollectionEditSave');
+    Route::post('/driver-collection-verify/{orderId}', 'UserRoleController@driverCollectionVerification')
+        ->name('roles.driverCollectionVerification');
     Route::get('/drivers/view/{driverId}', 'UserRoleController@driverView')
         ->name('roles.driverView');
 
