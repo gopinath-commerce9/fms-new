@@ -91,13 +91,22 @@
                                 <label  class="col-3 col-form-label text-right">Role</label>
                                 <?php $mappedUserRole = null; ?>
                                 <div class="col-6">
-                                    <select class="form-control" id="user_role" name="user_role" >
+                                    <select class="form-control" id="user_role" name="user_role" data-feeder-target="{{ (is_null($driverRole)) ? '' : $driverRole->id }}" >
                                         <option value="" selected>Not Assigned</option>
                                         @foreach($userRoles as $userRoleEl)
                                             <option value="{{ $userRoleEl->id }}">
                                                 {{ $userRoleEl->display_name }}
                                             </option>
                                         @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="new_user_feeder_driver_check_row" style="display:none;">
+                                <label  class="col-3 col-form-label text-right">Feeder Driver</label>
+                                <div class="col-6">
+                                    <select class="form-control" id="user_feeder_driver" name="user_feeder_driver" >
+                                        <option value="0" selected>No</option>
+                                        <option value="1">Yes</option>
                                     </select>
                                 </div>
                             </div>

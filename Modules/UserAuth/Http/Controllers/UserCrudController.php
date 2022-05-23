@@ -55,10 +55,14 @@ class UserCrudController extends Controller
         $userRoles = UserRole::all();
         $serviceHelper = new UserServiceHelper();
 
+        $driverRoleObj = UserRole::where('code', UserRole::USER_ROLE_DRIVER)->get();
+        $driverRole = ($driverRoleObj && (count($driverRoleObj) > 0)) ? $driverRoleObj->first() : null;
+
         return view('userauth::users.new', compact(
             'pageTitle',
             'pageSubTitle',
             'userRoles',
+            'driverRole',
             'serviceHelper'
         ));
 
@@ -86,6 +90,7 @@ class UserCrudController extends Controller
             'profile_avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:200'],
             'profile_avatar_remove' => ['nullable', 'boolean'],
             'user_role' => ['nullable', 'numeric', 'integer', 'exists:user_roles,id'],
+            'user_feeder_driver' => ['nullable', 'numeric', 'integer'],
             'user_password' => [
                 'required',
                 'confirmed',
@@ -113,15 +118,21 @@ class UserCrudController extends Controller
         $postData = $validator->validated();
 
         $givenUserRole = null;
-        $roleAssiged = false;
+        $roleAssigned = false;
+        $feederDriverSet = 0;
         if (array_key_exists('user_role', $postData)) {
-            $roleAssiged = true;
+            $roleAssigned = true;
             if (!is_null($postData['user_role'])) {
                 $givenUserRole = UserRole::find($postData['user_role']);
                 if(!$givenUserRole) {
                     return back()
                         ->with('error', 'The User Role does not exist!')
                         ->withInput($request->only('user_name'));
+                }
+                if (array_key_exists('user_feeder_driver', $postData)) {
+                    if (((int)$postData['user_feeder_driver'] === 0) || ((int)$postData['user_feeder_driver'] === 1)) {
+                        $feederDriverSet = (int)$postData['user_feeder_driver'];
+                    }
                 }
             }
         }
@@ -153,14 +164,17 @@ class UserCrudController extends Controller
 
             }
 
-            if ($roleAssiged) {
+            if ($roleAssigned) {
                 if (is_null($givenUserRole)) {
                     UserRoleMap::where('user_id', $newUser->id)
                         ->delete();
                 } else {
+                    $driverRoleObj = UserRole::where('code', UserRole::USER_ROLE_DRIVER)->get();
+                    $driverRole = ($driverRoleObj && (count($driverRoleObj) > 0)) ? $driverRoleObj->first() : null;
+                    $feederDriverClean = (!is_null($driverRole) && ($givenUserRole->id === $driverRole->id)) ? $feederDriverSet : 0;
                     $newRoleMap = UserRoleMap::updateOrCreate(
                         ['user_id' => $newUser->id],
-                        ['role_id' => $givenUserRole->id, 'is_active' => 1]
+                        ['role_id' => $givenUserRole->id, 'is_feeder_driver' => $feederDriverClean, 'is_active' => 1]
                     );
                 }
             }
@@ -229,6 +243,9 @@ class UserCrudController extends Controller
         $userRoles = UserRole::all();
         $serviceHelper = new UserServiceHelper();
 
+        $driverRoleObj = UserRole::where('code', UserRole::USER_ROLE_DRIVER)->get();
+        $driverRole = ($driverRoleObj && (count($driverRoleObj) > 0)) ? $driverRoleObj->first() : null;
+
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Edit User #' . $givenUserData->email;
 
@@ -237,6 +254,7 @@ class UserCrudController extends Controller
             'pageSubTitle',
             'givenUserData',
             'userRoles',
+            'driverRole',
             'serviceHelper'
         ));
 
@@ -277,6 +295,7 @@ class UserCrudController extends Controller
             'profile_avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:200'],
             'profile_avatar_remove' => ['nullable', 'boolean'],
             'user_role' => ['nullable', 'numeric', 'integer', 'exists:user_roles,id'],
+            'user_feeder_driver' => ['nullable', 'numeric', 'integer'],
         ], [
             'user_name.required' => 'The User Name should be provided.',
             'user_name.string' => 'The User Name should be a string value.',
@@ -294,9 +313,10 @@ class UserCrudController extends Controller
         $postData = $validator->validated();
 
         $givenUserRole = null;
-        $roleAssiged = false;
+        $roleAssigned = false;
+        $feederDriverSet = 0;
         if (array_key_exists('user_role', $postData)) {
-            $roleAssiged = true;
+            $roleAssigned = true;
             if (!is_null($postData['user_role'])) {
                 $givenUserRole = UserRole::find($postData['user_role']);
                 if(!$givenUserRole) {
@@ -304,10 +324,15 @@ class UserCrudController extends Controller
                         ->with('error', 'The User Role does not exist!')
                         ->withInput($request->only('user_name'));
                 }
+                if (array_key_exists('user_feeder_driver', $postData)) {
+                    if (((int)$postData['user_feeder_driver'] === 0) || ((int)$postData['user_feeder_driver'] === 1)) {
+                        $feederDriverSet = (int)$postData['user_feeder_driver'];
+                    }
+                }
             }
         }
 
-        if ($givenUserData->isDefaultUser() && $roleAssiged && (is_null($givenUserRole) || ($givenUserRole->code != UserRole::USER_ROLE_ADMIN))) {
+        if ($givenUserData->isDefaultUser() && $roleAssigned && (is_null($givenUserRole) || ($givenUserRole->code != UserRole::USER_ROLE_ADMIN))) {
             return back()
                 ->with('error', "The Role of the default User '". $givenUserData->email . " 'cannot be changed!")
                 ->withInput($request->only('user_name'));
@@ -355,7 +380,7 @@ class UserCrudController extends Controller
 
             $givenUserData->saveQuietly();
 
-            if ($roleAssiged) {
+            if ($roleAssigned) {
                 if (is_null($givenUserRole)) {
                     UserRoleMap::where('user_id', $givenUserData->id)
                         ->delete();
@@ -363,9 +388,12 @@ class UserCrudController extends Controller
                     $sessionUser['roleCode'] = '';
                     $sessionUser['roleName'] = '';
                 } else {
+                    $driverRoleObj = UserRole::where('code', UserRole::USER_ROLE_DRIVER)->get();
+                    $driverRole = ($driverRoleObj && (count($driverRoleObj) > 0)) ? $driverRoleObj->first() : null;
+                    $feederDriverClean = (!is_null($driverRole) && ($givenUserRole->id === $driverRole->id)) ? $feederDriverSet : 0;
                     $newRoleMap = UserRoleMap::updateOrCreate(
                         ['user_id' => $givenUserData->id],
-                        ['role_id' => $givenUserRole->id, 'is_active' => 1]
+                        ['role_id' => $givenUserRole->id, 'is_feeder_driver' => $feederDriverClean, 'is_active' => 1]
                     );
                     $sessionUser['roleId'] = $givenUserRole->id;
                     $sessionUser['roleCode'] = $givenUserRole->code;

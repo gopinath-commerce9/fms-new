@@ -59,6 +59,14 @@ var RoleDriversCustomJsBlocks = function() {
         });
     };
 
+    var select2ElementsInitiator = function () {
+
+        $('#driver_filter').select2({
+            placeholder: "Select Drivers",
+        });
+
+    };
+
     var initDriverSaleOrderReportTable = function() {
 
         var table = $('#driver_report_filter_table');
@@ -81,15 +89,21 @@ var RoleDriversCustomJsBlocks = function() {
                 type: targetForm.attr('method'),
                 timeout:600000,
                 data: function(d) {
+                    var driverValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'filter_action') {
                             d[val.name] = 'datatable';
                         } else {
-                            d[val.name] = val.value;
+                            if (val.name === 'driver_filter') {
+                                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+                            } else {
+                                d[val.name] = val.value;
+                            }
                         }
                     });
+                    d['driver_values'] = driverValues;
                     d['columnsDef'] = [
-                        'driverId', 'driver', 'active', 'date', 'assignedOrders', 'deliveryOrders',
+                        'driverId', 'driver', 'active', 'feeder', 'date', 'assignedOrders', 'deliveryOrders',
                         'deliveredOrders', 'canceledOrders', 'actions'
                     ];
                 },
@@ -98,6 +112,7 @@ var RoleDriversCustomJsBlocks = function() {
                 {data: 'driverId'},
                 {data: 'driver'},
                 {data: 'active'},
+                {data: 'feeder'},
                 {data: 'date'},
                 {data: 'assignedOrders'},
                 {data: 'deliveryOrders'},
@@ -115,6 +130,13 @@ var RoleDriversCustomJsBlocks = function() {
             }, {
                 targets: 2,
                 title: 'Active',
+                orderable: true,
+                render: function(data, type, full, meta) {
+                    return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
+                },
+            }, {
+                targets: 3,
+                title: 'Feeder',
                 orderable: true,
                 render: function(data, type, full, meta) {
                     return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
@@ -145,6 +167,13 @@ var RoleDriversCustomJsBlocks = function() {
     var getDriverReportExcel = function () {
         var targetForm = $('#filter_driver_report_form');
         $('#filter_action').val('excel_sheet');
+        var driverValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'driver_filter') {
+                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#driver_values').val(driverValues);
         targetForm.submit();
     };
 
@@ -226,6 +255,7 @@ var RoleDriversCustomJsBlocks = function() {
         },
         reportPage: function(hostUrl){
             initDriverReportDateRangePicker();
+            select2ElementsInitiator();
             initDriverSaleOrderReportTable();
         },
         viewPage: function(hostUrl) {

@@ -101,7 +101,7 @@
                                     <td>
                                         @if($userEl->mappedRole && (count($userEl->mappedRole) > 0))
                                             <span class="label label-lg font-weight-bold label-light-primary label-inline">
-                                                {{ $userEl->mappedRole[0]->display_name }}
+                                                {{ $userEl->mappedRole[0]->display_name . (((int)$userEl->mappedRole[0]->pivot->is_feeder_driver === 1) ? " [Feeder]" : "") }}
                                             </span>
                                         @endif
                                     </td>

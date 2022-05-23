@@ -33,6 +33,26 @@ var UsersCustomJsBlocks = function() {
         });
     };
 
+    var newPageUserRoleSelectionAction = function () {
+        var userRole = $('select#user_role').val();
+        var targetRole = $('select#user_role').data('feeder-target');
+        if ((targetRole.toString().trim() != '') && (targetRole.toString().trim() == userRole.toString().trim())) {
+            jQuery('#new_user_feeder_driver_check_row').show();
+        } else {
+            jQuery('#new_user_feeder_driver_check_row').hide();
+        }
+    };
+
+    var editPageUserRoleSelectionAction = function () {
+        var userRole = $('select#user_role').val();
+        var targetRole = $('select#user_role').data('feeder-target');
+        if ((targetRole.toString().trim() != '') && (targetRole.toString().trim() == userRole.toString().trim())) {
+            jQuery('#edit_user_feeder_driver_check_row').show();
+        } else {
+            jQuery('#edit_user_feeder_driver_check_row').hide();
+        }
+    };
+
     return {
         listPage: function() {
             initUserListTable();
@@ -44,11 +64,19 @@ var UsersCustomJsBlocks = function() {
             jQuery('button#new_user_cancel_btn').on('click', function(e) {
                 window.location = hostUrl + '/userauth/users';
             });
+            newPageUserRoleSelectionAction();
+            jQuery('select#user_role').on('change', function(ev) {
+                newPageUserRoleSelectionAction();
+            });
         },
         editPage: function(hostUrl) {
             let dpImage = new KTImageInput('profile_avatar_area');
             jQuery('button#edit_user_cancel_btn').on('click', function(e) {
                 window.location = hostUrl + '/userauth/users';
+            });
+            editPageUserRoleSelectionAction();
+            jQuery('select#user_role').on('change', function(ev) {
+                editPageUserRoleSelectionAction();
             });
         },
         editProfilePage: function(hostUrl) {

@@ -18,6 +18,7 @@ class UserRoleMap extends Model
     protected $fillable = [
         'user_id',
         'role_id',
+        'is_feeder_driver',
         'is_active',
     ];
 

@@ -47,8 +47,7 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="driver_filter" name="driver_filter" >
-                                                <option value="" >Select a Driver</option>
+                                            <select class="form-control datatable-input" id="driver_filter" name="driver_filter" multiple>
                                                 @if(count($drivers->mappedUsers) > 0)
                                                     @foreach($drivers->mappedUsers as $userEl)
                                                         <option value="{{ $userEl->id }}" >{{ $userEl->name }}</option>
@@ -59,6 +58,13 @@
                                     </div>
 
                                     <div class="form-group row">
+                                        <div class="col-lg-4 text-right">
+                                            <select class="form-control datatable-input" id="feeder_driver_filter" name="feeder_driver_filter" >
+                                                <option value="" >Select a Feeder Option</option>
+                                                <option value="1" >Yes</option>
+                                                <option value="2" >No</option>
+                                            </select>
+                                        </div>
                                         <div class="col-lg-4">
                                             <input type='text' class="form-control" name="delivery_date_range_filter" id="delivery_date_range_filter" readonly placeholder="Select Date Range" type="text"/>
                                             <input  type="hidden" class="datatable-date-input" value="{{ date('Y-m-d') }}" id="delivery_date_start_filter" name="delivery_date_start_filter" />
@@ -72,8 +78,18 @@
                                                 @endforeach
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <div class="col-lg-4">
+
+                                        </div>
+                                        <div class="col-lg-4">
+
+                                        </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
+                                            <input type="hidden" name="driver_values" id="driver_values" value="" />
                                             <button type="button" id="filter_driver_report_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>
@@ -104,6 +120,7 @@
                                                 <th># Driver Id</th>
                                                 <th>Driver</th>
                                                 <th>Active</th>
+                                                <th>Feeder</th>
                                                 <th>Date</th>
                                                 <th>Orders Assigned</th>
                                                 <th>Orders Out-For-Delivery</th>

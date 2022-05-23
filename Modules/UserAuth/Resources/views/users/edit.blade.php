@@ -94,7 +94,7 @@
 
                         @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('user-roles.assign'))
                             @if(!$givenUserData->isDefaultUser())
-                            <div class="form-group row mb-1">
+                            <div class="form-group row">
                                 <label  class="col-3 col-form-label text-right">Role</label>
                                 <?php
                                     $mappedUserRole = null;
@@ -103,13 +103,22 @@
                                     }
                                 ?>
                                 <div class="col-6">
-                                    <select class="form-control" id="user_role" name="user_role" >
+                                    <select class="form-control" id="user_role" name="user_role" data-feeder-target="{{ (is_null($driverRole)) ? '' : $driverRole->id }}" >
                                         <option value="" {{ (is_null($mappedUserRole)) ? "selected" : "" }}>Not Assigned</option>
                                         @foreach($userRoles as $userRoleEl)
                                             <option value="{{ $userRoleEl->id }}" {{ (!is_null($mappedUserRole) && ($mappedUserRole->id == $userRoleEl->id)) ? "selected" : "" }}>
                                                 {{ $userRoleEl->display_name }}
                                             </option>
                                         @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="edit_user_feeder_driver_check_row" style="display:none;">
+                                <label  class="col-3 col-form-label text-right">Feeder Driver</label>
+                                <div class="col-6">
+                                    <select class="form-control" id="user_feeder_driver" name="user_feeder_driver" >
+                                        <option value="0" {{ (is_null($mappedUserRole) || ((int)$mappedUserRole->pivot->is_feeder_driver === 0)) ? "selected" : "" }}>No</option>
+                                        <option value="1" {{ (!is_null($mappedUserRole) && ((int)$mappedUserRole->pivot->is_feeder_driver === 1)) ? "selected" : "" }}>Yes</option>
                                     </select>
                                 </div>
                             </div>

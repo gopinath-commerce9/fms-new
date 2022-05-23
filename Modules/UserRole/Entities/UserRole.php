@@ -64,7 +64,7 @@ class UserRole extends Model
             (new UserRoleMap())->getTable(),
             'role_id',
             'user_id'
-        )->withPivot('is_active')->withTimestamps();
+        )->withPivot('is_feeder_driver', 'is_active')->withTimestamps();
     }
 
     /**

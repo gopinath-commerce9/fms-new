@@ -635,10 +635,15 @@ class UserRoleController extends Controller
             && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
         ) ? trim($request->input('channel_filter')) : '';
 
-        $driver = (
-            $request->has('driver_filter')
-            && (trim($request->input('driver_filter')) != '')
-        ) ? trim($request->input('driver_filter')) : '';
+        $drivers = (
+            $request->has('driver_values')
+            && (trim($request->input('driver_values')) != '')
+        ) ? explode(',', trim($request->input('driver_values'))) : [];
+
+        $feederFlag = (
+            $request->has('feeder_driver_filter')
+            && (trim($request->input('feeder_driver_filter')) != '')
+        ) ? trim($request->input('feeder_driver_filter')) : '';
 
         $startDate = (
             $request->has('delivery_date_start_filter')
@@ -657,7 +662,7 @@ class UserRoleController extends Controller
 
         if ($methodAction == 'datatable') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot);
 
             $filteredOrderData = [];
             $totalRec = 0;
@@ -681,6 +686,7 @@ class UserRoleController extends Controller
                     'driverId' => $record['driverId'],
                     'driver' => $record['driver'],
                     'active' => $record['active'],
+                    'feeder' => $record['feeder'],
                     'date' => date('d-m-Y', strtotime($record['date'])),
                     'assignedOrders' => $record['assignedOrders'],
                     'deliveryOrders' => $record['deliveryOrders'],
@@ -701,7 +707,7 @@ class UserRoleController extends Controller
 
         }  elseif ($methodAction == 'excel_sheet') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot);
             if (count($filteredOrderStats) <= 0) {
                 return back()
                     ->with('error', "There is no record to export the CSV file.");
@@ -783,7 +789,12 @@ class UserRoleController extends Controller
         $driver = (
             $request->has('driver')
             && (trim($request->input('driver')) != '')
-        ) ? trim($request->input('driver')) : '';
+        ) ? explode(',', trim($request->input('driver'))) : [];
+
+        $feederFlag = (
+            $request->has('feeder_driver_filter')
+            && (trim($request->input('feeder_driver_filter')) != '')
+        ) ? trim($request->input('feeder_driver_filter')) : '';
 
         $startDate = (
             $request->has('delivery_date')
@@ -800,32 +811,38 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_slot')) != '')
         ) ? trim($request->input('delivery_slot')) : '';
 
-        if (is_null($driver) || !is_numeric($driver) || ((int)$driver <= 0)) {
+        if (is_null($driver) || !is_array($driver) || (count($driver) == 0)) {
             return back()
                 ->with('error', 'The Driver Id input is invalid!');
         }
 
-        $driverObject = User::find($driver);
-        if (!$driverObject) {
+        $driverObject = User::select('*')->whereIn('id', $driver)->get();
+        if (!$driverObject || (count($driverObject) == 0)) {
             return back()
                 ->with('error', 'The Driver does not exist!');
         }
 
-        if (is_null($driverObject->mappedRole) || (count($driverObject->mappedRole) == 0)) {
-            return back()
-                ->with('error', 'The given User is not a Driver!');
+        $driverFlag = true;
+        $driverNames = [];
+        foreach ($driverObject as $driverObj) {
+            if (is_null($driverObj->mappedRole) || (count($driverObj->mappedRole) == 0)) {
+                $driverFlag = false;
+            } elseif (!$driverObj->mappedRole[0]->isDriver()) {
+                $driverFlag = false;
+            } else {
+                $driverNames[] =  $driverObj->name;
+            }
         }
 
-        $mappedRole = $driverObject->mappedRole[0];
-        if (!$mappedRole->isDriver()) {
+        if ($driverFlag === false) {
             return back()
                 ->with('error', 'The given User is not a Driver!');
         }
 
         $pageTitle = 'Fulfillment Center';
-        $pageSubTitle = 'Driver (' . $driverObject->name . ') Activities on ' . date('d-m-Y', strtotime($startDate)) . '';
+        $pageSubTitle = 'Drivers (' . implode(', ', $driverNames) . ') Activities on ' . date('d-m-Y', strtotime($startDate)) . '';
 
-        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $startDate, $endDate, $deliverySlot);
+        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $feederFlag, $startDate, $endDate, $deliverySlot);
         if (count($filteredOrderStats) <= 0) {
             return back()
                 ->with('error', "There is no record of Activities of the Driver.");

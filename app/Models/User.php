@@ -72,7 +72,7 @@ class User extends Authenticatable
             (new UserRoleMap())->getTable(),
             'user_id',
             'role_id'
-        )->withPivot('is_active')->withTimestamps();
+        )->withPivot('is_feeder_driver', 'is_active')->withTimestamps();
     }
 
     /**

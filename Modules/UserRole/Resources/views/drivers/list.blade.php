@@ -38,6 +38,7 @@
                                             <th>Name</th>
                                             <th>EMail</th>
                                             <th>Contact</th>
+                                            <th>Feeder</th>
                                             <?php /* ?><th>Assigned Order Count</th><?php */ ?>
                                             <th>Action</th>
                                         </tr>
@@ -80,6 +81,15 @@
                                                     <td>{{ $userDisplayName }}</td>
                                                     <td>{{ $userEl->email }}</td>
                                                     <td>{{ $userEl->contact_number }}</td>
+                                                    <td>
+                                                        @if($userEl->pivot->is_feeder_driver == 0)
+                                                            <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">No</span>
+                                                        @elseif($userEl->pivot->is_feeder_driver == 1)
+                                                            <span class="label label-lg font-weight-bold label-light-success label-inline mt-2">Yes</span>
+                                                        @else
+                                                            {{ $userEl->pivot->is_feeder_driver }}
+                                                        @endif
+                                                    </td>
                                                     <?php /* ?>
                                                     <td>
                                                         @if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0))

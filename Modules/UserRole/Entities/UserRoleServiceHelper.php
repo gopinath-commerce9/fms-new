@@ -356,13 +356,14 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
         $statsList = [];
 
         $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
-        $driverClean = (!is_null($driver) && (trim($driver) != '')) ? trim($driver) : null;
+        $driverClean = (!is_null($driver) && is_array($driver) && (count($driver) > 0)) ? $driver : null;
+        $feederFlagClean = (((int)$feederFlag === 1) || ((int)$feederFlag === 2)) ? (int)$feederFlag : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
@@ -385,6 +386,21 @@ class UserRoleServiceHelper
         if(count($drivers->mappedUsers) > 0) {
             $driversArray = $drivers->mappedUsers->toArray();
             foreach($driversArray as $userEl) {
+
+                $feederChecker = true;
+                if (!is_null($feederFlagClean)) {
+                    $driverRoleMap = UserRoleMap::select('*')
+                        ->where('user_id', $userEl['id'])
+                        ->where('is_feeder_driver', (($feederFlagClean === 1) ? 1 : 0))
+                        ->get();
+                    if (!$driverRoleMap || (count($driverRoleMap) == 0)) {
+                        $feederChecker = false;
+                    }
+                }
+
+                if ($feederChecker === false) {
+                    continue;
+                }
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -489,7 +505,7 @@ class UserRoleServiceHelper
                 if (!is_null($historyObj)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && ((int)$historyObj->done_by != $driverClean)) {
+                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && !in_array($historyObj->done_by, $driverClean)) {
                         $canProceed = false;
                     }
 
@@ -544,6 +560,7 @@ class UserRoleServiceHelper
                                 'driverId' => $userEl->id,
                                 'driver' => $userEl->name,
                                 'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
+                                'feeder' => ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1') ? 'Yes' : 'No',
                                 'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                 'assignedOrders' => $currentAssignCount,
                                 'deliveryOrders' => $currentDeliveryCount,
@@ -571,13 +588,14 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '') {
 
         $statsList = [];
 
         $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
-        $driverClean = (!is_null($driver) && (trim($driver) != '')) ? trim($driver) : null;
+        $driverClean = (!is_null($driver) && is_array($driver) && (count($driver) > 0)) ? $driver : null;
+        $feederFlagClean = (((int)$feederFlag === 1) || ((int)$feederFlag === 2)) ? (int)$feederFlag : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
@@ -601,6 +619,21 @@ class UserRoleServiceHelper
         if(count($drivers->mappedUsers) > 0) {
             $driversArray = $drivers->mappedUsers->toArray();
             foreach($driversArray as $userEl) {
+
+                $feederChecker = true;
+                if (!is_null($feederFlagClean)) {
+                    $driverRoleMap = UserRoleMap::select('*')
+                        ->where('user_id', $userEl['id'])
+                        ->where('is_feeder_driver', (($feederFlagClean === 1) ? 1 : 0))
+                        ->get();
+                    if (!$driverRoleMap || (count($driverRoleMap) == 0)) {
+                        $feederChecker = false;
+                    }
+                }
+
+                if ($feederChecker === false) {
+                    continue;
+                }
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -704,7 +737,7 @@ class UserRoleServiceHelper
                 if (!is_null($historyObj)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && ((int)$historyObj->done_by != $driverClean)) {
+                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && !in_array($historyObj->done_by, $driverClean)) {
                         $canProceed = false;
                     }
 

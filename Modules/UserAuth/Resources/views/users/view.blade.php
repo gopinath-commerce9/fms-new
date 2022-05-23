@@ -217,6 +217,19 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group row my-2">
+                                    <label class="col-2 col-form-label font-size-lg-h2 text-right">Feeder:</label>
+                                    <div class="col-10">
+                                        @if($givenUserData->mappedRole[0]->pivot->is_feeder_driver == 0)
+                                            <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">No</span>
+                                        @elseif($givenUserData->mappedRole[0]->pivot->is_feeder_driver == 1)
+                                            <span class="label label-lg font-weight-bold label-light-success label-inline mt-2">Yes</span>
+                                        @else
+                                            {{ $givenUserData->mappedRole[0]->pivot->is_feeder_driver }}
+                                        @endif
+                                    </div>
+                                </div>
+
                             @endif
 
                         </div>
