@@ -403,9 +403,9 @@ class UserRoleServiceHelper
                         $feederChecker = true;
                     }
                 }
-                if ($feederChecker === false) {
+                /*if ($feederChecker === false) {
                     continue;
-                }
+                }*/
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -641,9 +641,9 @@ class UserRoleServiceHelper
                         $feederChecker = true;
                     }
                 }
-                if ($feederChecker === false) {
+                /*if ($feederChecker === false) {
                     continue;
-                }
+                }*/
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
