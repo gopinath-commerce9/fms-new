@@ -363,7 +363,12 @@ class UserRoleServiceHelper
         $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
         $driverClean = (!is_null($driver) && is_array($driver) && (count($driver) > 0)) ? $driver : null;
-        $feederFlagClean = (((int)$feederFlag === 1) || ((int)$feederFlag === 2)) ? (int)$feederFlag : null;
+        $feederFlagClean = 2;
+        if (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '1')) {
+            $feederFlagClean = 1;
+        } elseif (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '2')) {
+            $feederFlagClean = 0;
+        }
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
@@ -388,25 +393,16 @@ class UserRoleServiceHelper
             foreach($driversArray as $userEl) {
 
                 $feederChecker = true;
-                if ($feederFlagClean !== null) {
+                if ($feederFlagClean < 2) {
                     $feederChecker = false;
-                    $feederValue = 2;
-                    if ($feederFlagClean === 1) {
-                        $feederValue = 1;
-                    } elseif ($feederFlagClean === 2) {
-                        $feederValue = 0;
-                    }
-                    if ($feederValue < 2) {
-                        $driverRoleMap = UserRoleMap::select('*')
-                            ->where('user_id', $userEl['id'])
-                            ->where('is_feeder_driver', $feederValue)
-                            ->get();
-                        if ($driverRoleMap && (count($driverRoleMap) > 0)) {
-                            $feederChecker = true;
-                        }
+                    $driverRoleMap = UserRoleMap::select('*')
+                        ->where('user_id', $userEl['id'])
+                        ->where('is_feeder_driver', $feederFlagClean)
+                        ->get();
+                    if ($driverRoleMap && (count($driverRoleMap) > 0)) {
+                        $feederChecker = true;
                     }
                 }
-
                 if ($feederChecker === false) {
                     continue;
                 }
@@ -604,7 +600,12 @@ class UserRoleServiceHelper
         $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
         $driverClean = (!is_null($driver) && is_array($driver) && (count($driver) > 0)) ? $driver : null;
-        $feederFlagClean = (((int)$feederFlag === 1) || ((int)$feederFlag === 2)) ? (int)$feederFlag : null;
+        $feederFlagClean = 2;
+        if (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '1')) {
+            $feederFlagClean = 1;
+        } elseif (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '2')) {
+            $feederFlagClean = 0;
+        }
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
@@ -630,25 +631,16 @@ class UserRoleServiceHelper
             foreach($driversArray as $userEl) {
 
                 $feederChecker = true;
-                if ($feederFlagClean !== null) {
+                if ($feederFlagClean < 2) {
                     $feederChecker = false;
-                    $feederValue = 2;
-                    if ($feederFlagClean === 1) {
-                        $feederValue = 1;
-                    } elseif ($feederFlagClean === 2) {
-                        $feederValue = 0;
-                    }
-                    if ($feederValue < 2) {
-                        $driverRoleMap = UserRoleMap::select('*')
-                            ->where('user_id', $userEl['id'])
-                            ->where('is_feeder_driver', $feederValue)
-                            ->get();
-                        if ($driverRoleMap && (count($driverRoleMap) > 0)) {
-                            $feederChecker = true;
-                        }
+                    $driverRoleMap = UserRoleMap::select('*')
+                        ->where('user_id', $userEl['id'])
+                        ->where('is_feeder_driver', $feederFlagClean)
+                        ->get();
+                    if ($driverRoleMap && (count($driverRoleMap) > 0)) {
+                        $feederChecker = true;
                     }
                 }
-
                 if ($feederChecker === false) {
                     continue;
                 }
