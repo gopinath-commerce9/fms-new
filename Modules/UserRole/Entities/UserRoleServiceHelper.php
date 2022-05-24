@@ -403,9 +403,9 @@ class UserRoleServiceHelper
                         $feederChecker = true;
                     }
                 }
-                /*if ($feederChecker === false) {
+                if ($feederChecker === false) {
                     continue;
-                }*/
+                }
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -420,7 +420,7 @@ class UserRoleServiceHelper
                     ->get();
 
                 $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
-                    ->where('done_by', $userEl['id'])
+                    /*->where('done_by', $userEl['id'])*/
                     ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
                     ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
                     ->get();
@@ -641,9 +641,9 @@ class UserRoleServiceHelper
                         $feederChecker = true;
                     }
                 }
-                /*if ($feederChecker === false) {
+                if ($feederChecker === false) {
                     continue;
-                }*/
+                }
 
                 $deliveredDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -658,7 +658,7 @@ class UserRoleServiceHelper
                     ->get();
 
                 $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
-                    ->where('done_by', $userEl['id'])
+                    /*->where('done_by', $userEl['id'])*/
                     ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
                     ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
                     ->get();
