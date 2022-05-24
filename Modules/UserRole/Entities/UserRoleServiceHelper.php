@@ -203,12 +203,17 @@ class UserRoleServiceHelper
         }
 
         $filterableSaleOrderIds = [];
+        $filterableUserOrderIds = [];
 
         $userRoleObj = new UserRole();
         $pickers = $userRoleObj->allPickers();
         if(count($pickers->mappedUsers) > 0) {
             $pickersArray = $pickers->mappedUsers->toArray();
             foreach($pickersArray as $userEl) {
+
+                if (!is_null($pickerClean) && ($userEl['id'] != $pickerClean)) {
+                    continue;
+                }
 
                 $pickedDataList = SaleOrderProcessHistory::select('*')
                     ->where('done_by', $userEl['id'])
@@ -227,6 +232,7 @@ class UserRoleServiceHelper
                     $pickedOrderIds = array_column($pickedDataArray, 'order_id');
                     foreach($pickedOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -235,6 +241,7 @@ class UserRoleServiceHelper
                     $currentPickupOrderIds = array_column($currentPickupArray, 'order_id');
                     foreach($currentPickupOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -285,7 +292,7 @@ class UserRoleServiceHelper
                 if (!is_null($historyObj)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !is_null($pickerClean) && ((int)$historyObj->done_by != $pickerClean)) {
+                    if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
                         $canProceed = false;
                     }
 
@@ -385,12 +392,17 @@ class UserRoleServiceHelper
         }
 
         $filterableSaleOrderIds = [];
+        $filterableUserOrderIds = [];
 
         $userRoleObj = new UserRole();
         $drivers = $userRoleObj->allDrivers();
         if(count($drivers->mappedUsers) > 0) {
             $driversArray = $drivers->mappedUsers->toArray();
             foreach($driversArray as $userEl) {
+
+                if (!is_null($driverClean) && !in_array($userEl['id'], $driverClean)) {
+                    continue;
+                }
 
                 $feederChecker = true;
                 if ($feederFlagClean < 2) {
@@ -420,7 +432,7 @@ class UserRoleServiceHelper
                     ->get();
 
                 $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
-                    /*->where('done_by', $userEl['id'])*/
+                    ->where('done_by', $userEl['id'])
                     ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
                     ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
                     ->get();
@@ -430,6 +442,7 @@ class UserRoleServiceHelper
                     $deliveredOrderIds = array_column($deliveredDataArray, 'order_id');
                     foreach($deliveredOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -438,6 +451,7 @@ class UserRoleServiceHelper
                     $canceledOrderIds = array_column($canceledDataArray, 'order_id');
                     foreach($canceledOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -446,6 +460,7 @@ class UserRoleServiceHelper
                     $currentDeliveryOrderIds = array_column($currentDeliveryArray, 'order_id');
                     foreach($currentDeliveryOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -510,7 +525,7 @@ class UserRoleServiceHelper
                 if (!is_null($historyObj)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && !in_array($historyObj->done_by, $driverClean)) {
+                    if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
                         $canProceed = false;
                     }
 
@@ -624,11 +639,17 @@ class UserRoleServiceHelper
         $availableStatuses = $this->getAvailableStatuses();
 
         $filterableSaleOrderIds = [];
+        $filterableUserOrderIds = [];
+
         $userRoleObj = new UserRole();
         $drivers = $userRoleObj->allDrivers();
         if(count($drivers->mappedUsers) > 0) {
             $driversArray = $drivers->mappedUsers->toArray();
             foreach($driversArray as $userEl) {
+
+                if (!is_null($driverClean) && !in_array($userEl['id'], $driverClean)) {
+                    continue;
+                }
 
                 $feederChecker = true;
                 if ($feederFlagClean < 2) {
@@ -668,6 +689,7 @@ class UserRoleServiceHelper
                     $deliveredOrderIds = array_column($deliveredDataArray, 'order_id');
                     foreach($deliveredOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -676,6 +698,7 @@ class UserRoleServiceHelper
                     $canceledOrderIds = array_column($canceledDataArray, 'order_id');
                     foreach($canceledOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -684,6 +707,7 @@ class UserRoleServiceHelper
                     $currentDeliveryOrderIds = array_column($currentDeliveryArray, 'order_id');
                     foreach($currentDeliveryOrderIds as $orderIdEl) {
                         $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
                     }
                 }
 
@@ -747,7 +771,7 @@ class UserRoleServiceHelper
                 if (!is_null($historyObj)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !is_null($driverClean) && !in_array($historyObj->done_by, $driverClean)) {
+                    if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
                         $canProceed = false;
                     }
 
