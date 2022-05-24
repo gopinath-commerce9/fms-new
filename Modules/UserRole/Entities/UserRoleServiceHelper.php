@@ -388,13 +388,22 @@ class UserRoleServiceHelper
             foreach($driversArray as $userEl) {
 
                 $feederChecker = true;
-                if (!is_null($feederFlagClean)) {
-                    $driverRoleMap = UserRoleMap::select('*')
-                        ->where('user_id', $userEl['id'])
-                        ->where('is_feeder_driver', (($feederFlagClean === 1) ? 1 : 0))
-                        ->get();
-                    if (!$driverRoleMap || (count($driverRoleMap) == 0)) {
-                        $feederChecker = false;
+                if ($feederFlagClean !== null) {
+                    $feederChecker = false;
+                    $feederValue = 2;
+                    if ($feederFlagClean === 1) {
+                        $feederValue = 1;
+                    } elseif ($feederFlagClean === 2) {
+                        $feederValue = 0;
+                    }
+                    if ($feederValue < 2) {
+                        $driverRoleMap = UserRoleMap::select('*')
+                            ->where('user_id', $userEl['id'])
+                            ->where('is_feeder_driver', $feederValue)
+                            ->get();
+                        if ($driverRoleMap && (count($driverRoleMap) > 0)) {
+                            $feederChecker = true;
+                        }
                     }
                 }
 
@@ -621,13 +630,22 @@ class UserRoleServiceHelper
             foreach($driversArray as $userEl) {
 
                 $feederChecker = true;
-                if (!is_null($feederFlagClean)) {
-                    $driverRoleMap = UserRoleMap::select('*')
-                        ->where('user_id', $userEl['id'])
-                        ->where('is_feeder_driver', (($feederFlagClean === 1) ? 1 : 0))
-                        ->get();
-                    if (!$driverRoleMap || (count($driverRoleMap) == 0)) {
-                        $feederChecker = false;
+                if ($feederFlagClean !== null) {
+                    $feederChecker = false;
+                    $feederValue = 2;
+                    if ($feederFlagClean === 1) {
+                        $feederValue = 1;
+                    } elseif ($feederFlagClean === 2) {
+                        $feederValue = 0;
+                    }
+                    if ($feederValue < 2) {
+                        $driverRoleMap = UserRoleMap::select('*')
+                            ->where('user_id', $userEl['id'])
+                            ->where('is_feeder_driver', $feederValue)
+                            ->get();
+                        if ($driverRoleMap && (count($driverRoleMap) > 0)) {
+                            $feederChecker = true;
+                        }
                     }
                 }
 
