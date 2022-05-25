@@ -1199,4 +1199,300 @@ class UserRoleController extends Controller
 
     }
 
+    public function feedersReportList() {
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Feeder Drivers Detailed Report';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+
+        $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        return view('userrole::drivers.feeder-report', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'deliveryTimeSlots',
+            'serviceHelper',
+            'drivers',
+            'collectionMethods',
+            'currentRole',
+        ));
+
+    }
+
+    public function feedersReportFilter(Request $request) {
+
+        set_time_limit(600);
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $availableActions = ['datatable', 'excel_sheet'];
+        $methodAction = (
+            $request->has('filter_action')
+            && (trim($request->input('filter_action')) != '')
+            && in_array(trim($request->input('filter_action')), $availableActions)
+        ) ? trim($request->input('filter_action')) : 'datatable';
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $drivers = (
+            $request->has('driver_values')
+            && (trim($request->input('driver_values')) != '')
+        ) ? explode(',', trim($request->input('driver_values'))) : [];
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
+        if ($methodAction == 'datatable') {
+
+            $filteredOrderStats = $serviceHelper->getFeederOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot);
+
+            $filteredOrderData = [];
+            $totalRec = 0;
+            $collectRecStart = $dtStart;
+            $collectRecEnd = $collectRecStart + $dtPageLength;
+            $currentRec = -1;
+            foreach ($filteredOrderStats as $record) {
+                $totalRec++;
+                $currentRec++;
+                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                    continue;
+                }
+
+                $currentRole = null;
+                if (session()->has('authUserData')) {
+                    $sessionUser = session('authUserData');
+                    $currentRole = $sessionUser['roleCode'];
+                }
+
+                if (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_ADMIN)) {
+                    $roleUrlFragment = 'admin';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_SUPERVISOR)) {
+                    $roleUrlFragment = 'supervisor';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_PICKER)) {
+                    $roleUrlFragment = 'picker';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_DRIVER)) {
+                    $roleUrlFragment = 'driver';
+                }
+
+                $amountCollectable = false;
+                $amountCollectionEditable = false;
+                $amountCollectionVerified = false;
+                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                if (in_array($record['paymentMethodCode'], $fixTotalDueArray)) {
+                    $amountCollectable = true;
+                    if ($record['collectionVerified'] == '0') {
+                        $amountCollectionEditable = true;
+                    } elseif ($record['collectionVerified'] == '1') {
+                        $amountCollectionVerified = true;
+                    }
+                }
+                if ($amountCollectable === false) {
+                    if ($record['collectionVerified'] == '1') {
+                        $amountCollectionVerified = true;
+                    }
+                }
+
+                $feedersString = '';
+                if (is_array($record['feedersInvolved']) && (count($record['feedersInvolved']) > 0)) {
+                    foreach ($record['feedersInvolved'] as $feederEl) {
+                        $feedersString .= '<a href="' . url('/userrole/drivers/view/' . $feederEl['id']) . '" class="btn btn-primary btn-clean mr-2" title="View Picker">';
+                        $feedersString .= '<span>' . $feederEl['name'] . '</span>';
+                        $feedersString .= '</a>';
+                    }
+                }
+                $collectionVerifiedString = ($amountCollectionVerified) ? '<i class="flaticon2-check-mark text-success"></i>' : '-';
+                $collectionVerifiedAtString = (!is_null($record['collectionVerifiedAt'])) ? $serviceHelper->getFormattedTime($record['collectionVerifiedAt'], 'F d, Y, h:i:s A') : '-';
+                $amountCollectedString = '';
+                foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
+                    if (array_key_exists($cMethod, $record)) {
+                        $amountCollectedString .=  ((trim($amountCollectedString) != '') ? ' + ' : '') . $record[$cMethod] . ' (' . ucwords($cMethod) . ')';
+                    }
+                }
+                $driverString = '';
+                $driverString .= '<a href="' . url('/userrole/drivers/view/' . $record['driverId']) . '" class="btn btn-primary btn-clean mr-2" title="View Picker">';
+                $driverString .= '<span>' . $record['driver'] . '</span>';
+                $driverString .= '</a>';
+                $actionLinkUrl = '';
+                $actionLinkUrl .= '<a href="' . url('/'. $roleUrlFragment . '/order-view/' . $record['orderRecordId']) . '" target="_blank" class="btn btn-sm btn-primary mr-2 feeder-report-single-order-view-btn"';
+                $actionLinkUrl .= ' data-order-id="' . $record['orderRecordId'] . '" data-order-number="' . $record['orderNumber'] . '" title="View Order">View</a>';
+                if($amountCollectionEditable === true) {
+                    $actionLinkUrl .= '<a href="' . url('/userrole/driver-collection-edit/' . $record['orderRecordId']) . '" target="_blank" class="btn btn-sm btn-primary mr-2 feeder-report-single-order-edit-btn"';
+                    $actionLinkUrl .= ' data-order-id="' . $record['orderRecordId'] . '" data-order-number="' . $record['orderNumber'] . '" title="Edit Order Amount Collection">Edit</a>';
+                }
+                if($amountCollectionVerified === false) {
+                    $actionLinkUrl .= '<a href="' . url('/userrole/driver-collection-verify/' . $record['orderRecordId']) . '" class="btn btn-sm btn-primary mr-2 feeder-report-single-order-verify-btn"';
+                    $actionLinkUrl .= ' data-order-id="' . $record['orderRecordId'] . '" data-order-number="' . $record['orderNumber'] . '" title="Verify Order Amount Collection">Verify</a>';
+                }
+
+                $filteredOrderData[] = [
+                    'orderRecordId' => $record['orderRecordId'],
+                    'orderId' => $record['orderId'],
+                    'orderNumber' => $record['orderNumber'],
+                    'feeders' => $feedersString,
+                    'channel' => $record['channel'],
+                    'region' => $record['emirates'],
+                    'customerName' => $record['customerName'],
+                    'orderDeliveryDate' => date('d-m-Y', strtotime($record['orderDeliveryDate'])),
+                    'driverDeliveryDate' => date('d-m-Y', strtotime($record['driverDeliveryDate'])),
+                    'paymentMethod' => $record['paymentMethod'],
+                    'collectionVerified' => $collectionVerifiedString,
+                    'initialPay' => $record['initialPay'],
+                    'amountCollected' => $amountCollectedString,
+                    'totalCollected' => $record['collectedAmount'],
+                    'totalPaid' => $record['totalPaid'],
+                    'orderTotal' => $record['orderTotal'],
+                    'paymentStatus' => $record['paymentStatus'],
+                    'collectionVerifiedAt' => $collectionVerifiedAtString,
+                    'driver' => $driverString,
+                    'deliveredAt' => $serviceHelper->getFormattedTime($record['driverDeliveryAt'], 'F d, Y, h:i:s A'),
+                    'orderStatus' => $record['orderStatus'],
+                    'customerAddress' => $record['shippingAddress'],
+                    'actions' => $actionLinkUrl
+                ];
+            }
+
+            $returnData = [
+                'draw' => $dtDraw,
+                'recordsTotal' => $totalRec,
+                'recordsFiltered' => $totalRec,
+                'data' => $filteredOrderData
+            ];
+
+            return response()->json($returnData, 200);
+
+        }  elseif ($methodAction == 'excel_sheet') {
+
+            $filteredOrderStats = $serviceHelper->getFeederOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot);
+            if (count($filteredOrderStats) <= 0) {
+                return back()
+                    ->with('error', "There is no record to export the CSV file.");
+            }
+
+            $fileName =  "feeders_delivery_report_" . date('d-m-Y', strtotime($startDate)) . "_" . date('d-m-Y', strtotime($endDate)) . ".csv";
+            $headers = array(
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            );
+
+            $headingColumns = ["Order Number", "Feeder(s)", "Channel", "Emirates", "Customer Name", "Customer Address", "Order Delivery Date", "Driver Delivery Date", "Order Status", "Payment Method", "Initial Pay"];
+            $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+            foreach ($collectionMethods as $methodEl) {
+                $headingColumns[] = ucwords($methodEl) . " Collected";
+            }
+            $headingColumns[] = "Amount Collected";
+            $headingColumns[] = "Total Paid";
+            $headingColumns[] = "Order Total";
+            $headingColumns[] = "Payment Status";
+            $headingColumns[] = "Payment Verified";
+            $headingColumns[] = "Payment Verified At";
+
+            $callback = function() use($filteredOrderStats, $headingColumns, $collectionMethods, $serviceHelper) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, array_values($headingColumns));
+                if(!empty($filteredOrderStats)) {
+                    foreach($filteredOrderStats as $row) {
+                        $feedersString = '';
+                        if (is_array($row['feedersInvolved']) && (count($row['feedersInvolved']) > 0)) {
+                            foreach ($row['feedersInvolved'] as $feederEl) {
+                                $feedersString .= ((trim($feedersString) != '') ? ', ' : '') . $feederEl['name'] . ' (#' . $feederEl['id'] . ')';
+                            }
+                        }
+                        $rowDataArray = [
+                            $row['orderNumber'],
+                            $feedersString,
+                            $row['channel'],
+                            $row['emirates'],
+                            $row['customerName'],
+                            $row['shippingAddress'],
+                            date('d-m-Y', strtotime($row['orderDeliveryDate'])),
+                            date('d-m-Y', strtotime($row['driverDeliveryDate'])),
+                            $row['orderStatus'],
+                            $row['paymentMethod'],
+                            $row['initialPay'],
+                        ];
+                        foreach ($collectionMethods as $methodEl) {
+                            $rowDataArray[] = (array_key_exists($methodEl, $row)) ? $row[$methodEl] : '0';
+                        }
+                        $rowDataArray[] = $row['collectedAmount'];
+                        $rowDataArray[] = $row['totalPaid'];
+                        $rowDataArray[] = $row['orderTotal'];
+                        $rowDataArray[] = $row['paymentStatus'];
+                        $rowDataArray[] = ($row['collectionVerified'] == '1') ? 'Yes' : 'No';
+                        $rowDataArray[] = (!is_null($row['collectionVerifiedAt'])) ? $serviceHelper->getFormattedTime($row['collectionVerifiedAt'], 'F d, Y, h:i:s A') : '-';
+                        fputcsv($file, $rowDataArray);
+                    }
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        }
+
+    }
+
 }

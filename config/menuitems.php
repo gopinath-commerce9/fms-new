@@ -114,6 +114,17 @@ return [
             'children' => null,
         ],
         [
+            'name' => 'Feeders Report',
+            'path' => '/userrole/feeders-report',
+            'icon' => 'fas fa-list',
+            'customIcon' => false,
+            'toolTip' => 'Feeders Report',
+            'permission_type' => 'role',
+            'permission' => ['admin', 'supervisor'],
+            'active' => true,
+            'children' => null,
+        ],
+        [
             'name' => 'Update Stock',
             'path' => '/sales/stock-update',
             'icon' => 'fas fa-redo',

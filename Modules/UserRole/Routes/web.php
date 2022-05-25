@@ -91,5 +91,9 @@ Route::prefix('userrole')->middleware([
         ->name('roles.driverCollectionVerification');
     Route::get('/drivers/view/{driverId}', 'UserRoleController@driverView')
         ->name('roles.driverView');
+    Route::get('/feeders-report', 'UserRoleController@feedersReportList')
+        ->name('roles.feedersReportList');
+    Route::post('/feeders-report-filter', 'UserRoleController@feedersReportFilter')
+        ->name('roles.feedersReportFilter');
 
 });
