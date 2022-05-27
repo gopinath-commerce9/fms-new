@@ -1241,6 +1241,13 @@ class ApiController extends BaseController
             && (count($request->input('collections')) > 0)
         ) ? $request->input('collections') : [];
 
+        $forcedCollection = (
+            $request->has('forced')
+            && (trim($request->input('forced')) != '')
+            && is_bool($request->input('forced'))
+        ) ? (bool)trim($request->input('forced')) : false;
+        $forcedCollection = true;
+
         if (is_null($givenOrderId)) {
             $errMessage = 'Sale Order Not found!';
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
@@ -1354,7 +1361,7 @@ class ApiController extends BaseController
                 $paymentStatus = 'due';
             }
         }
-        if ($paymentStatus === 'overpaid') {
+        if (($forcedCollection === false) && ($paymentStatus === 'overpaid')) {
             $overPayAmount = number_format(abs($totalDueValue), 2) . " " . $saleOrderData['order_currency'];
             $errMessage = 'The Sale Order will get overpaid by around ' . $overPayAmount . ' if proceeded with Collected Amount!';
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
