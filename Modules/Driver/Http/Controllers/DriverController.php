@@ -274,7 +274,7 @@ class DriverController extends Controller
 
         $customerGroups = [];
         $customerGroupData = $serviceHelper->getCustomerGroups();
-        if (array_key_exists('items', $customerGroupData)) {
+        if (is_array($customerGroupData) && (count($customerGroupData) > 0) && array_key_exists('items', $customerGroupData)) {
             foreach($customerGroupData['items'] as $group) {
                 $customerGroups[$group['id']] = $group['code'];
             }
