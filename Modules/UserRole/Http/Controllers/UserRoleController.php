@@ -1048,7 +1048,7 @@ class UserRoleController extends Controller
         $methodsIncluded = false;
         $currentAmountCollected = 0;
         foreach ($givenOrderCollections as $givenMethod => $givenAmount) {
-            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) >= 0)) {
                 $methodsIncluded = true;
                 $currentAmountCollected += (float)trim($givenAmount);
             }
@@ -1059,17 +1059,19 @@ class UserRoleController extends Controller
         }
 
         foreach ($givenOrderCollections as $givenMethod => $givenAmount) {
-            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) > 0)) {
+            if (in_array($givenMethod, $amountCollectionMethods) && is_numeric(trim($givenAmount)) && ((float)trim($givenAmount) >= 0)) {
                 $amountCollectionDeleteExec = SaleOrderAmountCollection::where('order_id', $saleOrderData['id'])
                     ->where('method', $givenMethod)
                     ->delete();
-                $newAmountCollectionObj = SaleOrderAmountCollection::updateOrCreate([
-                    'order_id' => $saleOrderData['id'],
-                    'method' => $givenMethod,
-                ], [
-                    'amount' => (float)trim($givenAmount),
-                    'status' => SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID,
-                ]);
+                if ((float)trim($givenAmount) > 0) {
+                    $newAmountCollectionObj = SaleOrderAmountCollection::updateOrCreate([
+                        'order_id' => $saleOrderData['id'],
+                        'method' => $givenMethod,
+                    ], [
+                        'amount' => (float)trim($givenAmount),
+                        'status' => SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID,
+                    ]);
+                }
             }
         }
 
