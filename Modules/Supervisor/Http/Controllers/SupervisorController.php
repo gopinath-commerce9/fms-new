@@ -452,6 +452,7 @@ class SupervisorController extends Controller
         $allowedStatuses = [
             SaleOrder::SALE_ORDER_STATUS_PENDING,
             SaleOrder::SALE_ORDER_STATUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_PROCESSING,
             SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
             SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH
         ];
@@ -491,6 +492,7 @@ class SupervisorController extends Controller
                     return (
                         ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_PENDING)
                         || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_PROCESSING)
+                        || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_NGENIUS_PROCESSING)
                         || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_ON_HOLD)
                     );
                 }),

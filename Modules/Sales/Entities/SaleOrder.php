@@ -10,7 +10,9 @@ class SaleOrder extends Model
 
     const AVAILABLE_ORDER_STATUSES = [
         'pending',
+        'ngenius_pending',
         'processing',
+        'ngenius_processing',
         'being_prepared',
         'holded',
         'order_updated',
@@ -21,7 +23,9 @@ class SaleOrder extends Model
     ];
 
     const SALE_ORDER_STATUS_PENDING = 'pending';
+    const SALE_ORDER_STATUS_NGENIUS_PENDING = 'ngenius_pending';
     const SALE_ORDER_STATUS_PROCESSING = 'processing';
+    const SALE_ORDER_STATUS_NGENIUS_PROCESSING = 'ngenius_processing';
     const SALE_ORDER_STATUS_BEING_PREPARED = 'being_prepared';
     const SALE_ORDER_STATUS_ON_HOLD = 'holded';
     const SALE_ORDER_STATUS_ORDER_UPDATED = 'order_updated';

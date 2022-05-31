@@ -139,6 +139,15 @@ return [
         'returned' => 'Returned',
         'delivered' => 'Delivered',
         'shipped' => 'Shipped',
+        'ngenius_processing' => 'N-Genius Online Processing',
+        'ngenius_pending' => 'N-Genius Online Pending',
+        'ngenius_partially_refunded' => 'N-Genius Online Partially Refunded',
+        'ngenius_partially_captured' => 'N-Genius Online Partially Captured',
+        'ngenius_fully_refunded' => 'N-Genius Online Fully Refunded',
+        'ngenius_fully_captured' => 'N-Genius Online Fully Captured',
+        'ngenius_failed' => 'N-Genius Online Failed',
+        'ngenius_auth_reversed' => 'N-Genius Online Auth Reversed',
+        'ngenius_authorised' => 'N-Genius Online Authorised',
     ],
 
     /*'emirates' => [
@@ -168,7 +177,9 @@ return [
     'role_allowed_statuses' => [
         'supervisor' => [
             'pending',
+            'ngenius_pending',
             'processing',
+            'ngenius_processing',
             'being_prepared',
             'holded',
             'order_updated',

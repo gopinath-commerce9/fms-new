@@ -60,6 +60,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     private $allowedSaleOrderStatuses = [
         'pending',
+        'ngenius_processing',
         'processing',
         'being_prepared',
         /*'holded',

@@ -65,6 +65,7 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
     private $allowedSaleOrderStatuses = [
         'pending',
         'processing',
+        'ngenius_processing',
         'being_prepared',
         /*'holded',
         'order_updated',*/
