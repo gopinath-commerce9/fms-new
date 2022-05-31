@@ -187,6 +187,7 @@
                                     <?php if(
                                         ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_PENDING)
                                         || ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_PROCESSING)
+                                        || ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE)
                                         || ($saleOrderData['order_status'] === \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_ON_HOLD)
                                     ) {?>
 
