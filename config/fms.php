@@ -161,6 +161,7 @@ return [
     'picklist_statuses' => [
         'pending',
         'processing',
+        'ngenius_complete',
         'being_prepared',
         'holded',
         'order_updated'
