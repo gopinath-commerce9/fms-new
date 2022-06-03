@@ -655,6 +655,15 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_date_end_filter')) != '')
         ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
 
+        $datePurpose = (
+            $request->has('date_purpose_filter')
+            && (trim($request->input('date_purpose_filter')) != '')
+            && (
+                ((int)trim($request->input('date_purpose_filter')) === 1)
+                || ((int)trim($request->input('date_purpose_filter')) === 2)
+            )
+        ) ? (int)trim($request->input('date_purpose_filter')) : 1;
+
         $deliverySlot = (
             $request->has('delivery_slot_filter')
             && (trim($request->input('delivery_slot_filter')) != '')
@@ -662,7 +671,7 @@ class UserRoleController extends Controller
 
         if ($methodAction == 'datatable') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
 
             $filteredOrderData = [];
             $totalRec = 0;
@@ -679,6 +688,7 @@ class UserRoleController extends Controller
                     'region' => $region,
                     'channel' => $apiChannel,
                     'driver' => $record['driverId'],
+                    'filter_type' => $datePurpose,
                     'delivery_date' => date('Y-m-d', strtotime($record['date'])),
                     'delivery_slot' => $deliverySlot,
                 ]);
@@ -707,7 +717,7 @@ class UserRoleController extends Controller
 
         }  elseif ($methodAction == 'excel_sheet') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
             if (count($filteredOrderStats) <= 0) {
                 return back()
                     ->with('error', "There is no record to export the CSV file.");
@@ -722,7 +732,7 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Driver Id", "Driver Name", "Order Delivery Date", "Driver Delivery Date", "Order Number", "Emirates", "Address", "Order Status", "Payment Method", "Initial Pay"];
+            $headingColumns = ["Driver Id", "Driver Name", "Order Delivery Date", "Driver Assigned Date", "Driver Delivery Date", "Order Number", "Emirates", "Address", "Order Status", "Payment Method", "Initial Pay"];
             $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
             foreach ($collectionMethods as $methodEl) {
                 $headingColumns[] = ucwords($methodEl) . " Collected";
@@ -741,6 +751,7 @@ class UserRoleController extends Controller
                             $row['driverId'],
                             $row['driver'],
                             date('d-m-Y', strtotime($row['orderDeliveryDate'])),
+                            date('d-m-Y', strtotime($row['driverAssignedDate'])),
                             date('d-m-Y', strtotime($row['driverDeliveryDate'])),
                             $row['orderNumber'],
                             $row['emirates'],
@@ -806,6 +817,15 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_date')) != '')
         ) ? trim($request->input('delivery_date')) : date('Y-m-d');
 
+        $datePurpose = (
+            $request->has('filter_type')
+            && (trim($request->input('filter_type')) != '')
+            && (
+                ((int)trim($request->input('filter_type')) === 1)
+                || ((int)trim($request->input('filter_type')) === 2)
+            )
+        ) ? (int)trim($request->input('filter_type')) : 1;
+
         $deliverySlot = (
             $request->has('delivery_slot')
             && (trim($request->input('delivery_slot')) != '')
@@ -840,9 +860,9 @@ class UserRoleController extends Controller
         }
 
         $pageTitle = 'Fulfillment Center';
-        $pageSubTitle = 'Drivers (' . implode(', ', $driverNames) . ') Activities on ' . date('d-m-Y', strtotime($startDate)) . '';
+        $pageSubTitle = 'Drivers (' . implode(', ', $driverNames) . ') ' . (($datePurpose == 2) ? 'Assignments' : 'Activities') . ' on ' . date('d-m-Y', strtotime($startDate)) . '';
 
-        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $feederFlag, $startDate, $endDate, $deliverySlot);
+        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
         if (count($filteredOrderStats) <= 0) {
             return back()
                 ->with('error', "There is no record of Activities of the Driver.");

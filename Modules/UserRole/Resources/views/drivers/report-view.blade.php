@@ -40,6 +40,7 @@
                                                 <th>Driver Id</th>
                                                 <th>Driver Name</th>
                                                 <th>Order Delivery Date</th>
+                                                <th>Driver Assigned Date</th>
                                                 <th>Driver Delivery Date</th>
                                                 <th>Order Number</th>
                                                 <th>Emirates</th>
@@ -101,6 +102,7 @@
                                                     <td class="text-wrap">{{ $statEl['driverId'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['driver'] }}</td>
                                                     <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['orderDeliveryDate'], 'd-m-Y') }}</td>
+                                                    <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['driverAssignedDate'], 'd-m-Y') }}</td>
                                                     <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['driverDeliveryDate'], 'd-m-Y') }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderNumber'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['emirates'] }}</td>
@@ -144,7 +146,7 @@
 
                                             @endforeach
                                         @else
-                                            <tr><td colspan="{{ (count($collectionMethods) + 17) }}">No Driver Activity data found!</td></tr>
+                                            <tr><td colspan="{{ (count($collectionMethods) + 18) }}">No Driver Activity/Assignments data found!</td></tr>
                                         @endif
 
                                         </tbody>

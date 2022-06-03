@@ -363,7 +363,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
 
         $statsList = [];
 
@@ -379,6 +379,7 @@ class UserRoleServiceHelper
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
+        $datePurposeClean = (!is_null($datePurpose) && (trim($datePurpose) != '') && ((trim($datePurpose) == '1') || (trim($datePurpose) == '2'))) ? (int)trim($datePurpose) : 1;
         $fromDate = null;
         $toDate = null;
         if (!is_null($startDateClean) && !is_null($endDateClean)) {
@@ -513,35 +514,47 @@ class UserRoleServiceHelper
                     ->orderBy('done_at', 'desc')
                     ->limit(1)->get();
 
+                $deliveryHistory = null;
+                if ($currentDriver && (count($currentDriver) > 0)) {
+                    $deliveryHistory = $currentDriver->first();
+                }
+
                 $historyObj = null;
                 if ($deliveredData && (count($deliveredData) > 0)) {
                     $historyObj = $deliveredData->first();
                 } elseif ($canceledData && (count($canceledData) > 0)) {
                     $historyObj = $canceledData->first();
-                } elseif ($currentDriver && (count($currentDriver) > 0)) {
-                    $historyObj = $currentDriver->first();
+                } else {
+                    $historyObj = $deliveryHistory;
                 }
 
-                if (!is_null($historyObj)) {
+                $filterHistory = null;
+                if ($datePurposeClean == 1) {
+                    $filterHistory = $historyObj;
+                } elseif ($datePurposeClean == 2) {
+                    $filterHistory = $deliveryHistory;
+                }
+
+                if (!is_null($deliveryHistory) && !is_null($historyObj) && !is_null($filterHistory)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
+                    if (!is_null($filterHistory->done_by) && !array_key_exists($filterHistory->done_by, $filterableUserOrderIds)) {
                         $canProceed = false;
                     }
 
-                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($historyObj->done_at)))) {
+                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($filterHistory->done_at)))) {
                         $canProceed = false;
                     }
 
-                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($historyObj->done_at)))) {
+                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($filterHistory->done_at)))) {
                         $canProceed = false;
                     }
 
                     if ($canProceed) {
 
                         $userElQ = User::select('*')
-                            ->where('id', $historyObj->done_by)->get();
-                        $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
+                            ->where('id', $filterHistory->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $filterHistory->actionDoer;
 
                         $currentAssignCount = 0;
                         $currentDeliveryCount = 0;
@@ -549,12 +562,12 @@ class UserRoleServiceHelper
                         $currentCanceledCount = 0;
                         if (
                             array_key_exists($userEl->id, $statsList)
-                            && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$userEl->id])
+                            && array_key_exists(date('Y-m-d', strtotime($filterHistory->done_at)), $statsList[$userEl->id])
                         ) {
-                            $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
-                            $currentDeliveryCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['deliveryOrders'];
-                            $currentDeliveredCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['deliveredOrders'];
-                            $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['canceledOrders'];
+                            $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['assignedOrders'];
+                            $currentDeliveryCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveryOrders'];
+                            $currentDeliveredCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveredOrders'];
+                            $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['canceledOrders'];
                         }
 
                         $addToRecords = false;
@@ -576,12 +589,12 @@ class UserRoleServiceHelper
 
                         if ($addToRecords) {
 
-                            $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
+                            $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))] = [
                                 'driverId' => $userEl->id,
                                 'driver' => $userEl->name,
                                 'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
                                 'feeder' => ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1') ? 'Yes' : 'No',
-                                'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                'date' => date('Y-m-d', strtotime($filterHistory->done_at)),
                                 'assignedOrders' => $currentAssignCount,
                                 'deliveryOrders' => $currentDeliveryCount,
                                 'deliveredOrders' => $currentDeliveredCount,
@@ -608,7 +621,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
 
         $statsList = [];
 
@@ -624,6 +637,7 @@ class UserRoleServiceHelper
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
         $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
+        $datePurposeClean = (!is_null($datePurpose) && (trim($datePurpose) != '') && ((trim($datePurpose) == '1') || (trim($datePurpose) == '2'))) ? (int)trim($datePurpose) : 1;
         $fromDate = null;
         $toDate = null;
         if (!is_null($startDateClean) && !is_null($endDateClean)) {
@@ -759,35 +773,47 @@ class UserRoleServiceHelper
                     ->orderBy('done_at', 'desc')
                     ->limit(1)->get();
 
+                $deliveryHistory = null;
+                if ($currentDriver && (count($currentDriver) > 0)) {
+                    $deliveryHistory = $currentDriver->first();
+                }
+
                 $historyObj = null;
                 if ($deliveredData && (count($deliveredData) > 0)) {
                     $historyObj = $deliveredData->first();
                 } elseif ($canceledData && (count($canceledData) > 0)) {
                     $historyObj = $canceledData->first();
-                } elseif ($currentDriver && (count($currentDriver) > 0)) {
-                    $historyObj = $currentDriver->first();
+                } else {
+                    $historyObj = $deliveryHistory;
                 }
 
-                if (!is_null($historyObj)) {
+                $filterHistory = null;
+                if ($datePurposeClean == 1) {
+                    $filterHistory = $historyObj;
+                } elseif ($datePurposeClean == 2) {
+                    $filterHistory = $deliveryHistory;
+                }
+
+                if (!is_null($deliveryHistory) && !is_null($historyObj) && !is_null($filterHistory)) {
 
                     $canProceed = true;
-                    if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
+                    if (!is_null($filterHistory->done_by) && !array_key_exists($filterHistory->done_by, $filterableUserOrderIds)) {
                         $canProceed = false;
                     }
 
-                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($historyObj->done_at)))) {
+                    if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($filterHistory->done_at)))) {
                         $canProceed = false;
                     }
 
-                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($historyObj->done_at)))) {
+                    if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($filterHistory->done_at)))) {
                         $canProceed = false;
                     }
 
                     if ($canProceed) {
 
                         $userElQ = User::select('*')
-                            ->where('id', $historyObj->done_by)->get();
-                        $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
+                            ->where('id', $filterHistory->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $filterHistory->actionDoer;
 
                         $saleOrderExtraData = [
                             'shipping_address' => [],
@@ -883,6 +909,7 @@ class UserRoleServiceHelper
                             'driverId' => $userEl->id,
                             'driver' => $userEl->name,
                             'orderDeliveryDate' => date('Y-m-d', strtotime($orderEl['delivery_date'])),
+                            'driverAssignedDate' => date('Y-m-d', strtotime($deliveryHistory->done_at)),
                             'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                             'orderRecordId' => $orderEl['id'],
                             'orderId' => $orderEl['order_id'],
@@ -904,7 +931,7 @@ class UserRoleServiceHelper
                         foreach ($amountCollectionData as $collectionKey => $collectionValue) {
                             $tempArrayRecord[$collectionKey] = $collectionValue . " " . $orderEl['order_currency'];
                         }
-                        $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))][$orderEl['id']] = $tempArrayRecord;
+                        $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))][$orderEl['id']] = $tempArrayRecord;
 
                     }
 

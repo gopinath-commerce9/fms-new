@@ -71,18 +71,21 @@
                                             <input  type="hidden" class="datatable-date-input" value="{{ date('Y-m-d') }}" id="delivery_date_end_filter" name="delivery_date_end_filter" />
                                         </div>
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="delivery_slot_filter" name="delivery_slot_filter" >
-                                                <option value="" >Select a Time Slot</option>
-                                                @foreach($deliveryTimeSlots as $deliveryEl)
-                                                    <option value="{{ $deliveryEl }}" >{{ $deliveryEl }}</option>
-                                                @endforeach
+                                            <select class="form-control" id="date_purpose_filter" name="date_purpose_filter" >
+                                                <option value="1" selected>Activity Based</option>
+                                                <option value="2" >Assignment Based</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="form-group row">
                                         <div class="col-lg-4">
-
+                                            <select class="form-control datatable-input" id="delivery_slot_filter" name="delivery_slot_filter" >
+                                                <option value="" >Select a Time Slot</option>
+                                                @foreach($deliveryTimeSlots as $deliveryEl)
+                                                    <option value="{{ $deliveryEl }}" >{{ $deliveryEl }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                         <div class="col-lg-4">
 
