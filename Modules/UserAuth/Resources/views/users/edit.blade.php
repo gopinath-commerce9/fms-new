@@ -125,6 +125,35 @@
                             @endif
                         @endif
 
+                        <div class="form-group row">
+                            <label  class="col-3 col-form-label text-right">Reset Password</label>
+                            <div class="col-6">
+                                <div class="input-group show-hide-password-group" id="user_password_form_group">
+                                    <input type="password" class="form-control" id="user_password" name="user_password" value="{{ old('user_password') }}" placeholder="Enter Password"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text show-hide-password"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                                <span class="form-text text-muted">
+                                    Please enter the password. The password must be more than 8 characters long, should contain at-least 1 Uppercase, 1 Lowercase, 1 Numeric and 1 special character.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label  class="col-3 col-form-label text-right">Confirm Password</label>
+                            <div class="col-6">
+                                <div class="input-group show-hide-password-group" id="user_password_conf_form_group">
+                                    <input type="password" class="form-control" id="user_password_confirmation" name="user_password_confirmation"
+                                           value="{{ old('user_password_confirmation') }}" placeholder="Confirm Password"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text show-hide-password"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                                <span class="form-text text-muted">Please confirm the password.</span>
+                            </div>
+                        </div>
+
                     </div>
                     <!--end::Card Body-->
 

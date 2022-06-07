@@ -296,6 +296,11 @@ class UserCrudController extends Controller
             'profile_avatar_remove' => ['nullable', 'boolean'],
             'user_role' => ['nullable', 'numeric', 'integer', 'exists:user_roles,id'],
             'user_feeder_driver' => ['nullable', 'numeric', 'integer'],
+            'user_password' => [
+                'nullable',
+                'confirmed',
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+            ],
         ], [
             'user_name.required' => 'The User Name should be provided.',
             'user_name.string' => 'The User Name should be a string value.',
@@ -376,6 +381,10 @@ class UserCrudController extends Controller
                     $sessionUser['userImage'] = $proposedFileName;
                 }
 
+            }
+
+            if (!is_null($postData['user_password']) && (trim($postData['user_password']) != '')) {
+                $givenUserData->password = Hash::make($postData['user_password']);
             }
 
             $givenUserData->saveQuietly();
