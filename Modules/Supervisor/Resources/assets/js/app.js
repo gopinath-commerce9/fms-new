@@ -230,16 +230,13 @@ var SupervisorCustomJsBlocks = function() {
             },
             columns: [
                 {data: 'incrementId', className: 'text-wrap'},
-                {data: 'channel', className: 'text-wrap'},
                 {data: 'region', className: 'text-wrap'},
                 {data: 'customerName', className: 'text-wrap'},
                 {data: 'customerAddress', className: 'text-wrap'},
                 {data: 'deliveryDate', className: 'text-wrap'},
                 {data: 'deliveryTimeSlot', className: 'text-wrap'},
                 {data: 'deliveryPicker', className: 'text-wrap'},
-                {data: 'deliveryPickerTime', className: 'text-wrap'},
                 {data: 'deliveryDriver', className: 'text-wrap'},
-                {data: 'deliveryDriverTime', className: 'text-wrap'},
                 {data: 'orderStatus', className: 'text-nowrap'},
                 {data: 'actions', className: 'text-wrap', responsivePriority: -1},
             ],
@@ -251,7 +248,7 @@ var SupervisorCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 11,
+                targets: 8,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {
