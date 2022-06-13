@@ -89,13 +89,22 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-
+                                            <select class="form-control datatable-input" id="picker_filter" name="picker_filter" multiple>
+                                                <option value="" >Select a Picker</option>
+                                                @if(count($pickers->mappedUsers) > 0)
+                                                    @foreach($pickers->mappedUsers as $userEl)
+                                                        <option value="{{ $userEl->id }}" >{{ $userEl->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
                                             <input type="hidden" name="items_selected_values" id="items_selected_values" value="" />
                                             <input type="hidden" name="order_status_values" id="order_status_values" value="" />
                                             <input type="hidden" name="product_category_values" id="product_category_values" value="" />
+                                            <input type="hidden" name="store_availability_values" id="store_availability_values" value="" />
+                                            <input type="hidden" name="picker_values" id="picker_values" value="" />
                                             <button type="button" id="filter_item_picklist_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>

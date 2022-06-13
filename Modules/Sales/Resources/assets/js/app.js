@@ -356,6 +356,10 @@ var SalesCustomJsBlocks = function() {
             placeholder: "Select Store Availabilities",
         });
 
+        $('#picker_filter').select2({
+            placeholder: "Select Pickers",
+        });
+
     };
 
     var initPicklistDeliveryDateRangePicker = function () {
@@ -402,6 +406,8 @@ var SalesCustomJsBlocks = function() {
 
                     var orderStatusValues = '';
                     var productCatValues = '';
+                    var storeAvailabilityValues = '';
+                    var pickerValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'filter_action') {
                             d[val.name] = 'datatable';
@@ -410,6 +416,10 @@ var SalesCustomJsBlocks = function() {
                                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
                             } else if (val.name === 'product_category_filter') {
                                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'store_availability_filter') {
+                                storeAvailabilityValues = storeAvailabilityValues + ((storeAvailabilityValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'picker_filter') {
+                                pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
                             }  else {
                                 d[val.name] = val.value;
                             }
@@ -418,6 +428,8 @@ var SalesCustomJsBlocks = function() {
 
                     d['order_status_values'] = orderStatusValues;
                     d['product_category_values'] = productCatValues;
+                    d['store_availability_values'] = storeAvailabilityValues;
+                    d['picker_values'] = pickerValues;
 
                     d['columnsDef'] = [
                         'itemSelector', 'deliveryDate', 'deliveryTimeSlot', 'orderId', 'productType',
@@ -517,15 +529,23 @@ var SalesCustomJsBlocks = function() {
         $('#filter_action').val('pdf_generator');
         var orderStatusValues = '';
         var productCatValues = '';
+        var storeAvailabilityValues = '';
+        var pickerValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'order_status_filter') {
                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             } else if (val.name === 'product_category_filter') {
                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'store_availability_filter') {
+                storeAvailabilityValues = storeAvailabilityValues + ((storeAvailabilityValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'picker_filter') {
+                pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
             }
         });
         $('#order_status_values').val(orderStatusValues);
         $('#product_category_values').val(productCatValues);
+        $('#store_availability_values').val(storeAvailabilityValues);
+        $('#picker_values').val(pickerValues);
         targetForm.submit();
     };
 
@@ -534,15 +554,23 @@ var SalesCustomJsBlocks = function() {
         $('#filter_action').val('csv_generator');
         var orderStatusValues = '';
         var productCatValues = '';
+        var storeAvailabilityValues = '';
+        var pickerValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'order_status_filter') {
                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             } else if (val.name === 'product_category_filter') {
                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'store_availability_filter') {
+                storeAvailabilityValues = storeAvailabilityValues + ((storeAvailabilityValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'picker_filter') {
+                pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
             }
         });
         $('#order_status_values').val(orderStatusValues);
         $('#product_category_values').val(productCatValues);
+        $('#store_availability_values').val(storeAvailabilityValues);
+        $('#picker_values').val(pickerValues);
         targetForm.submit();
     };
 

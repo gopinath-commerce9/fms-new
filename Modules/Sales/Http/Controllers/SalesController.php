@@ -524,7 +524,7 @@ class SalesController extends Controller
                                         </span>
                                     </div>
                                 </div>
-                                <small>Actual Qty.: ' . $sessionActualQtyArray[$index] . ' ' . $productItem['extension_attributes']['selling_format_label'] . '</small> 
+                                <small>Actual Qty.: ' . $sessionActualQtyArray[$index] . ' ' . $productItem['extension_attributes']['selling_format_label'] . '</small>
                             </td>';
                             $returnCartHtml .='<td class="text-right">'.number_format($currentItemQty * $itemPrice, 2).'</td>';
                             $cartTotal += $currentItemQty * $itemPrice;
@@ -962,6 +962,9 @@ class SalesController extends Controller
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
         $productCategories = $serviceHelper->getProductCategories();
 
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+
         $storeAvailability = [
             '1' => 'Not Checked',
             '2' => 'Available',
@@ -980,6 +983,7 @@ class SalesController extends Controller
             'deliveryTimeSlots',
             'productCategories',
             'storeAvailability',
+            'pickers',
             'serviceHelper'
         ));
 
@@ -1034,6 +1038,11 @@ class SalesController extends Controller
             && (trim($request->input('order_status_values')) != '')
         ) ? explode(',', trim($request->input('order_status_values'))) : [];
 
+        $pickerFilter = (
+            $request->has('picker_values')
+            && (trim($request->input('picker_values')) != '')
+        ) ? explode(',', trim($request->input('picker_values'))) : [];
+
         $startDate = (
             $request->has('delivery_date_start_filter')
             && (trim($request->input('delivery_date_start_filter')) != '')
@@ -1061,9 +1070,9 @@ class SalesController extends Controller
             '3' => 'Not Available',
         ];
         $availabilityFilter = (
-            $request->has('store_availability_filter')
-            && (trim($request->input('store_availability_filter')) != '')
-        ) ? explode(',', trim($request->input('store_availability_filter'))) : [];
+            $request->has('store_availability_values')
+            && (trim($request->input('store_availability_values')) != '')
+        ) ? explode(',', trim($request->input('store_availability_values'))) : [];
 
         $itemSelectedFilter = (
             $request->has('items_selected_values')
@@ -1081,84 +1090,102 @@ class SalesController extends Controller
                 $currentRec = -1;
                 foreach ($filteredOrders as $record) {
 
-                    $record->orderItems;
-                    if ($record->orderItems && (count($record->orderItems) > 0)) {
-                        $orderItems = $record->orderItems;
-                        foreach ($orderItems as $orderItemEl) {
+                    $currentPicker = SaleOrderProcessHistory::select('*')
+                        ->where('order_id', $record->id)
+                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                        ->orderBy('done_at', 'desc')
+                        ->limit(1)->get();
 
-                            $productId = $orderItemEl->product_id;
-                            $productCat = null;
-                            if ($orderItemEl->productCategory) {
-                                $productCat = $orderItemEl->productCategory;
-                            }
+                    $pickerFilterFlag = false;
+                    if ($currentPicker && (count($currentPicker) > 0)) {
+                        $deliveryHistory = $currentPicker->first();
+                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
+                            $pickerFilterFlag = true;
+                        }
+                    }
 
-                            if (is_null($productCat)) {
-                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
-                                if (!is_null($catApiResult)) {
-                                    $productCat = ProductCategory::firstOrCreate([
-                                        'env' => $record->env,
-                                        'channel' => $record->channel,
-                                        'product_id' => $productId
-                                    ], [
-                                        'product_sku' => $catApiResult['product_sku'],
-                                        'product_name' => $catApiResult['product_name'],
-                                        'category_id' => $catApiResult['category_id'],
-                                        'category_name' => $catApiResult['category_name']
-                                    ]);
+                    if ($pickerFilterFlag) {
+
+                        $record->orderItems;
+                        if ($record->orderItems && (count($record->orderItems) > 0)) {
+                            $orderItems = $record->orderItems;
+                            foreach ($orderItems as $orderItemEl) {
+
+                                $productId = $orderItemEl->product_id;
+                                $productCat = null;
+                                if ($orderItemEl->productCategory) {
+                                    $productCat = $orderItemEl->productCategory;
                                 }
-                            }
 
-                            $productCatIdFinal = '0';
-                            $productCatFinal = 'UnCat';
-                            if (!is_null($productCat)) {
-                                $productCatIdFinal = strval($productCat->category_id);
-                                $productCatFinal = strval($productCat->category_name);
-                            }
+                                if (is_null($productCat)) {
+                                    $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                    if (!is_null($catApiResult)) {
+                                        $productCat = ProductCategory::firstOrCreate([
+                                            'env' => $record->env,
+                                            'channel' => $record->channel,
+                                            'product_id' => $productId
+                                        ], [
+                                            'product_sku' => $catApiResult['product_sku'],
+                                            'product_name' => $catApiResult['product_name'],
+                                            'category_id' => $catApiResult['category_id'],
+                                            'category_name' => $catApiResult['category_name']
+                                        ]);
+                                    }
+                                }
 
-                            $storeAvailabilityStatus = null;
-                            $storeAvailabilityStatusLabel = '';
-                            if ($orderItemEl->isNotCheckedStoreAvailable()) {
-                                $storeAvailabilityStatus = '1';
-                                $storeAvailabilityStatusLabel = 'Not Checked';
-                            } elseif ($orderItemEl->isStoreAvailable()) {
-                                $storeAvailabilityStatus = '2';
-                                $storeAvailabilityStatusLabel = 'Available';
-                            } elseif ($orderItemEl->isNotStoreAvailable()) {
-                                $storeAvailabilityStatus = '3';
-                                $storeAvailabilityStatusLabel = 'Not Available';
-                            }
+                                $productCatIdFinal = '0';
+                                $productCatFinal = 'UnCat';
+                                if (!is_null($productCat)) {
+                                    $productCatIdFinal = strval($productCat->category_id);
+                                    $productCatFinal = strval($productCat->category_name);
+                                }
 
-                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+                                $storeAvailabilityStatus = null;
+                                $storeAvailabilityStatusLabel = '';
+                                if ($orderItemEl->isNotCheckedStoreAvailable()) {
+                                    $storeAvailabilityStatus = '1';
+                                    $storeAvailabilityStatusLabel = 'Not Checked';
+                                } elseif ($orderItemEl->isStoreAvailable()) {
+                                    $storeAvailabilityStatus = '2';
+                                    $storeAvailabilityStatusLabel = 'Available';
+                                } elseif ($orderItemEl->isNotStoreAvailable()) {
+                                    $storeAvailabilityStatus = '3';
+                                    $storeAvailabilityStatusLabel = 'Not Available';
+                                }
 
-                                if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
+                                if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
 
-                                    $totalRec++;
-                                    $currentRec++;
-                                    if (($currentRec >= $collectRecStart) && ($currentRec < $collectRecEnd)) {
+                                    if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
 
-                                        $itemSelector = '<label class="checkbox checkbox-single checkbox-solid checkbox-primary mb-0 justify-content-center">';
-                                        $itemSelector .= '<input type="checkbox" value="" class="checkable sales-picklist-item" id="sales-picklist-item-' . $orderItemEl->id;
-                                        $itemSelector .= '" name="sales-picklist-item-' . $orderItemEl->id .'" data-item-id="' . $orderItemEl->id . '"/><span></span></label>';
+                                        $totalRec++;
+                                        $currentRec++;
+                                        if (($currentRec >= $collectRecStart) && ($currentRec < $collectRecEnd)) {
 
-                                        $filteredOrderData[] = [
-                                            'itemSelector' => $itemSelector,
-                                            'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
-                                            'deliveryTimeSlot' => $record->delivery_time_slot,
-                                            'orderId' => $record->increment_id,
-                                            'productType' => $productCatFinal,
-                                            'productSku' => $orderItemEl->item_sku,
-                                            'productName' => $orderItemEl->item_name,
-                                            'quantity' => $orderItemEl->qty_ordered,
-                                            'availability' => $storeAvailabilityStatusLabel,
-                                        ];
+                                            $itemSelector = '<label class="checkbox checkbox-single checkbox-solid checkbox-primary mb-0 justify-content-center">';
+                                            $itemSelector .= '<input type="checkbox" value="" class="checkable sales-picklist-item" id="sales-picklist-item-' . $orderItemEl->id;
+                                            $itemSelector .= '" name="sales-picklist-item-' . $orderItemEl->id .'" data-item-id="' . $orderItemEl->id . '"/><span></span></label>';
+
+                                            $filteredOrderData[] = [
+                                                'itemSelector' => $itemSelector,
+                                                'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
+                                                'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'orderId' => $record->increment_id,
+                                                'productType' => $productCatFinal,
+                                                'productSku' => $orderItemEl->item_sku,
+                                                'productName' => $orderItemEl->item_name,
+                                                'quantity' => $orderItemEl->qty_ordered,
+                                                'availability' => $storeAvailabilityStatusLabel,
+                                            ];
+
+                                        }
 
                                     }
 
                                 }
 
                             }
-
                         }
+
                     }
 
                 }
@@ -1178,100 +1205,118 @@ class SalesController extends Controller
 
                 foreach ($filteredOrders as $record) {
 
-                    $record->orderItems;
-                    $record->shippingAddress;
+                    $currentPicker = SaleOrderProcessHistory::select('*')
+                        ->where('order_id', $record->id)
+                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                        ->orderBy('done_at', 'desc')
+                        ->limit(1)->get();
 
-                    if ($record->orderItems && (count($record->orderItems) > 0)) {
+                    $pickerFilterFlag = false;
+                    if ($currentPicker && (count($currentPicker) > 0)) {
+                        $deliveryHistory = $currentPicker->first();
+                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
+                            $pickerFilterFlag = true;
+                        }
+                    }
 
-                        $orderItems = $record->orderItems;
-                        foreach ($orderItems as $orderItemEl) {
+                    if ($pickerFilterFlag) {
 
-                            $productId = $orderItemEl->product_id;
-                            $productCat = null;
-                            if ($orderItemEl->productCategory) {
-                                $productCat = $orderItemEl->productCategory;
-                            }
+                        $record->orderItems;
+                        $record->shippingAddress;
 
-                            if (is_null($productCat)) {
-                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
-                                if (!is_null($catApiResult)) {
-                                    $productCat = ProductCategory::firstOrCreate([
-                                        'env' => $record->env,
-                                        'channel' => $record->channel,
-                                        'product_id' => $productId
-                                    ], [
-                                        'product_sku' => $catApiResult['product_sku'],
-                                        'product_name' => $catApiResult['product_name'],
-                                        'category_id' => $catApiResult['category_id'],
-                                        'category_name' => $catApiResult['category_name']
-                                    ]);
+                        if ($record->orderItems && (count($record->orderItems) > 0)) {
+
+                            $orderItems = $record->orderItems;
+                            foreach ($orderItems as $orderItemEl) {
+
+                                $productId = $orderItemEl->product_id;
+                                $productCat = null;
+                                if ($orderItemEl->productCategory) {
+                                    $productCat = $orderItemEl->productCategory;
                                 }
-                            }
 
-                            $productCatIdFinal = '0';
-                            $productCatFinal = 'UnCat';
-                            if (!is_null($productCat)) {
-                                $productCatIdFinal = strval($productCat->category_id);
-                                $productCatFinal = strval($productCat->category_name);
-                            }
+                                if (is_null($productCat)) {
+                                    $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                    if (!is_null($catApiResult)) {
+                                        $productCat = ProductCategory::firstOrCreate([
+                                            'env' => $record->env,
+                                            'channel' => $record->channel,
+                                            'product_id' => $productId
+                                        ], [
+                                            'product_sku' => $catApiResult['product_sku'],
+                                            'product_name' => $catApiResult['product_name'],
+                                            'category_id' => $catApiResult['category_id'],
+                                            'category_name' => $catApiResult['category_name']
+                                        ]);
+                                    }
+                                }
 
-                            $storeAvailabilityStatus = null;
-                            $storeAvailabilityStatusLabel = '';
-                            if ($orderItemEl->isNotCheckedStoreAvailable()) {
-                                $storeAvailabilityStatus = '1';
-                                $storeAvailabilityStatusLabel = 'Not Checked';
-                            } elseif ($orderItemEl->isStoreAvailable()) {
-                                $storeAvailabilityStatus = '2';
-                                $storeAvailabilityStatusLabel = 'Available';
-                            } elseif ($orderItemEl->isNotStoreAvailable()) {
-                                $storeAvailabilityStatus = '3';
-                                $storeAvailabilityStatusLabel = 'Not Available';
-                            }
+                                $productCatIdFinal = '0';
+                                $productCatFinal = 'UnCat';
+                                if (!is_null($productCat)) {
+                                    $productCatIdFinal = strval($productCat->category_id);
+                                    $productCatFinal = strval($productCat->category_name);
+                                }
 
-                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+                                $storeAvailabilityStatus = null;
+                                $storeAvailabilityStatusLabel = '';
+                                if ($orderItemEl->isNotCheckedStoreAvailable()) {
+                                    $storeAvailabilityStatus = '1';
+                                    $storeAvailabilityStatusLabel = 'Not Checked';
+                                } elseif ($orderItemEl->isStoreAvailable()) {
+                                    $storeAvailabilityStatus = '2';
+                                    $storeAvailabilityStatusLabel = 'Available';
+                                } elseif ($orderItemEl->isNotStoreAvailable()) {
+                                    $storeAvailabilityStatus = '3';
+                                    $storeAvailabilityStatusLabel = 'Not Available';
+                                }
 
-                                if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
+                                if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
 
-                                    if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
+                                    if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
 
-                                        $productWeight = 0;
-                                        if (array_key_exists($productCatIdFinal, $filteredOrderTotalWeight)) {
-                                            $productWeight = (float) $filteredOrderTotalWeight[$productCatIdFinal]['weight'];
-                                        }
-                                        $filteredOrderTotalWeight[$productCatIdFinal]['id'] = $productCatIdFinal;
-                                        $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
-                                        $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
+                                        if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
 
-                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
-                                            'deliveryDate' => $record->delivery_date,
-                                            'deliveryTimeSlot' => $record->delivery_time_slot,
-                                            'orderId' => $record->order_id,
-                                            'orderNumber' => $record->increment_id,
-                                            'productType' => $productCatFinal,
-                                            'productSku' => $orderItemEl->item_sku,
-                                            'productName' => $orderItemEl->item_name,
-                                            'productInfo' => $orderItemEl->item_info,
-                                            'quantity' => $orderItemEl->qty_ordered,
-                                            'sellingUnit' => $orderItemEl->selling_unit
-                                        ];
+                                            $productWeight = 0;
+                                            if (array_key_exists($productCatIdFinal, $filteredOrderTotalWeight)) {
+                                                $productWeight = (float) $filteredOrderTotalWeight[$productCatIdFinal]['weight'];
+                                            }
+                                            $filteredOrderTotalWeight[$productCatIdFinal]['id'] = $productCatIdFinal;
+                                            $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
+                                            $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
 
-                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['deliveryNotes'] = $record->delivery_notes;
-                                        $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
-                                        if ($record->shippingAddress) {
-                                            $shippingAddress = $record->shippingAddress;
-                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [
-                                                'firstName' => $shippingAddress['first_name'],
-                                                'lastName' => $shippingAddress['last_name'],
-                                                'address1' => $shippingAddress['address_1'],
-                                                'address2' => $shippingAddress['address_2'],
-                                                'address3' => $shippingAddress['address_3'],
-                                                'city' => $shippingAddress['city'],
-                                                'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
-                                                'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
-                                                'countryId' => $shippingAddress['country_id'],
-                                                'postCode' => $shippingAddress['post_code'],
-                                                'contactNumber' => $shippingAddress['contact_number'],
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
+                                                'deliveryDate' => $record->delivery_date,
+                                                'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'orderId' => $record->order_id,
+                                                'orderNumber' => $record->increment_id,
+                                                'productType' => $productCatFinal,
+                                                'productSku' => $orderItemEl->item_sku,
+                                                'productName' => $orderItemEl->item_name,
+                                                'productInfo' => $orderItemEl->item_info,
+                                                'quantity' => $orderItemEl->qty_ordered,
+                                                'sellingUnit' => $orderItemEl->selling_unit
                                             ];
+
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['deliveryNotes'] = $record->delivery_notes;
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
+                                            if ($record->shippingAddress) {
+                                                $shippingAddress = $record->shippingAddress;
+                                                $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [
+                                                    'firstName' => $shippingAddress['first_name'],
+                                                    'lastName' => $shippingAddress['last_name'],
+                                                    'address1' => $shippingAddress['address_1'],
+                                                    'address2' => $shippingAddress['address_2'],
+                                                    'address3' => $shippingAddress['address_3'],
+                                                    'city' => $shippingAddress['city'],
+                                                    'region' => (!is_null($shippingAddress['region']) && array_key_exists($shippingAddress['region'], $emirates)) ? $emirates[$shippingAddress['region']] : $shippingAddress['region'],
+                                                    'region_code' => (!is_null($shippingAddress['region_code']) && array_key_exists($shippingAddress['region_code'], $emirates)) ? $emirates[$shippingAddress['region_code']] : $shippingAddress['region_code'],
+                                                    'countryId' => $shippingAddress['country_id'],
+                                                    'postCode' => $shippingAddress['post_code'],
+                                                    'contactNumber' => $shippingAddress['contact_number'],
+                                                ];
+                                            }
+
                                         }
 
                                     }
@@ -1324,86 +1369,104 @@ class SalesController extends Controller
 
                 foreach ($filteredOrders as $record) {
 
-                    $record->orderItems;
-                    $record->shippingAddress;
+                    $currentPicker = SaleOrderProcessHistory::select('*')
+                        ->where('order_id', $record->id)
+                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                        ->orderBy('done_at', 'desc')
+                        ->limit(1)->get();
 
-                    if ($record->orderItems && (count($record->orderItems) > 0)) {
+                    $pickerFilterFlag = false;
+                    if ($currentPicker && (count($currentPicker) > 0)) {
+                        $deliveryHistory = $currentPicker->first();
+                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
+                            $pickerFilterFlag = true;
+                        }
+                    }
 
-                        $orderItems = $record->orderItems;
-                        foreach ($orderItems as $orderItemEl) {
+                    if ($pickerFilterFlag) {
 
-                            $productId = $orderItemEl->product_id;
-                            $productCat = null;
-                            if ($orderItemEl->productCategory) {
-                                $productCat = $orderItemEl->productCategory;
-                            }
+                        $record->orderItems;
+                        $record->shippingAddress;
 
-                            if (is_null($productCat)) {
-                                $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
-                                if (!is_null($catApiResult)) {
-                                    $productCat = ProductCategory::firstOrCreate([
-                                        'env' => $record->env,
-                                        'channel' => $record->channel,
-                                        'product_id' => $productId
-                                    ], [
-                                        'product_sku' => $catApiResult['product_sku'],
-                                        'product_name' => $catApiResult['product_name'],
-                                        'category_id' => $catApiResult['category_id'],
-                                        'category_name' => $catApiResult['category_name']
-                                    ]);
+                        if ($record->orderItems && (count($record->orderItems) > 0)) {
+
+                            $orderItems = $record->orderItems;
+                            foreach ($orderItems as $orderItemEl) {
+
+                                $productId = $orderItemEl->product_id;
+                                $productCat = null;
+                                if ($orderItemEl->productCategory) {
+                                    $productCat = $orderItemEl->productCategory;
                                 }
-                            }
 
-                            $productCatIdFinal = '0';
-                            $productCatFinal = 'UnCat';
-                            if (!is_null($productCat)) {
-                                $productCatIdFinal = strval($productCat->category_id);
-                                $productCatFinal = strval($productCat->category_name);
-                            }
+                                if (is_null($productCat)) {
+                                    $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
+                                    if (!is_null($catApiResult)) {
+                                        $productCat = ProductCategory::firstOrCreate([
+                                            'env' => $record->env,
+                                            'channel' => $record->channel,
+                                            'product_id' => $productId
+                                        ], [
+                                            'product_sku' => $catApiResult['product_sku'],
+                                            'product_name' => $catApiResult['product_name'],
+                                            'category_id' => $catApiResult['category_id'],
+                                            'category_name' => $catApiResult['category_name']
+                                        ]);
+                                    }
+                                }
 
-                            $storeAvailabilityStatus = null;
-                            $storeAvailabilityStatusLabel = '';
-                            if ($orderItemEl->isNotCheckedStoreAvailable()) {
-                                $storeAvailabilityStatus = '1';
-                                $storeAvailabilityStatusLabel = 'Not Checked';
-                            } elseif ($orderItemEl->isStoreAvailable()) {
-                                $storeAvailabilityStatus = '2';
-                                $storeAvailabilityStatusLabel = 'Available';
-                            } elseif ($orderItemEl->isNotStoreAvailable()) {
-                                $storeAvailabilityStatus = '3';
-                                $storeAvailabilityStatusLabel = 'Not Available';
-                            }
+                                $productCatIdFinal = '0';
+                                $productCatFinal = 'UnCat';
+                                if (!is_null($productCat)) {
+                                    $productCatIdFinal = strval($productCat->category_id);
+                                    $productCatFinal = strval($productCat->category_name);
+                                }
 
-                            if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
+                                $storeAvailabilityStatus = null;
+                                $storeAvailabilityStatusLabel = '';
+                                if ($orderItemEl->isNotCheckedStoreAvailable()) {
+                                    $storeAvailabilityStatus = '1';
+                                    $storeAvailabilityStatusLabel = 'Not Checked';
+                                } elseif ($orderItemEl->isStoreAvailable()) {
+                                    $storeAvailabilityStatus = '2';
+                                    $storeAvailabilityStatusLabel = 'Available';
+                                } elseif ($orderItemEl->isNotStoreAvailable()) {
+                                    $storeAvailabilityStatus = '3';
+                                    $storeAvailabilityStatusLabel = 'Not Available';
+                                }
 
-                                if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
+                                if ((count($categoryFilter) == 0) || in_array($productCatIdFinal, $categoryFilter)) {
 
-                                    if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
+                                    if ((count($availabilityFilter) == 0) || (!is_null($storeAvailabilityStatus) && in_array($storeAvailabilityStatus, $availabilityFilter))) {
 
-                                        $orderNumber = (!empty($record->increment_id)) ? "#" . $record->increment_id : "";
-                                        $productCategory = (!empty($productCatFinal)) ? $productCatFinal : "";
-                                        $productSku = (!empty($orderItemEl->item_sku)) ? $orderItemEl->item_sku : "";
-                                        $productName = (!empty($orderItemEl->item_name)) ? $orderItemEl->item_name : "";
-                                        $weightInfo = (!empty($orderItemEl->item_info)) ? $orderItemEl->item_info : "";
-                                        $nameLabel = '';
-                                        $nameLabel .= ($productName != '') ? $productName : '';
-                                        $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
-                                        $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
-                                        $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
-                                        $qtyLabel = '';
-                                        $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
-                                        $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
+                                        if ((count($itemSelectedFilter) == 0) || in_array($orderItemEl->id, $itemSelectedFilter)) {
 
-                                        $filteredOrderData[] = [
-                                            'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
-                                            'deliveryTimeSlot' => $record->delivery_time_slot,
-                                            'orderNumber' => $orderNumber,
-                                            'productCat' => $productCategory,
-                                            'productSku' => $productSku,
-                                            'productName' => $nameLabel,
-                                            'quantity' => $qtyLabel,
-                                            'availability' => $storeAvailabilityStatusLabel
-                                        ];
+                                            $orderNumber = (!empty($record->increment_id)) ? "#" . $record->increment_id : "";
+                                            $productCategory = (!empty($productCatFinal)) ? $productCatFinal : "";
+                                            $productSku = (!empty($orderItemEl->item_sku)) ? $orderItemEl->item_sku : "";
+                                            $productName = (!empty($orderItemEl->item_name)) ? $orderItemEl->item_name : "";
+                                            $weightInfo = (!empty($orderItemEl->item_info)) ? $orderItemEl->item_info : "";
+                                            $nameLabel = '';
+                                            $nameLabel .= ($productName != '') ? $productName : '';
+                                            $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
+                                            $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
+                                            $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
+                                            $qtyLabel = '';
+                                            $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
+                                            $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
+
+                                            $filteredOrderData[] = [
+                                                'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
+                                                'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'orderNumber' => $orderNumber,
+                                                'productCat' => $productCategory,
+                                                'productSku' => $productSku,
+                                                'productName' => $nameLabel,
+                                                'quantity' => $qtyLabel,
+                                                'availability' => $storeAvailabilityStatusLabel
+                                            ];
+
+                                        }
 
                                     }
 
