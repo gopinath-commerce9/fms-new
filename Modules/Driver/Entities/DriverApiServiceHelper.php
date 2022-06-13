@@ -390,4 +390,57 @@ class DriverApiServiceHelper
 
     }
 
+    public function changeSaleOrderAssignment(SaleOrder $order = null, $driverId = 0) {
+
+        if (is_null($order)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order is empty!'
+            ];
+        }
+
+        if (is_null($driverId) || !is_numeric($driverId) || ((int)$driverId <= 0)) {
+            return [
+                'status' => false,
+                'message' => 'Invalid driver!'
+            ];
+        }
+
+        $allowedCurrentStatuses = [
+            SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH,
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
+        ];
+        if (!in_array($order->order_status, $allowedCurrentStatuses)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order status cannot be changed!'
+            ];
+        }
+
+        $saleOrderProcessHistoryAssigner = (new SaleOrderProcessHistory())->create([
+            'order_id' => $order->id,
+            'action' => SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY_ASSIGN,
+            'status' => 1,
+            'comments' => 'The Sale Order Id #' . $order->order_id . ' is assigned for delivery.',
+            'extra_info' => null,
+            'done_by' => ($driverId !== 0) ? $driverId : null,
+            'done_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $saleOrderProcessHistoryAssigned = (new SaleOrderProcessHistory())->create([
+            'order_id' => $order->id,
+            'action' => SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY,
+            'status' => 1,
+            'comments' => 'The Sale Order Id #' . $order->order_id . ' is assigned for delivery.',
+            'extra_info' => null,
+            'done_by' => $driverId,
+            'done_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return [
+            'status' => true,
+        ];
+
+    }
+
 }

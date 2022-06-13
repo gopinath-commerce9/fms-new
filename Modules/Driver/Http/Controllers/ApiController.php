@@ -1427,4 +1427,73 @@ class ApiController extends BaseController
 
     }
 
+    public function setOrderAsAssigned(Request $request) {
+
+        $serviceHelper = new DriverApiServiceHelper();
+
+        $user = auth()->user();
+        $userId = $user->id;
+        $validStatus = $serviceHelper->isValidApiUser($userId);
+        if ($validStatus['success'] === false) {
+            return $this->sendError($validStatus['message'], ['error' => $validStatus['message']], $validStatus['httpStatus']);
+        }
+
+        $givenOrderId = (
+            $request->has('orderId')
+            && (trim($request->input('orderId')) != '')
+            && is_numeric($request->input('orderId'))
+            && ((int)trim($request->input('orderId')) > 0)
+        ) ? (int)trim($request->input('orderId')) : null;
+
+        if (is_null($givenOrderId)) {
+            $errMessage = 'Sale Order Not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $saleOrderObj = null;
+        $saleOrderObjCol = SaleOrder::select('*')
+            ->where('env', $serviceHelper->getApiEnvironment())
+            ->where('channel', $serviceHelper->getApiChannel())
+            ->where('increment_id', $givenOrderId)
+            ->get();
+        if ($saleOrderObjCol) {
+            $saleOrderObj = ($saleOrderObjCol instanceof SaleOrder) ? $saleOrderObjCol : $saleOrderObjCol->first();
+        }
+
+        if (!$saleOrderObj) {
+            $errMessage = 'Sale Order Not found!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $allowedStatuses = [
+            SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH,
+            SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY
+        ];
+        if (!in_array($saleOrderObj->order_status, $allowedStatuses)) {
+            $errMessage = 'The Sale Order Status cannot be assigned!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $canProceed = true;
+        if ($saleOrderObj->currentDriver && (count($saleOrderObj->currentDriver) > 0)) {
+            $currentHistory = $saleOrderObj->currentDriver[0];
+            if ($currentHistory->done_by === $userId) {
+                $canProceed = false;
+            }
+        }
+        if (!$canProceed) {
+            $errMessage = 'The Sale Order is already assigned to the user!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $newStatus = SaleOrder::SALE_ORDER_STATUS_DELIVERED;
+        $returnResult = $serviceHelper->changeSaleOrderAssignment($saleOrderObj, $userId);
+        if (!$returnResult['status']) {
+            return $this->sendError($returnResult['message'], ['error' => $returnResult['message']], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
+        }
+
+        return $this->sendResponse([], 'The Sale Order is assigned to the driver successfully!');
+
+    }
+
 }
