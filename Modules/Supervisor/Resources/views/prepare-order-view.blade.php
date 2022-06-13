@@ -315,10 +315,10 @@
                                                 $productName = "";
                                             }
 
-                                            $storeAvailabilityValue = '';
-                                            if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED) {
+                                            $storeAvailabilityValue = 1;
+                                            /*if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED) {
                                                 $storeAvailabilityValue = '';
-                                            } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES) {
+                                            } else*/if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES) {
                                                 $storeAvailabilityValue = $item['store_availability'];
                                             } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NO) {
                                                 $storeAvailabilityValue = $item['store_availability'];
