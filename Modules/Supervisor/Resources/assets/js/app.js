@@ -198,7 +198,7 @@ var SupervisorCustomJsBlocks = function() {
         return $(this.header()).text().trim();
     });
 
-    var initSupervisorSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart) {
+    var initSupervisorSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart, hostUrl, tokenValue) {
 
         var table = $('#supervisor_order_filter_table');
         var targetForm = $('form#filter_supervisor_order_form');
@@ -279,6 +279,42 @@ var SupervisorCustomJsBlocks = function() {
             dataTable.table().draw();
         });
 
+        $(document).on('change', 'select.sale-order-picker-assigner', function (ev) {
+            var pickerId = $(this).val();
+            var orderId = $(this).data('order-id');
+            var orderNumber = $(this).data('order-number');
+            var postData = {
+                picker: pickerId,
+                _token: tokenValue
+            };
+            $.ajax({
+                url: hostUrl + '/supervisor/assign-order-oms-status/' + orderId,
+                method: 'POST',
+                data: postData,
+                beforeSend: function() {
+                    KTApp.blockPage({
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Please wait...'
+                    });
+                },
+                success: function(data){
+                    KTApp.unblockPage();
+                    showAlertMessage(data.message);
+                    getSalesChartData(saleOrderSalesChart);
+                    getStatusChartData(saleOrderStatusChart);
+                    dataTable.table().draw();
+                },
+                error: function (jqXhr, textStatus, errorMessage) {
+                    KTApp.unblockPage();
+                    showAlertMessage(data.message);
+                    getSalesChartData(saleOrderSalesChart);
+                    getStatusChartData(saleOrderStatusChart);
+                    dataTable.table().draw();
+                }
+            });
+        });
+
     };
 
     var resyncOrderData = function(orderId) {
@@ -323,13 +359,13 @@ var SupervisorCustomJsBlocks = function() {
     };
 
     return {
-        dashboardPage: function(hostUrl){
+        dashboardPage: function(hostUrl, token){
             initFilterDeliveryDateRangePicker();
             var saleOrderSalesChart = saleOrderSalesBarChartSetter();
             var saleOrderStatusChart = saleOrderStatusBarChartSetter();
             getSalesChartData(saleOrderSalesChart);
             getStatusChartData(saleOrderStatusChart);
-            initSupervisorSaleOrderTable(saleOrderSalesChart, saleOrderStatusChart);
+            initSupervisorSaleOrderTable(saleOrderSalesChart, saleOrderStatusChart, hostUrl, token);
         },
         orderViewPage: function(hostUrl, orderId) {
             resyncOrderData(orderId);

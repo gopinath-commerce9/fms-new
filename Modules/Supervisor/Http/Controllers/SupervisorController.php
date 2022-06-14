@@ -182,6 +182,16 @@ class SupervisorController extends Controller
             $filteredOrders = $serviceHelper->getSupervisorOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
             if ($filteredOrders) {
 
+                $pickerStatues = [
+                    SaleOrder::SALE_ORDER_STATUS_PENDING,
+                    SaleOrder::SALE_ORDER_STATUS_PROCESSING,
+                    SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE,
+                    SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
+                ];
+
+                $userRoleObj = new UserRole();
+                $pickers = $userRoleObj->allPickers();
+
                 $filteredOrderData = [];
                 $totalRec = 0;
                 $collectRecStart = $dtStart;
@@ -222,12 +232,15 @@ class SupervisorController extends Controller
                     $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
                     $deliveryPickerData = $record->currentPicker;
                     $deliveryDriverData = $record->currentDriver;
+                    $pickerSelectedId = '';
+                    $pickerSelectedName = '';
                     $tempRecord['actions'] = url('/supervisor/order-view/' . $record->id);
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData[0];
                         $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
                         if ($pickerDetail->actionDoer) {
-                            $tempRecord['deliveryPicker'] = $pickerDetail->actionDoer->name;
+                            $pickerSelectedId = $pickerDetail->actionDoer->id;
+                            $pickerSelectedName = $pickerDetail->actionDoer->name;
                         }
                     }
                     if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
@@ -237,6 +250,19 @@ class SupervisorController extends Controller
                             $tempRecord['deliveryDriver'] = $driverDetail->actionDoer->name;
                         }
                     }
+                    $pickerValues = $pickerSelectedName;
+                    if (in_array($record->order_status, $pickerStatues)) {
+                        $pickerValues = '<select class="form-control datatable-input sale-order-picker-assigner" id="picker_assigner_' . $record->id . '" name="picker_assigner_';
+                        $pickerValues .= $record->id . '" data-order-id="' . $record->id . '" data-order-number="' . $record->increment_id . '" >';
+                        $pickerValues .= '<option value="" '. (($pickerSelectedId == '') ? 'selected' : '') . ' >Unassigned</option>';
+                        if(count($pickers->mappedUsers) > 0) {
+                            foreach($pickers->mappedUsers as $userEl) {
+                                $pickerValues .= '<option value="' . $userEl->id . '" '. (($pickerSelectedId == $userEl->id) ? 'selected' : '') . ' >' . $userEl->name . '</option>';
+                            }
+                        }
+                        $pickerValues .= '</select>';
+                    }
+                    $tempRecord['deliveryPicker'] = $pickerValues;
                     $filteredOrderData[] = $tempRecord;
                 }
 
@@ -799,6 +825,143 @@ class SupervisorController extends Controller
             'data'    => [],
             'message' => 'The Sale Order resynced and updated!',
         ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+
+    }
+
+    public function setOrderOmsStatus(Request $request, $orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order Id input is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order does not exist!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $allowedStatuses = [
+            SaleOrder::SALE_ORDER_STATUS_PENDING,
+            SaleOrder::SALE_ORDER_STATUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE,
+            SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
+            SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH
+        ];
+        if (!in_array($saleOrderObj->order_status, $allowedStatuses)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The Sale Order Status cannot be changed!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+        $drivers = $userRoleObj->allDrivers();
+
+        $pickerIds = [];
+        $driverIds = [];
+
+        $serviceHelper = new SupervisorServiceHelper();
+        if(count($pickers->mappedUsers) > 0) {
+            foreach($pickers->mappedUsers as $userEl) {
+                /*if(is_null($serviceHelper->isPickerAssigned($userEl))) {
+                    $pickerIds[] = $userEl->id;
+                }*/
+                $pickerIds[] = $userEl->id;
+            }
+        }
+        if(count($drivers->mappedUsers) > 0) {
+            foreach($drivers->mappedUsers as $userEl) {
+                /*if(is_null($serviceHelper->isDriverAssigned($userEl))) {
+                    $driverIds[] = $userEl->id;
+                }*/
+                $driverIds[] = $userEl->id;
+            }
+        }
+
+        $validator = Validator::make($request->all() , [
+            'picker' => [
+                Rule::requiredIf(function () use ($request, $saleOrderObj) {
+                    return (
+                        ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_PENDING)
+                        || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_PROCESSING)
+                        || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE)
+                        || ($saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_ON_HOLD)
+                    );
+                }),
+                Rule::in($pickerIds)
+            ],
+            'driver' => [
+                Rule::requiredIf(function () use ($request, $saleOrderObj) {
+                    return $saleOrderObj->order_status === SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH;
+                }),
+                Rule::in($driverIds)
+            ],
+        ], [
+            'picker.requiredIf' => 'The Picker is not selected.',
+            'picker.in' => 'The selected Picker does not exist (or) is not available .',
+            'driver.requiredIf' => 'The Driver is not selected.',
+            'driver.in' => 'The selected Driver does not exist (or) is not available .',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(" | ", $validator->errors()->all()),
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $postData = $validator->validated();
+        $assignedPickerId = (array_key_exists('picker', $postData)) ? $postData['picker'] : null;
+        $assignedDriverId = (array_key_exists('driver', $postData)) ? $postData['driver'] : null;
+
+        if ($assignedPickerId) {
+            $assignedPicker = (!is_null($assignedPickerId)) ? User::find($assignedPickerId) : null;
+            $returnResult = $serviceHelper->setOrderAsBeingPrepared($saleOrderObj, $assignedPicker->id, $processUserId);
+            if ($returnResult['status']) {
+                return response()->json([
+                    'success' => true,
+                    'data'    => [],
+                    'message' => 'The Sale Order is assigned to the Picker successfully!',
+                ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $returnResult['message'],
+                ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+            }
+        } elseif ($assignedDriverId) {
+            $assignedDriver = (!is_null($assignedDriverId)) ? User::find($assignedDriverId) : null;
+            $returnResult = $serviceHelper->assignOrderToDriver($saleOrderObj, $assignedDriver->id, $processUserId);
+            if ($returnResult['status']) {
+                return response()->json([
+                    'success' => true,
+                    'data'    => [],
+                    'message' => 'The Sale Order is assigned to the Driver successfully!',
+                ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $returnResult['message'],
+                ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'No process happened!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
 
     }
 
