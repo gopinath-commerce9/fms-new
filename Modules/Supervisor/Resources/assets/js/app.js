@@ -288,7 +288,7 @@ var SupervisorCustomJsBlocks = function() {
                 _token: tokenValue
             };
             $.ajax({
-                url: hostUrl + '/supervisor/assign-order-oms-status/' + orderId,
+                url: hostUrl + '/assign-order-oms-status/' + orderId,
                 method: 'POST',
                 data: postData,
                 beforeSend: function() {
