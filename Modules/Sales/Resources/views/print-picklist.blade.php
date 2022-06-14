@@ -102,7 +102,14 @@
                                     </label>
                                 </div>
                             </th>
-                            <th style="width: 15%; border: 1px solid #000000; padding: 5px;">
+                            <th style="width: 8%; border: 1px solid #000000; padding: 5px;">
+                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+                                        Picker
+                                    </label>
+                                </div>
+                            </th>
+                            <th style="width: 12%; border: 1px solid #000000; padding: 5px;">
                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                         Order #
@@ -123,7 +130,7 @@
                                     </label>
                                 </div>
                             </th>
-                            <th style="width: 30%; border: 1px solid #000000; padding: 5px;">
+                            <th style="width: 25%; border: 1px solid #000000; padding: 5px;">
                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                         Item Name
@@ -176,7 +183,14 @@
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                            <td style="width: 8%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 70%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                                         <?= 'Customer Name : ' . $customerName ?>
@@ -200,7 +214,14 @@
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                            <td style="width: 8%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 70%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                                         <?= 'Customer Address : ' . $shipAddressString ?>
@@ -224,7 +245,14 @@
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td colspan="5" style="width: 78%; border: 1px solid #000000; padding: 5px;">
+                                            <td style="width: 8%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
+
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td colspan="5" style="width: 70%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                                         <?= 'Delivery Notes : ' . $idOrderEl['deliveryNotes'] ?>
@@ -239,6 +267,7 @@
                                     foreach ($itemTypeEl as $itemKey => $itemEl) {
 
                                         $orderItemIterator++;
+                                        $pickerName = (!empty($itemEl['picker'])) ? $itemEl['picker'] : "";
                                         $orderNumber = (!empty($itemEl['orderNumber'])) ? $itemEl['orderNumber'] : "";
                                         $productCat = (!empty($itemEl['productType'])) ? $itemEl['productType'] : "";
                                         $productSku = (!empty($itemEl['productSku'])) ? $itemEl['productSku'] : "";
@@ -270,7 +299,14 @@
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td style="width: 15%; border: 1px solid #000000; padding: 5px;">
+                                            <td style="width: 8%; border: 1px solid #000000; padding: 5px;">
+                                                <div id="order-total-amount-label-div" style="text-align: center;">
+                                                    <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: normal; word-break: break-all;">
+                                                        <?= $pickerName ?>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td style="width: 12%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: normal; word-break: break-all;">
                                                         <?= $orderNumber ?>
@@ -291,7 +327,7 @@
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td style="width: 30%; border: 1px solid #000000; padding: 5px;">
+                                            <td style="width: 25%; border: 1px solid #000000; padding: 5px;">
                                                 <div id="order-total-amount-label-div" style="text-align: center;">
                                                     <label id="order-total-amount-label-label" class="highlight-info-label" style="font-size: medium; font-style: normal; font-weight: bold; word-break: break-all;">
                                                         <?= $nameLabel ?>

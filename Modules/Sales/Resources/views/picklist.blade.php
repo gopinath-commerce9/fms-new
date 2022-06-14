@@ -174,6 +174,7 @@
                                                 <th>Select</th>
                                                 <th>Delivery Date</th>
                                                 <th>Delivery TimeSlot</th>
+                                                <th>Picker</th>
                                                 <th>Order Id</th>
                                                 <th>Product Type</th>
                                                 <th>Product SKU</th>

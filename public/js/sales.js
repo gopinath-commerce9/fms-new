@@ -432,7 +432,7 @@ var SalesCustomJsBlocks = function() {
                     d['picker_values'] = pickerValues;
 
                     d['columnsDef'] = [
-                        'itemSelector', 'deliveryDate', 'deliveryTimeSlot', 'orderId', 'productType',
+                        'itemSelector', 'deliveryDate', 'deliveryTimeSlot', 'picker', 'orderId', 'productType',
                         'productSku', 'productName', 'quantity', 'availability'
                     ];
 
@@ -442,6 +442,7 @@ var SalesCustomJsBlocks = function() {
                 {data: 'itemSelector'},
                 {data: 'deliveryDate'},
                 {data: 'deliveryTimeSlot'},
+                {data: 'picker'},
                 {data: 'orderId'},
                 {data: 'productType'},
                 {data: 'productSku'},

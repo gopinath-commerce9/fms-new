@@ -2,6 +2,7 @@
 
 namespace Modules\Sales\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -1097,10 +1098,15 @@ class SalesController extends Controller
                         ->limit(1)->get();
 
                     $pickerFilterFlag = false;
+                    $deliveryHistory = null;
+                    $userEl = null;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
                         if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
                             $pickerFilterFlag = true;
+                            $userElQ = User::select('*')
+                                ->where('id', $deliveryHistory->done_by)->get();
+                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
                         }
                     }
 
@@ -1169,6 +1175,7 @@ class SalesController extends Controller
                                                 'itemSelector' => $itemSelector,
                                                 'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
                                                 'orderId' => $record->increment_id,
                                                 'productType' => $productCatFinal,
                                                 'productSku' => $orderItemEl->item_sku,
@@ -1212,10 +1219,15 @@ class SalesController extends Controller
                         ->limit(1)->get();
 
                     $pickerFilterFlag = false;
+                    $deliveryHistory = null;
+                    $userEl = null;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
                         if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
                             $pickerFilterFlag = true;
+                            $userElQ = User::select('*')
+                                ->where('id', $deliveryHistory->done_by)->get();
+                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
                         }
                     }
 
@@ -1288,6 +1300,7 @@ class SalesController extends Controller
                                             $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
                                                 'deliveryDate' => $record->delivery_date,
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
                                                 'orderId' => $record->order_id,
                                                 'orderNumber' => $record->increment_id,
                                                 'productType' => $productCatFinal,
@@ -1376,10 +1389,15 @@ class SalesController extends Controller
                         ->limit(1)->get();
 
                     $pickerFilterFlag = false;
+                    $deliveryHistory = null;
+                    $userEl = null;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
                         if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
                             $pickerFilterFlag = true;
+                            $userElQ = User::select('*')
+                                ->where('id', $deliveryHistory->done_by)->get();
+                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
                         }
                     }
 
@@ -1458,6 +1476,7 @@ class SalesController extends Controller
                                             $filteredOrderData[] = [
                                                 'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
                                                 'orderNumber' => $orderNumber,
                                                 'productCat' => $productCategory,
                                                 'productSku' => $productSku,
@@ -1494,7 +1513,7 @@ class SalesController extends Controller
                     "Expires"             => "0"
                 );
 
-                $headingColumns = ["Delivery Date", "Time Slot", "Order Number", "Product Type", "Product SKU", "Product Name", "Quantity", "Availability Status"];
+                $headingColumns = ["Delivery Date", "Time Slot", "Picker", "Order Number", "Product Type", "Product SKU", "Product Name", "Quantity", "Availability Status"];
 
                 $callback = function() use($filteredOrderData, $headingColumns) {
                     $file = fopen('php://output', 'w');
@@ -1504,6 +1523,7 @@ class SalesController extends Controller
                             fputcsv($file, [
                                 $row['deliveryDate'],
                                 $row['deliveryTimeSlot'],
+                                $row['picker'],
                                 $row['orderNumber'],
                                 $row['productCat'],
                                 $row['productSku'],
