@@ -253,7 +253,7 @@ class SupervisorController extends Controller
                     $pickerValues = $pickerSelectedName;
                     if (in_array($record->order_status, $pickerStatues)) {
                         $pickerValues = '<select class="form-control datatable-input sale-order-picker-assigner" id="picker_assigner_' . $record->id . '" name="picker_assigner_';
-                        $pickerValues .= $record->id . '" data-order-id="' . $record->id . '" data-order-number="' . $record->increment_id . '" >';
+                        $pickerValues .= $record->id . '" data-order-id="' . $record->id . '" data-order-number="' . $record->increment_id . '" data-action-loc="' . url('/supervisor/assign-order-oms-status/' . $record->id) . '" >';
                         $pickerValues .= '<option value="" '. (($pickerSelectedId == '') ? 'selected' : '') . ' >Unassigned</option>';
                         if(count($pickers->mappedUsers) > 0) {
                             foreach($pickers->mappedUsers as $userEl) {

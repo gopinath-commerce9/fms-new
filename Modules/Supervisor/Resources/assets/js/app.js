@@ -235,7 +235,7 @@ var SupervisorCustomJsBlocks = function() {
                 {data: 'customerAddress', className: 'text-wrap'},
                 {data: 'deliveryDate', className: 'text-wrap'},
                 {data: 'deliveryTimeSlot', className: 'text-wrap'},
-                {data: 'deliveryPicker', className: 'text-wrap'},
+                {data: 'deliveryPicker', className: 'text-nowrap'},
                 {data: 'deliveryDriver', className: 'text-wrap'},
                 {data: 'orderStatus', className: 'text-nowrap'},
                 {data: 'actions', className: 'text-wrap', responsivePriority: -1},
@@ -283,12 +283,13 @@ var SupervisorCustomJsBlocks = function() {
             var pickerId = $(this).val();
             var orderId = $(this).data('order-id');
             var orderNumber = $(this).data('order-number');
+            var actionLoc = $(this).data('action-loc');
             var postData = {
                 picker: pickerId,
                 _token: tokenValue
             };
             $.ajax({
-                url: hostUrl + '/assign-order-oms-status/' + orderId,
+                url: actionLoc,
                 method: 'POST',
                 data: postData,
                 beforeSend: function() {

@@ -240,7 +240,7 @@
     <script src="{{ asset('js/supervisor.js') }}"></script>
     <script>
         jQuery(document).ready(function() {
-            SupervisorCustomJsBlocks.dashboardPage('{{ url('/supervisor') }}', '{{ csrf_token() }}');
+            SupervisorCustomJsBlocks.dashboardPage('{{ url('/') }}', '{{ csrf_token() }}');
         });
     </script>
 
