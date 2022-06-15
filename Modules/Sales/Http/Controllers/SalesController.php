@@ -1097,25 +1097,30 @@ class SalesController extends Controller
                         ->orderBy('done_at', 'desc')
                         ->limit(1)->get();
 
-                    $pickerFilterFlag = false;
                     $deliveryHistory = null;
                     $userEl = null;
+                    $userCurrentId = 0;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
-                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
-                            $pickerFilterFlag = true;
-                            $userElQ = User::select('*')
-                                ->where('id', $deliveryHistory->done_by)->get();
-                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
-                        }
+                        $userElQ = User::select('*')
+                            ->where('id', $deliveryHistory->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
+                        $userCurrentId = (int)$userEl->id;
                     }
 
-                    if ($pickerFilterFlag) {
+                    if ((count($pickerFilter) == 0) || (in_array($userCurrentId, $pickerFilter))) {
 
                         $record->orderItems;
                         if ($record->orderItems && (count($record->orderItems) > 0)) {
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
+
+                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyNeeded = $qtyOrdered - $qtyCanceled;
+                                if ($qtyNeeded <= 0) {
+                                    continue;
+                                }
 
                                 $productId = $orderItemEl->product_id;
                                 $productCat = null;
@@ -1175,12 +1180,12 @@ class SalesController extends Controller
                                                 'itemSelector' => $itemSelector,
                                                 'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
-                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : 'Unassigned',
                                                 'orderId' => $record->increment_id,
                                                 'productType' => $productCatFinal,
                                                 'productSku' => $orderItemEl->item_sku,
                                                 'productName' => $orderItemEl->item_name,
-                                                'quantity' => $orderItemEl->qty_ordered,
+                                                'quantity' => $qtyNeeded,
                                                 'availability' => $storeAvailabilityStatusLabel,
                                             ];
 
@@ -1218,20 +1223,18 @@ class SalesController extends Controller
                         ->orderBy('done_at', 'desc')
                         ->limit(1)->get();
 
-                    $pickerFilterFlag = false;
                     $deliveryHistory = null;
                     $userEl = null;
+                    $userCurrentId = 0;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
-                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
-                            $pickerFilterFlag = true;
-                            $userElQ = User::select('*')
-                                ->where('id', $deliveryHistory->done_by)->get();
-                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
-                        }
+                        $userElQ = User::select('*')
+                            ->where('id', $deliveryHistory->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
+                        $userCurrentId = (int)$userEl->id;
                     }
 
-                    if ($pickerFilterFlag) {
+                    if ((count($pickerFilter) == 0) || (in_array($userCurrentId, $pickerFilter))) {
 
                         $record->orderItems;
                         $record->shippingAddress;
@@ -1240,6 +1243,13 @@ class SalesController extends Controller
 
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
+
+                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyNeeded = $qtyOrdered - $qtyCanceled;
+                                if ($qtyNeeded <= 0) {
+                                    continue;
+                                }
 
                                 $productId = $orderItemEl->product_id;
                                 $productCat = null;
@@ -1300,14 +1310,14 @@ class SalesController extends Controller
                                             $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
                                                 'deliveryDate' => $record->delivery_date,
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
-                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : 'Unassigned',
                                                 'orderId' => $record->order_id,
                                                 'orderNumber' => $record->increment_id,
                                                 'productType' => $productCatFinal,
                                                 'productSku' => $orderItemEl->item_sku,
                                                 'productName' => $orderItemEl->item_name,
                                                 'productInfo' => $orderItemEl->item_info,
-                                                'quantity' => $orderItemEl->qty_ordered,
+                                                'quantity' => $qtyNeeded,
                                                 'sellingUnit' => $orderItemEl->selling_unit
                                             ];
 
@@ -1388,20 +1398,18 @@ class SalesController extends Controller
                         ->orderBy('done_at', 'desc')
                         ->limit(1)->get();
 
-                    $pickerFilterFlag = false;
                     $deliveryHistory = null;
                     $userEl = null;
+                    $userCurrentId = 0;
                     if ($currentPicker && (count($currentPicker) > 0)) {
                         $deliveryHistory = $currentPicker->first();
-                        if ((count($pickerFilter) == 0) || in_array((int)$deliveryHistory->done_by, $pickerFilter)) {
-                            $pickerFilterFlag = true;
-                            $userElQ = User::select('*')
-                                ->where('id', $deliveryHistory->done_by)->get();
-                            $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
-                        }
+                        $userElQ = User::select('*')
+                            ->where('id', $deliveryHistory->done_by)->get();
+                        $userEl = ($userElQ) ? $userElQ->first() : $deliveryHistory->actionDoer;
+                        $userCurrentId = (int)$userEl->id;
                     }
 
-                    if ($pickerFilterFlag) {
+                    if ((count($pickerFilter) == 0) || (in_array($userCurrentId, $pickerFilter))) {
 
                         $record->orderItems;
                         $record->shippingAddress;
@@ -1410,6 +1418,13 @@ class SalesController extends Controller
 
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
+
+                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyNeeded = $qtyOrdered - $qtyCanceled;
+                                if ($qtyNeeded <= 0) {
+                                    continue;
+                                }
 
                                 $productId = $orderItemEl->product_id;
                                 $productCat = null;
@@ -1467,16 +1482,16 @@ class SalesController extends Controller
                                             $nameLabel = '';
                                             $nameLabel .= ($productName != '') ? $productName : '';
                                             $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
-                                            $qtyOrdered = (!empty($orderItemEl->qty_ordered)) ? $orderItemEl->qty_ordered : "";
+                                            $qtyToShow = (!empty($qtyNeeded)) ? $qtyNeeded : "";
                                             $sellingFormat = (!empty($orderItemEl->selling_unit)) ? $orderItemEl->selling_unit : "";
                                             $qtyLabel = '';
-                                            $qtyLabel .= ($qtyOrdered != '') ? $qtyOrdered : '';
+                                            $qtyLabel .= ($qtyToShow != '') ? $qtyToShow : '';
                                             $qtyLabel .= (($qtyLabel != '') && ($sellingFormat != '')) ? ' ' . $sellingFormat : '';
 
                                             $filteredOrderData[] = [
                                                 'deliveryDate' => date('d-m-Y', strtotime($record->delivery_date)),
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
-                                                'picker' => (!is_null($userEl)) ? $userEl->name : '',
+                                                'picker' => (!is_null($userEl)) ? $userEl->name : 'Unassigned',
                                                 'orderNumber' => $orderNumber,
                                                 'productCat' => $productCategory,
                                                 'productSku' => $productSku,

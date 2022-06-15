@@ -90,7 +90,7 @@
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <select class="form-control datatable-input" id="picker_filter" name="picker_filter" multiple>
-                                                <option value="" >Select a Picker</option>
+                                                <option value="0" >Unassigned</option>
                                                 @if(count($pickers->mappedUsers) > 0)
                                                     @foreach($pickers->mappedUsers as $userEl)
                                                         <option value="{{ $userEl->id }}" >{{ $userEl->name }}</option>
