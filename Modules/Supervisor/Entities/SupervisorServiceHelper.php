@@ -587,6 +587,7 @@ class SupervisorServiceHelper
         $allItemsAvailable = true;
         $orderItemUpdateData = [];
         $orderItemPostAQData = [];
+        $orderItemPostNotAvData = [];
         foreach ($order->orderItems as $orderItemEl) {
             $itemInputId = $orderItemEl->sku;
             if(!empty($orderItemEl->item_barcode)){
@@ -595,11 +596,17 @@ class SupervisorServiceHelper
                     $itemInputId = $barcode;
                 }
             }
+            $itemInputId = $orderItemEl->item_id;
             if (array_key_exists($orderItemEl->id, $storeAvailabilityArray)) {
                 $availability = $storeAvailabilityArray[$orderItemEl->id];
                 $actualItemQty = ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_YES) ? $orderItemEl->qty_ordered : 0;
                 if ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_NO) {
                     $allItemsAvailable = false;
+                    $orderItemPostNotAvData[] = [
+                        'itemId' => $itemInputId,
+                        'itemName' => $orderItemEl->item_name,
+                        'itemSku' => $orderItemEl->item_sku
+                    ];
                 }
                 $orderItemUpdateData[$orderItemEl->item_id] = [
                     'id' => $orderItemEl->id,
@@ -622,6 +629,7 @@ class SupervisorServiceHelper
                 'status' => $orderStatusNew,
                 'parcelCount' => $boxCount,
                 'actualQuantity' => $orderItemPostAQData,
+                'itemsNotAvailable' => $orderItemPostNotAvData
             ];
             $statusApiResult = $apiService->processPostApi($uri, $params);
             if (!$statusApiResult['status']) {
