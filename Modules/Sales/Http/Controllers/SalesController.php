@@ -1115,10 +1115,11 @@ class SalesController extends Controller
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
 
-                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
-                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyOrdered = (float)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (float)$orderItemEl->qty_canceled;
                                 $qtyNeeded = $qtyOrdered - $qtyCanceled;
-                                if ($qtyNeeded <= 0) {
+                                $epsilon = 0.00001;
+                                if ($qtyNeeded <= $epsilon) {
                                     continue;
                                 }
 
@@ -1244,10 +1245,11 @@ class SalesController extends Controller
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
 
-                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
-                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyOrdered = (float)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (float)$orderItemEl->qty_canceled;
                                 $qtyNeeded = $qtyOrdered - $qtyCanceled;
-                                if ($qtyNeeded <= 0) {
+                                $epsilon = 0.00001;
+                                if ($qtyNeeded <= $epsilon) {
                                     continue;
                                 }
 
@@ -1419,10 +1421,11 @@ class SalesController extends Controller
                             $orderItems = $record->orderItems;
                             foreach ($orderItems as $orderItemEl) {
 
-                                $qtyOrdered = (int)$orderItemEl->qty_ordered;
-                                $qtyCanceled = (int) $orderItemEl->qty_canceled;
+                                $qtyOrdered = (float)$orderItemEl->qty_ordered;
+                                $qtyCanceled = (float)$orderItemEl->qty_canceled;
                                 $qtyNeeded = $qtyOrdered - $qtyCanceled;
-                                if ($qtyNeeded <= 0) {
+                                $epsilon = 0.00001;
+                                if ($qtyNeeded <= $epsilon) {
                                     continue;
                                 }
 
