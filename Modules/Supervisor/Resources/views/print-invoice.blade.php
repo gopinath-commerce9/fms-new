@@ -568,19 +568,26 @@
                                             }
                                             foreach ($invoiceItems as $itemEl) {
 
+                                                $itemPriceAmount = array_key_exists('price_incl_tax', $itemEl) ? (float)$itemEl['price_incl_tax'] : (float)$itemEl['price'];
+                                                $itemTaxAmount = array_key_exists('tax_amount', $itemEl) ? (float)$itemEl['tax_amount'] : 0;
+                                                $itemRowTotalAmount = array_key_exists('row_total_incl_tax', $itemEl) ? (float)$itemEl['row_total_incl_tax'] : (float)$itemEl['row_total'];
+
                                     ?>
                                         <tr>
                                             <td class="invoice-items-subtable-products-data">{{ $itemEl['name'] }}</td>
                                             <td class="invoice-items-subtable-sku-data">{{ $itemEl['sku'] }}</td>
-                                            <td class="invoice-items-subtable-price-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format((float)$itemEl['price_incl_tax'], 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-price-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemPriceAmount, 2, '.', ',') }}</td>
                                             <td class="invoice-items-subtable-qty-data">{{ $itemEl['qty'] }}</td>
                                             <td class="invoice-items-subtable-unit-data">{{ (array_key_exists($itemEl['order_item_id'], $orderItemArray)) ? $orderItemArray[$itemEl['order_item_id']]['selling_unit'] : '' }}</td>
-                                            <td class="invoice-items-subtable-tax-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format((float)$itemEl['tax_amount'], 2, '.', ',') }}</td>
-                                            <td class="invoice-items-subtable-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format((float)$itemEl['row_total_incl_tax'], 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-tax-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemTaxAmount, 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemRowTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
 
                                             }
+
+                                            $orderSubTotalAmount = array_key_exists('subtotal_incl_tax', $invoiceData) ? (float)$invoiceData['subtotal_incl_tax'] : (float)$invoiceData['subtotal'];
+                                            $orderGrandTotalAmount = array_key_exists('grand_total', $invoiceData) ? (float)$invoiceData['grand_total'] : 0;
 
                                     ?>
                                         <tr>
@@ -588,11 +595,11 @@
                                         </tr>
                                         <tr>
                                            <td class="invoice-items-subtable-order-subtotal-label" colspan="6">Subtotal: </td>
-                                           <td class="invoice-items-subtable-order-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format((float)$invoiceData['subtotal_incl_tax'], 2, '.', ',') }}</td>
+                                           <td class="invoice-items-subtable-order-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                         <tr>
                                            <td class="invoice-items-subtable-order-grandtotal-label" colspan="6">Grand Total: </td>
-                                           <td class="invoice-items-subtable-order-grandtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format((float)$invoiceData['grand_total'], 2, '.', ',') }}</td>
+                                           <td class="invoice-items-subtable-order-grandtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderGrandTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
 
