@@ -246,7 +246,7 @@
                                                             <a href="{{ url('/supervisor/print-shipping-label/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Shipping Label</a>
                                                         </td>
                                                         <td>
-                                                            <a href="{{ url('/supervisor/print-order-invoice/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Invoice</a>
+                                                            {{--<a href="{{ url('/supervisor/print-order-invoice/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Invoice</a>--}}
                                                         </td>
                                                     </tr>
 
@@ -270,11 +270,11 @@
                                                         </td>
                                                     </tr>
                                                     @if(!is_null($saleOrderData['invoice_id']))
-                                                    <tr>
+                                                    {{--<tr>
                                                         <td>
                                                             <a href="{{ url('/supervisor/print-order-invoice/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Invoice</a>
                                                         </td>
-                                                    </tr>
+                                                    </tr>--}}
                                                     @endif
                                                 </table>
                                             </div>
