@@ -260,4 +260,12 @@ return [
         'done_by' => 'Aanacart'
     ],
 
+    'company_info' => [
+        'name' => 'Aanacart',
+        'location' => 'Dubai, UAE',
+        'website' => 'www.aanacart.com',
+        'support' => 'info@aanacart.com',
+        'contact' => '(+971) 50 150 5873'
+    ],
+
 ];

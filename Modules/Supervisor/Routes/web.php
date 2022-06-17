@@ -36,6 +36,8 @@ Route::prefix('supervisor')->middleware([
         ->name('supervisor.printOrderItemList');
     Route::get('/print-shipping-label/{orderId}', 'SupervisorController@printShippingLabel')
         ->name('supervisor.printShippingLabel');
+    Route::get('/print-order-invoice/{orderId}', 'SupervisorController@printOrderInvoice')
+        ->name('supervisor.printOrderInvoice');
     Route::get('/order-resync/{orderId}', 'SupervisorController@orderResync')
         ->name('supervisor.orderResync');
     Route::post('/assign-order-oms-status/{orderId}', 'SupervisorController@setOrderOmsStatus')

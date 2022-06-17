@@ -192,7 +192,9 @@ class SalesApiServiceHelper
                     $saleOrderData = $orderEl->toArray();
 
                     $paymentMethodString = 'Online';
-                    $totalOrderValue = (float)$saleOrderData['order_total'];
+                    $totalOrderValueOrig = (float)$saleOrderData['order_total'];
+                    $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
+                    $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                     $totalDueValue = (float)$saleOrderData['order_due'];
 
                     $fixTotalDueArray = ['cashondelivery', 'banktransfer'];

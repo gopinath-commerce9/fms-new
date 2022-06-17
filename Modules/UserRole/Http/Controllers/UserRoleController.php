@@ -940,7 +940,9 @@ class UserRoleController extends Controller
         $availableStatuses = $serviceHelper->getAvailableStatuses();
         $collectionMethodList = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
 
-        $totalOrderValue = $saleOrderData['order_total'];
+        $totalOrderValueOrig = (float)$saleOrderData['order_total'];
+        $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
+        $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
         $totalDueValue = $saleOrderData['order_due'];
         $initialPaidValue = (float)$saleOrderData['order_total'] - (float)$saleOrderData['order_due'];
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {

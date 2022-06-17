@@ -692,7 +692,9 @@ class SupervisorServiceHelper
                     ->update([
                         'order_updated_at' => $saleOrderEl['updated_at'],
                         'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
-                        'order_due' => $saleOrderEl['total_due'],
+                        /*'order_due' => $saleOrderEl['total_due'],*/
+                        'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
+                        'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
                         'order_state' => $saleOrderEl['state'],
                         'order_status' => $saleOrderEl['status'],
                         'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,
@@ -958,6 +960,36 @@ class SupervisorServiceHelper
 
     }
 
+    public function getInvoiceDetails(SaleOrder $order = null) {
+
+        if (is_null($order)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order is empty!'
+            ];
+        }
+
+        $saleInvoiceEl = $this->fetchInvoiceDetailsByOrderId($order->order_id, $order->env, $order->channel);
+        if (!is_array($saleInvoiceEl) || (count($saleInvoiceEl) == 0)) {
+            return [
+                'status' => false,
+                'message' => 'Could not fetch the data for Sale Order Invoice!'
+            ];
+        }
+
+        $order->invoice_id = $saleInvoiceEl['entity_id'];
+        $order->invoice_number = $saleInvoiceEl['increment_id'];
+        $order->invoiced_at = date('Y-m-d H:i:s', strtotime($saleInvoiceEl['created_at']));
+        $order->saveQuietly();
+
+        return [
+            'status' => true,
+            'message' => 'The Sale Order Invoice data is fetched successfully',
+            'invoiceData' => $saleInvoiceEl
+        ];
+
+    }
+
     private function getStoreConfigs($env = '', $apiChannel = '') {
 
         if (is_null($env) || (trim($env) == '')) {
@@ -1029,6 +1061,47 @@ class SupervisorServiceHelper
             && is_array($apiResult['response']['items'])
             && (count($apiResult['response']['items']) > 0)
         ) ? $apiResult['response']['items'][0] : [];*/
+
+    }
+
+    private function fetchInvoiceDetailsByOrderId($orderId = '', $env = '', $apiChannel = '') {
+
+        if (is_null($orderId) || (trim($orderId) == '') || !is_numeric(trim($orderId)) || ((int) trim($orderId) <= 0)) {
+            return [];
+        }
+
+        if (is_null($env) || (trim($env) == '')) {
+            return [];
+        }
+
+        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
+            return [];
+        }
+
+        $apiService = new RestApiService();
+        $apiService->setApiEnvironment($env);
+        $apiService->setApiChannel($apiChannel);
+
+        $uri = $apiService->getRestApiUrl() . 'invoices';
+        $qParams = [
+            'searchCriteria[filter_groups][0][filters][0][field]' => 'order_id',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
+            'searchCriteria[filter_groups][0][filters][0][value]' => $orderId
+        ];
+        $apiResult = $apiService->processGetApi($uri, $qParams);
+        if (!$apiResult['status']) {
+            return [];
+        }
+
+        if (!is_array($apiResult['response']) || (count($apiResult['response']) == 0)) {
+            return [];
+        }
+
+        return (
+            array_key_exists('items', $apiResult['response'])
+            && is_array($apiResult['response']['items'])
+            && (count($apiResult['response']['items']) > 0)
+        ) ? $apiResult['response']['items'][0] : [];
 
     }
 

@@ -856,7 +856,9 @@ class UserRoleServiceHelper
                         $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
 
                         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                        $totalOrderValue = $orderEl['order_total'];
+                        $totalOrderValueOrig = (float)$orderEl['order_total'];
+                        $totalCanceledValue = (!is_null($orderEl['canceled_total'])) ? (float)$orderEl['canceled_total'] : 0;
+                        $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                         $totalDueValue = $orderEl['order_due'];
                         $initialPaidValue = (float)$orderEl['order_total'] - (float)$orderEl['order_due'];
                         if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalDueArray)) {
@@ -1182,7 +1184,9 @@ class UserRoleServiceHelper
                         $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
 
                         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                        $totalOrderValue = $orderEl['order_total'];
+                        $totalOrderValueOrig = (float)$orderEl['order_total'];
+                        $totalCanceledValue = (!is_null($orderEl['canceled_total'])) ? (float)$orderEl['canceled_total'] : 0;
+                        $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                         $totalDueValue = $orderEl['order_due'];
                         $initialPaidValue = (float)$orderEl['order_total'] - (float)$orderEl['order_due'];
                         if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalDueArray)) {
