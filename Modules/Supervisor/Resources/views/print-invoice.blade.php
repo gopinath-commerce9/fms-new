@@ -42,7 +42,7 @@
 
     tr#top-head-row td div label img {
         height: 75px;
-        width: 75px;
+        width: auto;
     }
 
     tr#top-head-row td div label barcode {

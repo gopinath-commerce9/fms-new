@@ -837,13 +837,13 @@ class SupervisorController extends Controller
             }
             $orderData = $saleOrderObj->toArray();
 
-            $path = public_path('ktmt/media/logos/aanacart-favicon-final.png');
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            $logoEncoded = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            /*$logoPath = public_path('ktmt/media/logos/aanacart-favicon-final.png');*/
+            $logoPath = public_path('ktmt/media/logos/aanacart-logo.png');
+            $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $logoImageData = file_get_contents($logoPath);
+            $logoEncoded = 'data:image/' . $logoType . ';base64,' . base64_encode($logoImageData);
 
             $companyInfo = config('fms.company_info');
-            $fulfilledBy = config('fms.fulfillment.done_by');
 
             $pdfContent = view('supervisor::print-invoice', compact('orderData', 'invoiceData', 'logoEncoded', 'companyInfo', 'serviceHelper'))->render();
 
