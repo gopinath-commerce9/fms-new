@@ -3,8 +3,9 @@
     table#main-print-invoice-table {
         width: 100%;
     }
-    table#main-print-invoice-table > tr {
+    table#main-print-invoice-table tbody#main-print-invoice-table-body > tr {
         width: 100%;
+        display: inherit;
     }
 
     tbody#main-print-invoice-table-body > tr td div {
@@ -12,13 +13,20 @@
     }
 
     tbody#main-print-invoice-table-body > tr td div label {
+        display: inherit;
         font-size: small;
         font-style: normal;
         font-weight: normal;
+        text-align: center;
+        width: 100%;
+    }
+
+    tr#top-head-row {
+        width: 100%;
     }
 
     tr#top-head-row td {
-        width: 30%;
+        width: 33.33%;
     }
 
     tr#top-head-row > td div {
@@ -41,21 +49,24 @@
         height: 50px;
     }
 
+    tr#top-head-row td div#package-company-info-div {
+        width: 100%;
+    }
+
     tr#top-head-row td div#package-company-info-div label {
-        /*display: grid;*/
-    }
-
-    tr#top-head-row td div#package-company-info-div label table {
-        width: 100%;
-    }
-
-    tr#top-head-row td div#package-company-info-div label table tbody tr {
-        width: 100%;
-    }
-
-    tr#top-head-row td div#package-company-info-div label table tbody tr td {
+        display: inherit;
         text-align: right;
         width: 100%;
+    }
+
+    tr#top-head-row td div#package-company-info-div label p {
+        margin: 0;
+        padding: 1px 2px 1px 2px;
+        word-wrap: break-word;
+    }
+
+    tr#general-info-row {
+        /*width: 100%;*/
     }
 
     tr#general-info-row td {
@@ -65,6 +76,22 @@
     tr#general-info-row > td div {
         padding: 2px;
     }
+
+    /*tr#general-info-row td div#general-info-div label {
+        background-color: #727272;
+        border: 1px solid #000000;
+        color: #FFFFFF;
+        display: inherit;
+        padding: 10px 5px 10px 5px;
+        width: 100%;
+    }
+
+    tr#general-info-row td div#general-info-div label p {
+        margin: 0;
+        padding: 1px 2px 1px 2px;
+        text-align: left;
+        word-wrap: break-word;
+    }*/
 
     tr#general-info-row td div#general-info-div label table {
         background-color: #727272;
@@ -78,7 +105,12 @@
         text-align: left;
     }
 
-    tr#invoice-address-row > td {
+    tr#invoice-address-row {
+        display: inherit;
+        width: 100%;
+    }
+
+    tr#invoice-address-row td {
         width: 100%;
     }
 
@@ -92,7 +124,7 @@
         width: 100%;
     }
 
-    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable thead {
+    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable thead tr {
         width: 100%;
     }
 
@@ -100,24 +132,34 @@
         background-color: #ABA6A6;
         border: 1px solid #000000;
         color: #000000;
-        padding: 2px 15px 2px 15px;
+        padding: 2px 2px 2px 15px;
         text-align: left;
         width: 50%;
     }
 
-    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable > tbody {
+    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable tbody tr {
         width: 100%;
     }
 
-    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable tbody tr td table tbody tr td {
-        color: #000000;
-        padding: 2px 15px 2px 15px;
-        text-align: left;
+    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable tbody tr td {
         width: 50%;
-        word-break: break-word;
+        word-wrap: break-word;
     }
 
-    tr#invoice-methods-row > td {
+    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable tbody tr td label {
+        display: inherit;
+        width: 100%;
+    }
+
+    tr#invoice-address-row td div#invoice-address-div label table#invoice-address-subtable tbody tr td label p {
+        color: #000000;
+        margin: 0;
+        padding: 2px 2px 2px 10px;
+        text-align: left;
+        word-wrap: break-word;
+    }
+
+    tr#invoice-methods-row td {
         width: 100%;
     }
 
@@ -131,7 +173,7 @@
         width: 100%;
     }
 
-    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable thead {
+    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable thead tr {
         width: 100%;
     }
 
@@ -139,21 +181,31 @@
         background-color: #ABA6A6;
         border: 1px solid #000000;
         color: #000000;
-        padding: 2px 15px 2px 15px;
+        padding: 2px 2px 2px 15px;
         text-align: left;
         width: 50%;
     }
 
-    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable > tbody {
+    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable tbody tr {
         width: 100%;
     }
 
-    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable tbody tr td table tbody tr td {
-        color: #000000;
-        padding: 2px 15px 2px 15px;
-        text-align: left;
+    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable tbody tr td {
         width: 50%;
-        word-break: break-word;
+        word-wrap: break-word;
+    }
+
+    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable tbody tr td label {
+        display: inherit;
+        width: 100%;
+    }
+
+    tr#invoice-methods-row td div#invoice-methods-div label table#invoice-methods-subtable tbody tr td label p {
+        color: #000000;
+        margin: 0;
+        padding: 2px 2px 2px 10px;
+        text-align: left;
+        word-wrap: break-word;
     }
 
     tr#invoice-items-row > td {
@@ -170,7 +222,7 @@
         width: 100%;
     }
 
-    tr#invoice-items-row td div#invoice-items-div label table#invoice-items-subtable thead {
+    tr#invoice-items-row td div#invoice-items-div label table#invoice-items-subtable thead tr {
         width: 100%;
     }
 
@@ -180,9 +232,10 @@
         color: #000000;
         padding: 2px 15px 2px 15px;
         text-align: center;
+        width: 100%;
     }
 
-    tr#invoice-items-row td div#invoice-items-div label table#invoice-items-subtable tbody {
+    tr#invoice-items-row td div#invoice-items-div label table#invoice-items-subtable tbody tr {
         width: 100%;
     }
 
@@ -190,7 +243,7 @@
         color: #000000;
         padding: 1px 5px 1px 5px;
         text-align: center;
-        word-break: break-word;
+        word-wrap: break-word;
     }
 
     th.invoice-items-subtable-products-head, td.invoice-items-subtable-products-data {
@@ -221,17 +274,11 @@
         width: 15%;
     }
 
-    td.invoice-items-subtable-price-data,
-    td.invoice-items-subtable-tax-data,
-    td.invoice-items-subtable-subtotal-data,
-    td.invoice-items-subtable-order-subtotal-label,
-    td.invoice-items-subtable-order-subtotal-data,
-    td.invoice-items-subtable-order-grandtotal-label,
-    td.invoice-items-subtable-order-grandtotal-data {
+    .text-bold-highlighter {
         font-weight: bold;
     }
 
-    td.invoice-items-subtable-order-subtotal-label, td.invoice-items-subtable-order-grandtotal-label {
+    .text-align-right {
         text-align: right;
     }
 
@@ -264,9 +311,12 @@
 
     </page_header>
     <page_footer>
-        <p style="width: 100%">
-            <span style="width: 100%; text-align: right">[[page_cu]]/[[page_nb]]</span>
-        </p>
+        <table style="width: 100%;">
+            <tr>
+                <td style="font-size: small; text-align: left; width: 50%">{{ $serviceHelper->getFormattedTime(date('Y-m-d H:i:s'), 'Y-m-d H:i:s') }}</td>
+                <td style="font-size: small; text-align: right; width: 50%">page [[page_cu]]/[[page_nb]]</td>
+            </tr>
+        </table>
     </page_footer>
 
     <table id="main-print-invoice-table">
@@ -294,22 +344,10 @@
                 <td id="package-company-info-td">
                     <div id="package-company-info-div">
                         <label id="package-company-info-label">
-                            <table id="package-company-info-subtable">
-                                <tbody>
-                                    <tr>
-                                        <td>{{ $companyInfo['website'] }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>{{ $companyInfo['location'] }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>{{ $companyInfo['support'] }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>{{ $companyInfo['contact'] }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <p>{{ $companyInfo['website'] }}</p>
+                            <p>{{ $companyInfo['location'] }}</p>
+                            <p>{{ $companyInfo['support'] }}</p>
+                            <p>{{ $companyInfo['contact'] }}</p>
                         </label>
                     </div>
                 </td>
@@ -372,40 +410,31 @@
 
                                         <td id="invoice-address-sold-to-td">
 
-                                            <table id="invoice-address-sold-to-table">
-                                                <tbody>
-                                                    <?php if (trim($soldToName) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $soldToName }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($soldToMainAddress) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $soldToMainAddress }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($soldToCity) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $soldToCity }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($soldToRegion) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $soldToRegion }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($soldToCountry) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $soldToCountry }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($soldToContact) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ 'T: ' . $soldToContact }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                </tbody>
-                                            </table>
+                                            <label id="invoice-address-sold-to-label">
+                                                @if(trim($soldToName) != '')
+                                                    <p>{{ $soldToName }}</p>
+                                                @endif
+
+                                                @if(trim($soldToMainAddress) != '')
+                                                    <p>{{ $soldToMainAddress }}</p>
+                                                @endif
+
+                                                @if(trim($soldToCity) != '')
+                                                    <p>{{ $soldToCity }}</p>
+                                                @endif
+
+                                                @if(trim($soldToRegion) != '')
+                                                    <p>{{ $soldToRegion }}</p>
+                                                @endif
+
+                                                @if(trim($soldToCountry) != '')
+                                                    <p>{{ $soldToCountry }}</p>
+                                                @endif
+
+                                                @if(trim($soldToContact) != '')
+                                                    <p>{{ 'T: ' . $soldToContact }}</p>
+                                                @endif
+                                            </label>
 
                                         </td>
 
@@ -426,40 +455,31 @@
 
                                         <td id="invoice-address-shipped-to-td">
 
-                                            <table id="invoice-address-sold-to-table">
-                                                <tbody>
-                                                    <?php if (trim($shippedToName) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $shippedToName }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($shippedToMainAddress) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $shippedToMainAddress }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($shippedToCity) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $shippedToCity }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($shippedToRegion) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $shippedToRegion }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($shippedToCountry) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ $shippedToCountry }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                    <?php if (trim($shippedToContact) != '') { ?>
-                                                    <tr>
-                                                        <td>{{ 'T: ' . $shippedToContact }}</td>
-                                                    </tr>
-                                                    <?php } ?>
-                                                </tbody>
-                                            </table>
+                                            <label id="invoice-address-sold-to-label">
+                                                @if(trim($shippedToName) != '')
+                                                    <p>{{ $shippedToName }}</p>
+                                                @endif
+
+                                                @if(trim($shippedToMainAddress) != '')
+                                                    <p>{{ $shippedToMainAddress }}</p>
+                                                @endif
+
+                                                @if(trim($shippedToCity) != '')
+                                                    <p>{{ $shippedToCity }}</p>
+                                                @endif
+
+                                                @if(trim($shippedToRegion) != '')
+                                                    <p>{{ $shippedToRegion }}</p>
+                                                @endif
+
+                                                @if(trim($shippedToCountry) != '')
+                                                    <p>{{ $shippedToCountry }}</p>
+                                                @endif
+
+                                                @if(trim($shippedToContact) != '')
+                                                    <p>{{ 'T: ' . $shippedToContact }}</p>
+                                                @endif
+                                            </label>
 
                                         </td>
 
@@ -505,28 +525,18 @@
 
                                         <td id="invoice-methods-payment-method-td">
 
-                                            <table id="invoice-methods-payment-method-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td>{{ (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online' }}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                            <label id="invoice-methods-payment-method-label">
+                                                <p>{{ (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online' }}</p>
+                                            </label>
 
                                         </td>
 
                                         <td id="invoice-methods-shipping-method-td">
 
-                                            <table id="invoice-methods-shipping-method-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td>{{ $orderData['shipping_method'] }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>{{ '(Total Shipping Charges: ' . $invoiceData['order_currency_code'] . ' ' . number_format((float)$invoiceData['shipping_amount'], 2, '.', ',') . ')' }}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                            <label id="invoice-methods-shipping-method-label">
+                                                <p>{{ $orderData['shipping_method'] }}</p>
+                                                <p>{{ '(Total Shipping Charges: ' . $invoiceData['order_currency_code'] . ' ' . number_format((float)$invoiceData['shipping_amount'], 2, '.', ',') . ')' }}</p>
+                                            </label>
 
                                         </td>
 
@@ -576,11 +586,11 @@
                                         <tr>
                                             <td class="invoice-items-subtable-products-data">{{ $itemEl['name'] }}</td>
                                             <td class="invoice-items-subtable-sku-data">{{ $itemEl['sku'] }}</td>
-                                            <td class="invoice-items-subtable-price-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemPriceAmount, 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-price-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemPriceAmount, 2, '.', ',') }}</td>
                                             <td class="invoice-items-subtable-qty-data">{{ $itemEl['qty'] }}</td>
                                             <td class="invoice-items-subtable-unit-data">{{ (array_key_exists($itemEl['order_item_id'], $orderItemArray)) ? $orderItemArray[$itemEl['order_item_id']]['selling_unit'] : '' }}</td>
-                                            <td class="invoice-items-subtable-tax-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemTaxAmount, 2, '.', ',') }}</td>
-                                            <td class="invoice-items-subtable-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemRowTotalAmount, 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-tax-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemTaxAmount, 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemRowTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
 
@@ -594,12 +604,12 @@
                                             <td class="order-total-divider-row" colspan="7"></td>
                                         </tr>
                                         <tr>
-                                           <td class="invoice-items-subtable-order-subtotal-label" colspan="6">Subtotal: </td>
-                                           <td class="invoice-items-subtable-order-subtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
+                                           <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="6">Subtotal: </td>
+                                           <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                         <tr>
-                                           <td class="invoice-items-subtable-order-grandtotal-label" colspan="6">Grand Total: </td>
-                                           <td class="invoice-items-subtable-order-grandtotal-data">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderGrandTotalAmount, 2, '.', ',') }}</td>
+                                           <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Grand Total: </td>
+                                           <td class="invoice-items-subtable-order-grandtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderGrandTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
 
@@ -623,14 +633,23 @@
                             <table id="delivery-info-subtable">
                                 <tbody>
                                     <tr>
-                                        <td><span style="font-weight: bold">Delivery Date:</span>{{ ' ' . $serviceHelper->getFormattedTime($orderData['delivery_date'], 'F d, Y') }}</td>
+                                        <td>
+                                            <span class="delivery-info-date-td-label text-bold-highlighter">Delivery Date:</span>
+                                            <span class="delivery-info-date-td-value">{{ ' ' . $serviceHelper->getFormattedTime($orderData['delivery_date'], 'F d, Y') }}</span>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td><span style="font-weight: bold">Delivery Time:</span>{{ ' ' . $orderData['delivery_time_slot'] }}</td>
+                                        <td>
+                                            <span class="delivery-info-timeslot-td-label text-bold-highlighter">Delivery Time:</span>
+                                            <span class="delivery-info-timeslot-td-value">{{ ' ' . $orderData['delivery_time_slot'] }}</span>
+                                        </td>
                                     </tr>
                                     @if(trim($orderData['delivery_notes'] != ''))
                                     <tr>
-                                        <td><span style="font-weight: bold">Delivery Notes:</span>{{ ' ' . $orderData['delivery_notes'] }}</td>
+                                        <td>
+                                            <span class="delivery-info-notes-td-label text-bold-highlighter">Delivery Notes:</span>
+                                            <span class="delivery-info-notes-td-value">{{ ' ' . $orderData['delivery_notes'] }}</span>
+                                        </td>
                                     </tr>
                                     @endif
                                 </tbody>
