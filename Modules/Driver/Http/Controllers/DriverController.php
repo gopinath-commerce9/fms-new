@@ -456,4 +456,92 @@ class DriverController extends Controller
 
     }
 
+    public function printOrderInvoice($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        $invoiceNotAllowedStatues = [
+            SaleOrder::SALE_ORDER_STATUS_PENDING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_PENDING,
+            SaleOrder::SALE_ORDER_STATUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE,
+            SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED,
+            SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
+            SaleOrder::SALE_ORDER_STATUS_ORDER_UPDATED,
+        ];
+        if(in_array($saleOrderObj->order_status, $invoiceNotAllowedStatues)) {
+            return back()
+                ->with('error', 'Cannot print the Invoice of the Sale Order.!');
+        }
+
+        $serviceHelper = new DriverServiceHelper();
+        $invoiceResult = $serviceHelper->getInvoiceDetails($saleOrderObj);
+        if ($invoiceResult['status'] === false) {
+            return back()
+                ->with('error', 'Cannot print the Invoice of the Sale Order. ' . $invoiceResult['message']);
+        }
+
+        try {
+
+            $invoiceData = $invoiceResult['invoiceData'];
+            $saleOrderObj->refresh();
+
+            $pdfOrientation = 'P';
+            $pdfPaperSize = 'A4';
+            $pdfUseLang = 'en';
+            $pdfDefaultFont = 'Arial';
+
+            $saleOrderObj->saleCustomer;
+            $saleOrderObj->orderItems;
+            $saleOrderObj->billingAddress;
+            $saleOrderObj->shippingAddress;
+            $saleOrderObj->paymentData;
+            $saleOrderObj->statusHistory;
+            $saleOrderObj->processHistory;
+            if ($saleOrderObj->processHistory && (count($saleOrderObj->processHistory) > 0)) {
+                foreach($saleOrderObj->processHistory as $processHistory) {
+                    $processHistory->actionDoer;
+                }
+            }
+            $orderData = $saleOrderObj->toArray();
+
+            /*$logoPath = public_path('ktmt/media/logos/aanacart-favicon-final.png');*/
+            $logoPath = public_path('ktmt/media/logos/aanacart-logo.png');
+            $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $logoImageData = file_get_contents($logoPath);
+            $logoEncoded = 'data:image/' . $logoType . ';base64,' . base64_encode($logoImageData);
+
+            $companyInfo = config('fms.company_info');
+
+            $pdfContent = view('driver::print-invoice', compact('orderData', 'invoiceData', 'logoEncoded', 'companyInfo', 'serviceHelper'))->render();
+
+            $pdfName = "print-invoice-order-" . $saleOrderObj->increment_id . ".pdf";
+            $outputMode = 'D';
+
+            $html2pdf = new Html2Pdf($pdfOrientation, $pdfPaperSize, $pdfUseLang);
+            $html2pdf->setDefaultFont($pdfDefaultFont);
+            $html2pdf->setTestTdInOnePage(false);
+            $html2pdf->writeHTML($pdfContent);
+
+            $pdfOutput = $html2pdf->output($pdfName, $outputMode);
+
+        } catch (Html2PdfException $e) {
+            $html2pdf->clean();
+            $formatter = new ExceptionFormatter($e);
+            return back()
+                ->with('error', $formatter->getMessage());
+        }
+
+    }
+
 }

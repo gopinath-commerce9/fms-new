@@ -32,4 +32,6 @@ Route::prefix('driver')->middleware([
         ->name('driver.orderStatusChange');
     Route::get('/print-shipping-label/{orderId}', 'DriverController@printShippingLabel')
         ->name('driver.printShippingLabel');
+    Route::get('/print-order-invoice/{orderId}', 'DriverController@printOrderInvoice')
+        ->name('driver.printOrderInvoice');
 });

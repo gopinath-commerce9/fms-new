@@ -271,6 +271,7 @@ class PickerServiceHelper
         $allItemsAvailable = true;
         $orderItemUpdateData = [];
         $orderItemPostAQData = [];
+        $orderItemPostNotAvData = [];
         foreach ($order->orderItems as $orderItemEl) {
             $itemInputId = $orderItemEl->sku;
             if(!empty($orderItemEl->item_barcode)){
@@ -279,11 +280,17 @@ class PickerServiceHelper
                     $itemInputId = $barcode;
                 }
             }
+            $itemInputId = $orderItemEl->item_id;
             if (array_key_exists($orderItemEl->id, $storeAvailabilityArray)) {
                 $availability = $storeAvailabilityArray[$orderItemEl->id];
                 $actualItemQty = ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_YES) ? $orderItemEl->qty_ordered : 0;
                 if ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_NO) {
                     $allItemsAvailable = false;
+                    $orderItemPostNotAvData[] = [
+                        'itemId' => $itemInputId,
+                        'itemName' => $orderItemEl->item_name,
+                        'itemSku' => $orderItemEl->item_sku
+                    ];
                 }
                 $orderItemUpdateData[$orderItemEl->item_id] = [
                     'id' => $orderItemEl->id,
@@ -306,6 +313,7 @@ class PickerServiceHelper
                 'status' => $orderStatusNew,
                 'parcelCount' => $boxCount,
                 'actualQuantity' => $orderItemPostAQData,
+                'itemsNotAvailable' => $orderItemPostNotAvData
             ];
             $statusApiResult = $apiService->processPostApi($uri, $params);
             if (!$statusApiResult['status']) {
@@ -368,7 +376,9 @@ class PickerServiceHelper
                     ->update([
                         'order_updated_at' => $saleOrderEl['updated_at'],
                         'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
-                        'order_due' => $saleOrderEl['total_due'],
+                        /*'order_due' => $saleOrderEl['total_due'],*/
+                        'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
+                        'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
                         'order_state' => $saleOrderEl['state'],
                         'order_status' => $saleOrderEl['status'],
                         'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,

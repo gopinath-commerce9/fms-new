@@ -1111,25 +1111,32 @@ class SupervisorServiceHelper
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $updateData = [
+                'order_updated_at' => $saleOrderEl['updated_at'],
+                'total_item_count' => $saleOrderEl['total_item_count'],
+                'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
+                'order_weight' => $saleOrderEl['weight'],
+                'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
+                'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : 1,
+                'order_subtotal' => $saleOrderEl['subtotal'],
+                'order_tax' => $saleOrderEl['tax_amount'],
+                'discount_amount' => $saleOrderEl['discount_amount'],
+                'shipping_total' => $saleOrderEl['shipping_amount'],
+                'shipping_method' => $saleOrderEl['shipping_description'],
+                'order_total' => $saleOrderEl['grand_total'],
+                'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
+                'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
+                'order_state' => $saleOrderEl['state'],
+                'order_status' => $saleOrderEl['status'],
+                'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,
+            ];
+
+            if (!array_key_exists('total_canceled', $saleOrderEl)) {
+                $updateData['order_due'] = $saleOrderEl['total_due'];
+            }
+
             $saleOrderObj = SaleOrder::where('id', $currentOrderData['id'])
-                ->update([
-                    'order_updated_at' => $saleOrderEl['updated_at'],
-                    'total_item_count' => $saleOrderEl['total_item_count'],
-                    'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
-                    'order_weight' => $saleOrderEl['weight'],
-                    'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
-                    'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : 1,
-                    'order_subtotal' => $saleOrderEl['subtotal'],
-                    'order_tax' => $saleOrderEl['tax_amount'],
-                    'discount_amount' => $saleOrderEl['discount_amount'],
-                    'shipping_total' => $saleOrderEl['shipping_amount'],
-                    'shipping_method' => $saleOrderEl['shipping_description'],
-                    'order_total' => $saleOrderEl['grand_total'],
-                    'order_due' => $saleOrderEl['total_due'],
-                    'order_state' => $saleOrderEl['state'],
-                    'order_status' => $saleOrderEl['status'],
-                    'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,
-                ]);
+                ->update($updateData);
 
             return [
                 'status' => true,

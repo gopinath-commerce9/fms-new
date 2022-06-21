@@ -248,76 +248,58 @@
                                             $i = 0;
 
                                             foreach ($saleOrderData['order_items'] as $item) {
-                                            $itemInputId = $item['item_sku'];
-                                            // echo "<pre>";
-                                            //print_r($item);
 
-                                            if($item['qty_ordered'] >1 ) {
+                                                $itemInputId = $item['item_sku'];
+                                                // echo "<pre>";
+                                                //print_r($item);
+
+                                                $qtyOrdered = (float)$item['qty_ordered'];
+                                                $qtyCanceled = (float)$item['qty_canceled'];
+                                                $qtyNeeded = $qtyOrdered - $qtyCanceled;
+                                                $epsilon = 0.00001;
+
                                                 $row_subtotal = $item['row_grand_total'];
-                                            }
-                                            else {
-                                                $row_subtotal = $item['row_grand_total'];
-                                            }
-                                            if(!empty($item['actual_qty']) && $item['actual_qty']>0) {
-                                                $actualQty = $item['actual_qty'];
-                                            } else {
-                                                $actualQty = "";
-                                            }
-                                            if(!empty($item['selling_unit'])){
-                                                $sellingFormat = $item['selling_unit'];
-                                            } else {
-                                                $sellingFormat = "";
-                                            }
+                                                $actualQty = (!empty($qtyNeeded) && ($qtyNeeded > $epsilon)) ? $qtyNeeded : "";
+                                                $sellingFormat = (!empty($item['selling_unit'])) ? $item['selling_unit'] : "";
 
-                                            if(!empty($item['item_barcode'])){
-                                                $barcode = $item['item_barcode'];
-                                                if(substr($barcode,7)!=000000) {
-                                                    $itemInputId = $barcode;
-
+                                                if(!empty($item['item_barcode'])){
+                                                    $barcode = $item['item_barcode'];
+                                                    if(substr($barcode,7)!=000000) {
+                                                        $itemInputId = $barcode;
+                                                    } else {
+                                                        $barcode = "";
+                                                    }
                                                 } else {
-                                                    $barcode = "";
+                                                    $barCode = "";
                                                 }
 
-                                            } else {
-                                                $barCode = "";
-                                            }
+                                                $weightInfo = (!empty($item['item_info'])) ? $item['item_info'] : "";
+                                                $countryLabel = (!empty($item['country_label'])) ? $item['country_label'] : "";
+                                                $productName = (!empty($item['item_name'])) ? $item['item_name'] : "";
 
-
-                                            if(!empty($item['item_info'])){
-                                                $weightInfo = $item['item_info'];
-                                            } else {
-                                                $weightInfo = "";
-                                            }
-
-                                            if(!empty($item['country_label'])){
-                                                $countryLabel = $item['country_label'];
-                                            } else {
-                                                $countryLabel = "";
-                                            }
-
-                                            if(!empty($item['item_name'])){
-                                                $productName = $item['item_name'];
-                                            } else {
-                                                $productName = "";
-                                            }
-
-                                            $storeAvailabilityValue = '';
-                                            if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED) {
-                                                $storeAvailabilityValue = '';
-                                            } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES) {
-                                                $storeAvailabilityValue = $item['store_availability'];
-                                            } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NO) {
-                                                $storeAvailabilityValue = $item['store_availability'];
-                                            }
+                                                $storeAvailabilityValue = 1;
+                                                /*if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NOT_CHECKED) {
+                                                    $storeAvailabilityValue = '';
+                                                } else*/if ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_YES) {
+                                                    $storeAvailabilityValue = $item['store_availability'];
+                                                } elseif ($item['store_availability'] === \Modules\Sales\Entities\SaleOrderItem::STORE_AVAILABLE_NO) {
+                                                    $storeAvailabilityValue = $item['store_availability'];
+                                                }
 
                                             ?>
                                             <tr>
                                                 <td>
-                                                    <select class="form-control store-availability" name="store_availability[{{ $item['id'] }}]" id="store_availability_{{ $item['id'] }}">
-                                                        <option value="" {{ ($storeAvailabilityValue === '') ? " selected " : '' }}>Not Checked</option>
-                                                        <option value="1" {{ ($storeAvailabilityValue === 1) ? " selected " : '' }}>Yes</option>
-                                                        <option value="0" {{ ($storeAvailabilityValue === 0) ? " selected " : '' }}>No</option>
-                                                    </select>
+                                                    @if ($qtyNeeded > $epsilon)
+                                                        <select class="form-control store-availability" name="store_availability[{{ $item['id'] }}]" id="store_availability_{{ $item['id'] }}">
+                                                            <option value="" {{ ($storeAvailabilityValue === '') ? " selected " : '' }}>Not Checked</option>
+                                                            <option value="1" {{ ($storeAvailabilityValue === 1) ? " selected " : '' }}>Yes</option>
+                                                            <option value="0" {{ ($storeAvailabilityValue === 0) ? " selected " : '' }}>No</option>
+                                                        </select>
+                                                    @else
+                                                        <span class="label label-lg font-weight-bold label-light-danger label-inline">
+                                                                Canceled
+                                                            </span>
+                                                    @endif
                                                 </td>
 
                                                 {{--<td>
@@ -385,26 +367,32 @@
                                 <div class="table-responsive">
                                     <table class="table text-md-right font-weight-boldest">
                                         <tbody>
-                                        <tr>
-                                            <td class="align-middle title-color font-size-lg border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
-                                            <td class="align-middle font-size-h3 border-0 pt-0"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['order_subtotal'];?></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
-                                            <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['shipping_total'];?></td>
-                                        </tr>
-                                        <?php if( !empty($saleOrderData['discount_amount']) ) {?>
-                                        <tr>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-lg border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
+                                                <td class="align-middle font-size-h3 border-0 pt-0"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_subtotal'];?></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
+                                                <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['shipping_total'];?></td>
+                                            </tr>
+                                            <?php if( !empty($saleOrderData['discount_amount']) ) {?>
+                                            <tr>
 
-                                            <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
-                                            <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['discount_amount'];?></td>
+                                                <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
+                                                <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['discount_amount'];?></td>
 
-                                        </tr>
-                                        <?php } ?>
-                                        <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
-                                            <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency']." ".$saleOrderData['order_total'];?></td>
-                                        </tr>
+                                            </tr>
+                                            <?php } ?>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
+                                                <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_total'];?></td>
+                                            </tr>
+                                            @if(!is_null($saleOrderData['canceled_total']))
+                                                <tr>
+                                                    <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">Canceled TOTAL</td>
+                                                    <td class="text-danger font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['canceled_total'];?></td>
+                                                </tr>
+                                            @endif
                                         </tbody>
                                     </table>
                                 </div>
