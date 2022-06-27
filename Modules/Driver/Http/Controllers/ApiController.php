@@ -1461,9 +1461,7 @@ class ApiController extends BaseController
         $givenOrderId = (
             $request->has('orderId')
             && (trim($request->input('orderId')) != '')
-            && is_numeric($request->input('orderId'))
-            && ((int)trim($request->input('orderId')) > 0)
-        ) ? (int)trim($request->input('orderId')) : null;
+        ) ? trim($request->input('orderId')) : null;
 
         if (is_null($givenOrderId)) {
             $errMessage = 'Sale Order Not found!';
