@@ -250,7 +250,7 @@ class UserRoleServiceHelper
 
         if (count($filterableSaleOrderIds) > 0) {
 
-            $chunkedArraySize = 200;
+            $chunkedArraySize = 5000;
             foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
 
                 $orderRequest = SaleOrder::select('*');
@@ -315,16 +315,20 @@ class UserRoleServiceHelper
                                     ->where('id', $historyObj->done_by)->get();
                                 $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
 
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+
                                 $currentAssignCount = 0;
                                 $currentPickedCount = 0;
                                 $currentHoldedCount = 0;
                                 if (
-                                    array_key_exists($userEl->id, $statsList)
-                                    && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$userEl->id])
+                                    array_key_exists($currentUserId, $statsList)
+                                    && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$currentUserId])
                                 ) {
-                                    $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
-                                    $currentPickedCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['pickedOrders'];
-                                    $currentHoldedCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))]['holdedOrders'];
+                                    $currentAssignCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
+                                    $currentPickedCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['pickedOrders'];
+                                    $currentHoldedCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['holdedOrders'];
                                 }
 
                                 if ($historyObj->action == SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED) {
@@ -338,10 +342,10 @@ class UserRoleServiceHelper
                                 }
 
                                 if (($currentPickedCount > 0) || ($currentAssignCount > 0) || ($currentHoldedCount > 0)) {
-                                    $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))] = [
-                                        'pickerId' => $userEl->id,
-                                        'picker' => $userEl->name,
-                                        'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
+                                    $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))] = [
+                                        'pickerId' => $currentUserId,
+                                        'picker' => $currentUserName,
+                                        'active' => $currentUserActive,
                                         'date' => date('Y-m-d', strtotime($historyObj->done_at)),
                                         'assignedOrders' => $currentAssignCount,
                                         'pickedOrders' => $currentPickedCount,
@@ -479,7 +483,7 @@ class UserRoleServiceHelper
 
         if (count($filterableSaleOrderIds) > 0) {
 
-            $chunkedArraySize = 200;
+            $chunkedArraySize = 5000;
             foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
 
                 $orderRequest = SaleOrder::select('*');
@@ -570,18 +574,23 @@ class UserRoleServiceHelper
                                     ->where('id', $filterHistory->done_by)->get();
                                 $userEl = ($userElQ) ? $userElQ->first() : $filterHistory->actionDoer;
 
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+                                $currentUserFeeder = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1')) ? 'Yes': 'No';
+
                                 $currentAssignCount = 0;
                                 $currentDeliveryCount = 0;
                                 $currentDeliveredCount = 0;
                                 $currentCanceledCount = 0;
                                 if (
-                                    array_key_exists($userEl->id, $statsList)
-                                    && array_key_exists(date('Y-m-d', strtotime($filterHistory->done_at)), $statsList[$userEl->id])
+                                    array_key_exists($currentUserId, $statsList)
+                                    && array_key_exists(date('Y-m-d', strtotime($filterHistory->done_at)), $statsList[$currentUserId])
                                 ) {
-                                    $currentAssignCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['assignedOrders'];
-                                    $currentDeliveryCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveryOrders'];
-                                    $currentDeliveredCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveredOrders'];
-                                    $currentCanceledCount = (int) $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))]['canceledOrders'];
+                                    $currentAssignCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))]['assignedOrders'];
+                                    $currentDeliveryCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveryOrders'];
+                                    $currentDeliveredCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))]['deliveredOrders'];
+                                    $currentCanceledCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))]['canceledOrders'];
                                 }
 
                                 $addToRecords = false;
@@ -603,11 +612,11 @@ class UserRoleServiceHelper
 
                                 if ($addToRecords) {
 
-                                    $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))] = [
-                                        'driverId' => $userEl->id,
-                                        'driver' => $userEl->name,
-                                        'active' => ($userEl->mappedRole->first()->pivot->is_active == '1') ? 'Yes' : 'No',
-                                        'feeder' => ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1') ? 'Yes' : 'No',
+                                    $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))] = [
+                                        'driverId' => $currentUserId,
+                                        'driver' => $currentUserName,
+                                        'active' => $currentUserActive,
+                                        'feeder' => $currentUserFeeder,
                                         'date' => date('Y-m-d', strtotime($filterHistory->done_at)),
                                         'assignedOrders' => $currentAssignCount,
                                         'deliveryOrders' => $currentDeliveryCount,
@@ -711,7 +720,7 @@ class UserRoleServiceHelper
                     ->get();
 
                 $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
-                    /*->where('done_by', $userEl['id'])*/
+                    ->where('done_by', $userEl['id'])
                     ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
                     ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
                     ->get();
@@ -748,7 +757,7 @@ class UserRoleServiceHelper
 
         if (count($filterableSaleOrderIds) > 0) {
 
-            $chunkedArraySize = 200;
+            $chunkedArraySize = 5000;
             foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
 
                 $orderRequest = SaleOrder::select('*');
@@ -837,6 +846,11 @@ class UserRoleServiceHelper
                                 $userElQ = User::select('*')
                                     ->where('id', $filterHistory->done_by)->get();
                                 $userEl = ($userElQ) ? $userElQ->first() : $filterHistory->actionDoer;
+
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+                                $currentUserFeeder = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1')) ? 'Yes': 'No';
 
                                 $saleOrderExtraData = [
                                     'shipping_address' => [],
@@ -931,8 +945,8 @@ class UserRoleServiceHelper
                                 }
 
                                 $tempArrayRecord = [
-                                    'driverId' => $userEl->id,
-                                    'driver' => $userEl->name,
+                                    'driverId' => $currentUserId,
+                                    'driver' => $currentUserName,
                                     'orderDeliveryDate' => date('Y-m-d', strtotime($orderEl['delivery_date'])),
                                     'driverAssignedDate' => date('Y-m-d', strtotime($deliveryHistory->done_at)),
                                     'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
@@ -956,7 +970,7 @@ class UserRoleServiceHelper
                                 foreach ($amountCollectionData as $collectionKey => $collectionValue) {
                                     $tempArrayRecord[$collectionKey] = $collectionValue . " " . $orderEl['order_currency'];
                                 }
-                                $statsList[$userEl->id][date('Y-m-d', strtotime($filterHistory->done_at))][$orderEl['id']] = $tempArrayRecord;
+                                $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))][$orderEl['id']] = $tempArrayRecord;
 
                             }
 
@@ -1092,7 +1106,7 @@ class UserRoleServiceHelper
 
         if (count($filterableSaleOrderIds) > 0) {
 
-            $chunkedArraySize = 200;
+            $chunkedArraySize = 5000;
             foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
 
                 $orderRequest = SaleOrder::select('*');
@@ -1171,6 +1185,11 @@ class UserRoleServiceHelper
                                 $userElQ = User::select('*')
                                     ->where('id', $historyObj->done_by)->get();
                                 $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
+
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+                                $currentUserFeeder = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1')) ? 'Yes': 'No';
 
                                 $saleOrderExtraData = [
                                     'shipping_address' => [],
@@ -1268,8 +1287,8 @@ class UserRoleServiceHelper
                                 }
 
                                 $tempArrayRecord = [
-                                    'driverId' => $userEl->id,
-                                    'driver' => $userEl->name,
+                                    'driverId' => $currentUserId,
+                                    'driver' => $currentUserName,
                                     'orderDeliveryDate' => date('Y-m-d', strtotime($orderEl['delivery_date'])),
                                     'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
                                     'driverDeliveryAt' => date('Y-m-d H:i:s', strtotime($historyObj->done_at)),
@@ -1298,7 +1317,7 @@ class UserRoleServiceHelper
                                         $tempArrayRecord[$collectionKey] = $collectionValue . " " . $orderEl['order_currency'];
                                     }
                                 }
-                                $statsList[$userEl->id][date('Y-m-d', strtotime($historyObj->done_at))][$orderEl['id']] = $tempArrayRecord;
+                                $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))][$orderEl['id']] = $tempArrayRecord;
 
                             }
 
