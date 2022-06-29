@@ -153,6 +153,9 @@ class ApiController extends BaseController
         foreach ($envList as $envEl) {
             $restApiService->setApiEnvironment($envEl);
             $channels = $restApiService->getAllAvailableApiChannels();
+            if ((strcasecmp($givenEnv, $envEl) == 0) && ($givenChannel == '')) {
+                $givenChannel = $restApiService->getDefaultApiChannel();
+            }
             foreach ($channels as $channelId => $channelEl) {
                 $restApiService->setApiChannel($channelId);
                 $currentBaseUrl = $restApiService->getBaseUrl();
