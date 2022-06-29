@@ -458,10 +458,6 @@ class SalesApiServiceHelper
             return [];
         }
 
-        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
-            return [];
-        }
-
         $apiService = new RestApiService();
         $apiService->setApiEnvironment($env);
         $apiService->setApiChannel($apiChannel);
@@ -487,10 +483,6 @@ class SalesApiServiceHelper
         }
 
         if (is_null($env) || (trim($env) == '')) {
-            return [];
-        }
-
-        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
             return [];
         }
 
