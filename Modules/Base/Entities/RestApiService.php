@@ -11,7 +11,8 @@ class RestApiService
 
     private $mainConfigKey = 'fms';
     private $apiConfigKey = 'api';
-    private $apiEnvironment = 'live';
+    private $apiEnvironment = 'production';
+    private $apiEnvList = [];
     private $apiEnvConfigs = [];
     private $apiChannels = [];
     private $apiDefaultChannel = '';
@@ -279,10 +280,10 @@ class RestApiService
     public function setApiEnvironment($env = '') {
         $mainConfigs = config($this->mainConfigKey);
         $apiConfigs = $mainConfigs[$this->apiConfigKey];
-        $availableEnvs = array_keys($apiConfigs);
+        $this->apiEnvList = array_keys($apiConfigs);
         $defaultEnv = $mainConfigs['defaults']['apiEnv'];
         $targetEnv = strtolower(str_replace(' ', '_', trim($env)));
-        $envClean = (in_array($targetEnv, $availableEnvs)) ? $targetEnv : $defaultEnv;
+        $envClean = (in_array($targetEnv, $this->apiEnvList)) ? $targetEnv : $defaultEnv;
         $this->apiEnvironment = $envClean;
         $this->apiEnvConfigs = $apiConfigs[$this->apiEnvironment];
         $this->apiChannels = $this->apiEnvConfigs['channels'];
@@ -290,6 +291,23 @@ class RestApiService
         $this->apiChannel = $this->apiDefaultChannel;
         $this->apiDefaultCountry = $this->apiEnvConfigs['defaults']['country_code'];
         $this->apiCountry = $this->apiDefaultCountry;
+    }
+
+    /**
+     * Get all the Available Environments of RESTFul API Calls.
+     *
+     * @return array
+     */
+    public function getAllAvailableApiEnvironments() {
+        $envs = $this->apiEnvList;
+        if (is_null($envs) || !is_array($envs) || (count($envs) == 0)) {
+            return [];
+        }
+        $envArray = [];
+        foreach ($envs as $envKey => $envEl) {
+            $envArray[$envKey] = $envEl;
+        }
+        return $envArray;
     }
 
     /**
