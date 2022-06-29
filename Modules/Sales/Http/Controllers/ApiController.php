@@ -164,7 +164,6 @@ class ApiController extends BaseController
             }
         }
 
-        $serviceHelper = new SalesApiServiceHelper();
         $returnResult = $serviceHelper->saleOrderSync($givenOrderId, $givenEnv, $givenChannel, $userId);
         if (!$returnResult['status']) {
             return $this->sendError($returnResult['message'], ['error' => $returnResult['message']], ApiServiceHelper::HTTP_STATUS_CODE_NOT_FOUND);
