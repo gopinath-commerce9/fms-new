@@ -154,7 +154,7 @@ class ApiController extends BaseController
             $restApiService->setApiEnvironment($envEl);
             $channels = $restApiService->getAllAvailableApiChannels();
             foreach ($channels as $channelId => $channelEl) {
-                $restApiService->setApiChannel($channelEl);
+                $restApiService->setApiChannel($channelId);
                 $currentBaseUrl = $restApiService->getBaseUrl();
                 $requestHostNameClean = $requestHostName . ((substr($requestHostName, - 1) != '/') ? '/' : '');
                 if (strcasecmp($currentBaseUrl, $requestHostNameClean) == 0) {
