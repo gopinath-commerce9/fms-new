@@ -1037,7 +1037,7 @@ class SupervisorServiceHelper
         $apiService->setApiChannel($apiChannel);
 
         $uri = $apiService->getRestApiUrl() . 'orders/' . $orderId;
-        $apiResult = $this->restApiService->processGetApi($uri);
+        $apiResult = $apiService->processGetApi($uri);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
 
