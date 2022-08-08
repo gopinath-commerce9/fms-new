@@ -44,6 +44,8 @@
                                                 <th>Driver Delivery Date</th>
                                                 <th>Order Number</th>
                                                 <th>Emirates</th>
+                                                <th>Name</th>
+                                                <th>Contact</th>
                                                 <th>Order Status</th>
                                                 <th>Payment Method</th>
                                                 <th>Collection Verified</th>
@@ -106,6 +108,8 @@
                                                     <td class="text-wrap">{{ $serviceHelper->getFormattedTime($statEl['driverDeliveryDate'], 'd-m-Y') }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderNumber'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['emirates'] }}</td>
+                                                    <td class="text-wrap">{{ $statEl['customerName'] }}</td>
+                                                    <td class="text-wrap">{{ $statEl['customerContact'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['orderStatus'] }}</td>
                                                     <td class="text-wrap">{{ $statEl['paymentMethod'] }}</td>
                                                     <td class="text-wrap">

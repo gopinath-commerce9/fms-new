@@ -240,7 +240,7 @@ var RoleDriversCustomJsBlocks = function() {
                     });
                     d['driver_values'] = driverValues;
                     d['columnsDef'] = [
-                        'orderNumber', 'feeders', 'channel', 'region', 'customerName', 'orderDeliveryDate', 'driverDeliveryDate', 'paymentMethod',
+                        'orderNumber', 'feeders', 'channel', 'region', 'customerName', 'customerPhone', 'orderDeliveryDate', 'driverDeliveryDate', 'paymentMethod',
                         'collectionVerified', 'initialPay', 'amountCollected', 'totalCollected', 'totalPaid', 'orderTotal', 'paymentStatus', 'collectionVerifiedAt',
                         'driver', 'deliveredAt', 'orderStatus', 'customerAddress', 'action',
                     ];
@@ -252,6 +252,7 @@ var RoleDriversCustomJsBlocks = function() {
                 {data: 'channel', className: 'text-wrap'},
                 {data: 'region', className: 'text-wrap'},
                 {data: 'customerName', className: 'text-wrap'},
+                {data: 'customerPhone', className: 'text-wrap'},
                 {data: 'orderDeliveryDate', className: 'text-wrap'},
                 {data: 'driverDeliveryDate', className: 'text-wrap'},
                 {data: 'paymentMethod', className: 'text-wrap'},

@@ -133,6 +133,7 @@
                                                 <th>Channel</th>
                                                 <th>Emirates</th>
                                                 <th>Customer Name</th>
+                                                <th>Customer Phone</th>
                                                 <th>Order Delivery Date</th>
                                                 <th>Driver Delivery Date</th>
                                                 <th>Payment Method</th>

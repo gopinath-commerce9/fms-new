@@ -732,7 +732,21 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Driver Id", "Driver Name", "Order Delivery Date", "Driver Assigned Date", "Driver Delivery Date", "Order Number", "Emirates", "Address", "Order Status", "Payment Method", "Initial Pay"];
+            $headingColumns = [
+                "Driver Id",
+                "Driver Name",
+                "Order Delivery Date",
+                "Driver Assigned Date",
+                "Driver Delivery Date",
+                "Order Number",
+                "Emirates",
+                "Name",
+                "Address",
+                "Phone",
+                "Order Status",
+                "Payment Method",
+                "Initial Pay"
+            ];
             $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
             foreach ($collectionMethods as $methodEl) {
                 $headingColumns[] = ucwords($methodEl) . " Collected";
@@ -755,7 +769,9 @@ class UserRoleController extends Controller
                             date('d-m-Y', strtotime($row['driverDeliveryDate'])),
                             $row['orderNumber'],
                             $row['emirates'],
+                            $row['customerName'],
                             $row['shippingAddress'],
+                            $row['customerContact'],
                             $row['orderStatus'],
                             $row['paymentMethod'],
                             $row['initialPay'],
@@ -1417,6 +1433,7 @@ class UserRoleController extends Controller
                     'channel' => $record['channel'],
                     'region' => $record['emirates'],
                     'customerName' => $record['customerName'],
+                    'customerPhone' => $record['customerContact'],
                     'orderDeliveryDate' => date('d-m-Y', strtotime($record['orderDeliveryDate'])),
                     'driverDeliveryDate' => date('d-m-Y', strtotime($record['driverDeliveryDate'])),
                     'paymentMethod' => $record['paymentMethod'],
@@ -1462,7 +1479,7 @@ class UserRoleController extends Controller
                 "Expires"             => "0"
             );
 
-            $headingColumns = ["Order Number", "Feeder(s)", "Channel", "Emirates", "Customer Name", "Customer Address", "Order Delivery Date", "Driver Delivery Date", "Order Status", "Payment Method", "Initial Pay"];
+            $headingColumns = ["Order Number", "Feeder(s)", "Channel", "Emirates", "Customer Name", "Customer Address", "Customer Phone", "Order Delivery Date", "Driver Delivery Date", "Order Status", "Payment Method", "Initial Pay"];
             $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
             foreach ($collectionMethods as $methodEl) {
                 $headingColumns[] = ucwords($methodEl) . " Collected";
@@ -1492,6 +1509,7 @@ class UserRoleController extends Controller
                             $row['emirates'],
                             $row['customerName'],
                             $row['shippingAddress'],
+                            $row['customerContact'],
                             date('d-m-Y', strtotime($row['orderDeliveryDate'])),
                             date('d-m-Y', strtotime($row['driverDeliveryDate'])),
                             $row['orderStatus'],

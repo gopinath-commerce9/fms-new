@@ -883,6 +883,10 @@ class UserRoleServiceHelper
                                 }
 
                                 $shipAddress = $saleOrderExtraData['shipping_address'];
+                                $customerNameString = '';
+                                $customerNameString .= (isset($shipAddress['first_name'])) ? $shipAddress['first_name'] : '';
+                                $customerNameString .= (isset($shipAddress['last_name'])) ? ' ' . $shipAddress['last_name'] : '';
+                                $customerContactString = (isset($shipAddress['contact_number'])) ? ' ' . $shipAddress['contact_number'] : '';
                                 $shipAddressString = '';
                                 $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
                                 $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
@@ -954,7 +958,9 @@ class UserRoleServiceHelper
                                     'orderId' => $orderEl['order_id'],
                                     'orderNumber' => "#" . $orderEl['increment_id'],
                                     'emirates' => $orderEl['region'],
+                                    'customerName' => $customerNameString,
                                     'shippingAddress' => $shipAddressString,
+                                    'customerContact' => $customerContactString,
                                     'orderStatus' => (array_key_exists($orderEl['order_status'], $availableStatuses)) ? $availableStatuses[$orderEl['order_status']] : $orderEl['order_status'],
                                     'orderTotal' => $totalOrderValue . " " . $orderEl['order_currency'],
                                     'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
@@ -1225,6 +1231,7 @@ class UserRoleServiceHelper
                                 $customerName = '';
                                 $customerName .= (isset($shipAddress['first_name'])) ? $shipAddress['first_name'] . ' ' : '';
                                 $customerName .= (isset($shipAddress['last_name'])) ? $shipAddress['last_name'] : '';
+                                $customerContact = (isset($shipAddress['contact_number'])) ? $shipAddress['contact_number'] : '';
                                 $shipAddressString = '';
                                 $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
                                 $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
@@ -1299,6 +1306,7 @@ class UserRoleServiceHelper
                                     'emirates' => $orderEl['region'],
                                     'channel' => $availableApiChannels[$orderEl['channel']]['name'],
                                     'customerName' => $customerName,
+                                    'customerContact' => $customerContact,
                                     'shippingAddress' => $shipAddressString,
                                     'orderStatus' => (array_key_exists($orderEl['order_status'], $availableStatuses)) ? $availableStatuses[$orderEl['order_status']] : $orderEl['order_status'],
                                     'orderTotal' => $totalOrderValue . " " . $orderEl['order_currency'],
