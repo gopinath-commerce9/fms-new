@@ -7,6 +7,7 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\API\Entities\ApiServiceHelper;
+use Modules\Sales\Entities\SaleOrderAddress;
 use Modules\Sales\Entities\SaleOrderItem;
 use Modules\Supervisor\Entities\SupervisorServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
@@ -116,6 +117,9 @@ class SupervisorController extends Controller
 
     public function searchOrderByFilters(Request $request) {
 
+        set_time_limit(600);
+        ini_set("memory_limit","1024M");
+
         $serviceHelper = new SupervisorServiceHelper();
 
         $availableActions = ['datatable', 'status_chart', 'sales_chart'];
@@ -189,29 +193,54 @@ class SupervisorController extends Controller
                     SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
                 ];
 
+                $pickerListArray = [];
                 $userRoleObj = new UserRole();
                 $pickers = $userRoleObj->allPickers();
+                if(count($pickers->mappedUsers) > 0) {
+                    $pickerListArray = $pickers->mappedUsers->toArray();
+                }
+
+                $orderListArray = $filteredOrders->toArray();
 
                 $filteredOrderData = [];
                 $totalRec = 0;
                 $collectRecStart = $dtStart;
                 $collectRecEnd = $collectRecStart + $dtPageLength;
                 $currentRec = -1;
-                foreach ($filteredOrders as $record) {
+                foreach ($orderListArray as $record) {
                     $totalRec++;
                     $currentRec++;
                     if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                         continue;
                     }
+
+                    $deliveryPickerData = SaleOrderProcessHistory::select('*')
+                        ->where('order_id', $record['id'])
+                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                        ->orderBy('done_at', 'desc')
+                        ->limit(1)->get();
+
+                    $deliveryDriverData = SaleOrderProcessHistory::select('*')
+                        ->where('order_id', $record['id'])
+                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                        ->orderBy('done_at', 'desc')
+                        ->limit(1)->get();
+
+                    $shippingAddressRequest = SaleOrderAddress::select('*')
+                        ->where('order_id', $record['id'])
+                        ->where('type', 'shipping')
+                        ->limit(1)
+                        ->get();
+                    $shipAddress = $shippingAddressRequest->first();
+
                     $tempRecord = [];
-                    $tempRecord['recordId'] = $record->id;
-                    $tempRecord['orderId'] = $record->order_id;
-                    $tempRecord['incrementId'] = $record->increment_id;
-                    $apiChannelId = $record->channel;
+                    $tempRecord['recordId'] = $record['id'];
+                    $tempRecord['orderId'] = $record['order_id'];
+                    $tempRecord['incrementId'] = $record['increment_id'];
+                    $apiChannelId = $record['channel'];
                     $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
-                    $emirateId = $record->region_id;
+                    $emirateId = $record['region_id'];
                     $tempRecord['region'] = $emirates[$emirateId];
-                    $shipAddress = $record->shippingAddress;
                     $shipAddressString = '';
                     $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
                     $shipAddressString .= (isset($shipAddress->address_1)) ? $shipAddress->address_1 : '';
@@ -222,19 +251,17 @@ class SupervisorController extends Controller
                     $shipAddressString .= (isset($shipAddress->post_code)) ? ', ' . $shipAddress->post_code : '';
                     $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
                     $tempRecord['customerAddress'] = $shipAddressString;
-                    $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record->delivery_date));
-                    $tempRecord['deliveryTimeSlot'] = $record->delivery_time_slot;
+                    $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record['delivery_date']));
+                    $tempRecord['deliveryTimeSlot'] = $record['delivery_time_slot'];
                     $tempRecord['deliveryPicker'] = '';
                     $tempRecord['deliveryPickerTime'] = '';
                     $tempRecord['deliveryDriver'] = '';
                     $tempRecord['deliveryDriverTime'] = '';
-                    $orderStatusId = $record->order_status;
+                    $orderStatusId = $record['order_status'];
                     $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
-                    $deliveryPickerData = $record->currentPicker;
-                    $deliveryDriverData = $record->currentDriver;
                     $pickerSelectedId = '';
                     $pickerSelectedName = '';
-                    $tempRecord['actions'] = url('/supervisor/order-view/' . $record->id);
+                    $tempRecord['actions'] = url('/supervisor/order-view/' . $record['id']);
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData[0];
                         $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
@@ -251,13 +278,13 @@ class SupervisorController extends Controller
                         }
                     }
                     $pickerValues = $pickerSelectedName;
-                    if (in_array($record->order_status, $pickerStatues)) {
-                        $pickerValues = '<select class="form-control datatable-input sale-order-picker-assigner" id="picker_assigner_' . $record->id . '" name="picker_assigner_';
-                        $pickerValues .= $record->id . '" data-order-id="' . $record->id . '" data-order-number="' . $record->increment_id . '" data-action-loc="' . url('/supervisor/assign-order-oms-status/' . $record->id) . '" >';
+                    if (in_array($record['order_status'], $pickerStatues)) {
+                        $pickerValues = '<select class="form-control datatable-input sale-order-picker-assigner" id="picker_assigner_' . $record['id'] . '" name="picker_assigner_';
+                        $pickerValues .= $record['id'] . '" data-order-id="' . $record['id'] . '" data-order-number="' . $record['increment_id'] . '" data-action-loc="' . url('/supervisor/assign-order-oms-status/' . $record['id']) . '" >';
                         $pickerValues .= '<option value="" '. (($pickerSelectedId == '') ? 'selected' : '') . ' >Unassigned</option>';
-                        if(count($pickers->mappedUsers) > 0) {
-                            foreach($pickers->mappedUsers as $userEl) {
-                                $pickerValues .= '<option value="' . $userEl->id . '" '. (($pickerSelectedId == $userEl->id) ? 'selected' : '') . ' >' . $userEl->name . '</option>';
+                        if(count($pickerListArray) > 0) {
+                            foreach($pickerListArray as $userEl) {
+                                $pickerValues .= '<option value="' . $userEl['id'] . '" '. (($pickerSelectedId == $userEl['id']) ? 'selected' : '') . ' >' . $userEl['name'] . '</option>';
                             }
                         }
                         $pickerValues .= '</select>';
