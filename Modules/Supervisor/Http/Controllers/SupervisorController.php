@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\API\Entities\ApiServiceHelper;
 use Modules\Sales\Entities\SaleOrderAddress;
+use Illuminate\Support\Facades\DB;
 use Modules\Sales\Entities\SaleOrderItem;
 use Modules\Supervisor\Entities\SupervisorServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
@@ -201,8 +202,8 @@ class SupervisorController extends Controller
                 }
 
                 $orderListArray = $filteredOrders->toArray();
+                $orderListProperArray = [];
 
-                $filteredOrderData = [];
                 $totalRec = 0;
                 $collectRecStart = $dtStart;
                 $collectRecEnd = $collectRecStart + $dtPageLength;
@@ -213,25 +214,56 @@ class SupervisorController extends Controller
                     if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                         continue;
                     }
+                    $orderListProperArray[$record['id']] = $record;
+                }
 
-                    $deliveryPickerData = SaleOrderProcessHistory::select('*')
-                        ->where('order_id', $record['id'])
-                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
-                        ->orderBy('done_at', 'desc')
-                        ->limit(1)->get();
+                $orderRecordIds = array_keys($orderListProperArray);
 
-                    $deliveryDriverData = SaleOrderProcessHistory::select('*')
-                        ->where('order_id', $record['id'])
-                        ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
-                        ->orderBy('done_at', 'desc')
-                        ->limit(1)->get();
+                $chunkedArraySize = 2000;
+                foreach (array_chunk($orderRecordIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
 
-                    $shippingAddressRequest = SaleOrderAddress::select('*')
-                        ->where('order_id', $record['id'])
+                    $shippingAddressRequestArray = SaleOrderAddress::select('*')
+                        ->whereIn('order_id', $chunkedSaleOrderIds)
                         ->where('type', 'shipping')
-                        ->limit(1)
-                        ->get();
-                    $shipAddress = $shippingAddressRequest->first();
+                        ->get()->toArray();
+                    foreach ($shippingAddressRequestArray as $currentRec) {
+                        $orderListProperArray[$currentRec['order_id']]['shipping_address'] = $currentRec;
+                    }
+
+                    $currentDeliveryPickersArrayRequestArray = SaleOrderProcessHistory::select('*')
+                        ->whereIn('id', function ($query) use ($chunkedSaleOrderIds) {
+                            $query->select(DB::raw('MAX(id)'))
+                                ->from(with(new SaleOrderProcessHistory)->getTable())
+                                ->whereIn('order_id', $chunkedSaleOrderIds)
+                                ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                                ->groupBy('order_id');
+                        })
+                        ->with('actionDoer')->get()->toArray();
+                    foreach ($currentDeliveryPickersArrayRequestArray as $currentRec) {
+                        $orderListProperArray[$currentRec['order_id']]['current_picker'] = $currentRec;
+                    }
+
+                    $currentDeliveryDriversArrayRequestArray = SaleOrderProcessHistory::select('*')
+                        ->whereIn('id', function ($query) use ($chunkedSaleOrderIds) {
+                            $query->select(DB::raw('MAX(id)'))
+                                ->from(with(new SaleOrderProcessHistory)->getTable())
+                                ->whereIn('order_id', $chunkedSaleOrderIds)
+                                ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                                ->groupBy('order_id');
+                        })
+                        ->with('actionDoer')->get()->toArray();
+                    foreach ($currentDeliveryDriversArrayRequestArray as $currentRec) {
+                        $orderListProperArray[$currentRec['order_id']]['current_driver'] = $currentRec;
+                    }
+
+                }
+
+                $filteredOrderData = [];
+                foreach ($orderListProperArray as $orderIdKey => $record) {
+
+                    $shipAddress = array_key_exists('shipping_address', $record) ?  $record['shipping_address'] : [];
+                    $deliveryPickerData = array_key_exists('current_picker', $record) ?  $record['current_picker'] : [];
+                    $deliveryDriverData = array_key_exists('current_driver', $record) ?  $record['current_driver'] : [];
 
                     $tempRecord = [];
                     $tempRecord['recordId'] = $record['id'];
@@ -242,14 +274,18 @@ class SupervisorController extends Controller
                     $emirateId = $record['region_id'];
                     $tempRecord['region'] = $emirates[$emirateId];
                     $shipAddressString = '';
-                    $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
-                    $shipAddressString .= (isset($shipAddress->address_1)) ? $shipAddress->address_1 : '';
-                    $shipAddressString .= (isset($shipAddress->address_2)) ? ', ' . $shipAddress->address_2 : '';
-                    $shipAddressString .= (isset($shipAddress->address_3)) ? ', ' . $shipAddress->address_3 : '';
-                    $shipAddressString .= (isset($shipAddress->city)) ? ', ' . $shipAddress->city : '';
-                    $shipAddressString .= (isset($shipAddress->region)) ? ', ' . $shipAddress->region : '';
-                    $shipAddressString .= (isset($shipAddress->post_code)) ? ', ' . $shipAddress->post_code : '';
-                    $tempRecord['customerName'] = $shipAddress->first_name . ' ' . $shipAddress->last_name;
+                    $customerName = '';
+                    if (count($shipAddress) > 0) {
+                        $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
+                        $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
+                        $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
+                        $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
+                        $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+                        $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+                        $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
+                        $customerName = $shipAddress['first_name'] . ' ' . $shipAddress['last_name'];
+                    }
+                    $tempRecord['customerName'] = $customerName;
                     $tempRecord['customerAddress'] = $shipAddressString;
                     $tempRecord['deliveryDate'] = date('d-m-Y', strtotime($record['delivery_date']));
                     $tempRecord['deliveryTimeSlot'] = $record['delivery_time_slot'];
@@ -263,18 +299,18 @@ class SupervisorController extends Controller
                     $pickerSelectedName = '';
                     $tempRecord['actions'] = url('/supervisor/order-view/' . $record['id']);
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
-                        $pickerDetail = $deliveryPickerData[0];
-                        $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail->done_at, 'F d, Y, h:i:s A');
-                        if ($pickerDetail->actionDoer) {
-                            $pickerSelectedId = $pickerDetail->actionDoer->id;
-                            $pickerSelectedName = $pickerDetail->actionDoer->name;
+                        $pickerDetail = $deliveryPickerData;
+                        $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail['done_at'], 'F d, Y, h:i:s A');
+                        if ($pickerDetail['action_doer']) {
+                            $pickerSelectedId = $pickerDetail['action_doer']['id'];
+                            $pickerSelectedName = $pickerDetail['action_doer']['name'];
                         }
                     }
                     if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
-                        $driverDetail = $deliveryDriverData[0];
-                        $tempRecord['deliveryDriverTime'] = $serviceHelper->getFormattedTime($driverDetail->done_at, 'F d, Y, h:i:s A');
-                        if ($driverDetail->actionDoer) {
-                            $tempRecord['deliveryDriver'] = $driverDetail->actionDoer->name;
+                        $driverDetail = $deliveryDriverData;
+                        $tempRecord['deliveryDriverTime'] = $serviceHelper->getFormattedTime($driverDetail['done_at'], 'F d, Y, h:i:s A');
+                        if ($driverDetail['action_doer']) {
+                            $tempRecord['deliveryDriver'] = $driverDetail['action_doer']['name'];
                         }
                     }
                     $pickerValues = $pickerSelectedName;

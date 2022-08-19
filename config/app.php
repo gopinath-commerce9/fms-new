@@ -179,6 +179,8 @@ return [
 
         Ladumor\OneSignal\OneSignalServiceProvider::class,
 
+        Barryvdh\Debugbar\ServiceProvider::class,
+
     ],
 
     /*
@@ -234,6 +236,8 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
 
         'OneSignal' => Ladumor\OneSignal\OneSignal::class,
+
+        'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
 
     ],
 
