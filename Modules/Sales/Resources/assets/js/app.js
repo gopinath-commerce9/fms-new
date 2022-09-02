@@ -344,6 +344,10 @@ var SalesCustomJsBlocks = function() {
 
     var select2ElementsInitiator = function () {
 
+        $('#emirates_filter').select2({
+            placeholder: "Select Emirate Regions",
+        });
+
         $('#order_status_filter').select2({
             placeholder: "Select Order Statuses",
         });
@@ -404,6 +408,7 @@ var SalesCustomJsBlocks = function() {
                 timeout: 600000,
                 data: function(d) {
 
+                    var regionValues = '';
                     var orderStatusValues = '';
                     var productCatValues = '';
                     var storeAvailabilityValues = '';
@@ -412,7 +417,9 @@ var SalesCustomJsBlocks = function() {
                         if (val.name === 'filter_action') {
                             d[val.name] = 'datatable';
                         } else {
-                            if (val.name === 'order_status_filter') {
+                            if (val.name === 'emirates_filter') {
+                                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'order_status_filter') {
                                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
                             } else if (val.name === 'product_category_filter') {
                                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
@@ -426,6 +433,7 @@ var SalesCustomJsBlocks = function() {
                         }
                     });
 
+                    d['emirates_region'] = regionValues;
                     d['order_status_values'] = orderStatusValues;
                     d['product_category_values'] = productCatValues;
                     d['store_availability_values'] = storeAvailabilityValues;
@@ -475,6 +483,9 @@ var SalesCustomJsBlocks = function() {
             e.preventDefault();
             $('.datatable-input').each(function() {
                 $(this).val('');
+            });
+            $('.datatable-input-multiselect').each(function() {
+                $(this).val('').trigger('change');
             });
             $('#items_selected_values').val('');
             dataTable.table().draw();
@@ -528,12 +539,15 @@ var SalesCustomJsBlocks = function() {
     var getItemPicklistPdf = function () {
         var targetForm = $('#filter_item_picklist_form');
         $('#filter_action').val('pdf_generator');
+        var regionValues = '';
         var orderStatusValues = '';
         var productCatValues = '';
         var storeAvailabilityValues = '';
         var pickerValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
-            if (val.name === 'order_status_filter') {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'order_status_filter') {
                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             } else if (val.name === 'product_category_filter') {
                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
@@ -543,6 +557,7 @@ var SalesCustomJsBlocks = function() {
                 pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
             }
         });
+        $('#emirates_region').val(regionValues);
         $('#order_status_values').val(orderStatusValues);
         $('#product_category_values').val(productCatValues);
         $('#store_availability_values').val(storeAvailabilityValues);
@@ -553,12 +568,15 @@ var SalesCustomJsBlocks = function() {
     var getItemPicklistCsv = function () {
         var targetForm = $('#filter_item_picklist_form');
         $('#filter_action').val('csv_generator');
+        var regionValues = '';
         var orderStatusValues = '';
         var productCatValues = '';
         var storeAvailabilityValues = '';
         var pickerValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
-            if (val.name === 'order_status_filter') {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'order_status_filter') {
                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             } else if (val.name === 'product_category_filter') {
                 productCatValues = productCatValues + ((productCatValues === '') ? '' : ',') + val.value;
@@ -568,6 +586,7 @@ var SalesCustomJsBlocks = function() {
                 pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
             }
         });
+        $('#emirates_region').val(regionValues);
         $('#order_status_values').val(orderStatusValues);
         $('#product_category_values').val(productCatValues);
         $('#store_availability_values').val(storeAvailabilityValues);

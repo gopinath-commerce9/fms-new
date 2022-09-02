@@ -1038,15 +1038,21 @@ class SalesServiceHelper
 
     }
 
-    public function getSaleOrderPickList($region = '', $apiChannel = '', $status = [], $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getSaleOrderPickList($region = [], $apiChannel = '', $status = [], $startDate = '', $endDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');
 
         $emirates = $this->getAvailableRegionsList();
-        if (!is_null($region) && (trim($region) != '')) {
-            $orderRequest->where('region_id', trim($region));
+        $regionKeys = array_keys($emirates);
+        if (
+            !is_null($region)
+            && is_array($region)
+            && (count($region) > 0)
+            && (array_intersect($region, $regionKeys) == $region)
+        ) {
+            $orderRequest->whereIn('region_id', $region);
         } else {
-            $orderRequest->whereIn('region_id', array_keys($emirates));
+            $orderRequest->whereIn('region_id', $regionKeys);
         }
 
         $availableApiChannels = $this->getAllAvailableChannels();

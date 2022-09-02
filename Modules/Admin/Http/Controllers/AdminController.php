@@ -99,10 +99,9 @@ class AdminController extends Controller
         /*$emirates = config('fms.emirates');*/
         $emirates = $serviceHelper->getAvailableRegionsList();
         $region = (
-            $request->has('emirates_region_filter')
-            && (trim($request->input('emirates_region_filter')) != '')
-            && array_key_exists(trim($request->input('emirates_region_filter')), $emirates)
-        ) ? trim($request->input('emirates_region_filter')) : null;
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+        ) ? explode(',', trim($request->input('emirates_region'))) : [];
 
         $allowedOrderStatuses = $serviceHelper->getAdminAllowedStatuses();
         $orderStatus = (

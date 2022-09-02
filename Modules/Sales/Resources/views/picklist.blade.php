@@ -31,8 +31,7 @@
 
                                     <div class="form-group row">
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="emirates_region" name="emirates_region" >
-                                                <option value="" >Select a Region</option>
+                                            <select class="form-control datatable-input-multiselect" id="emirates_filter" name="emirates_filter" multiple>
                                                 @foreach($emirates as $emirateKey => $emirateName)
                                                     <option value="{{ $emirateKey }}" >{{ $emirateName }}</option>
                                                 @endforeach
@@ -47,7 +46,7 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="order_status_filter" name="order_status_filter" multiple>
+                                            <select class="form-control datatable-input-multiselect" id="order_status_filter" name="order_status_filter" multiple>
                                                 @foreach($availableStatuses as $statusKey => $statusEl)
                                                     <option value="{{ $statusKey }}" >{{ $statusEl }}</option>
                                                 @endforeach
@@ -72,7 +71,7 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-                                            <select class="form-control datatable-input" id="product_category_filter" name="product_category_filter" multiple>
+                                            <select class="form-control datatable-input-multiselect" id="product_category_filter" name="product_category_filter" multiple>
                                                 @foreach($productCategories as $categoryKey => $categoryEl)
                                                     <option value="{{ $categoryKey }}" >{{ $categoryEl }}</option>
                                                 @endforeach
@@ -82,14 +81,14 @@
 
                                     <div class="form-group row">
                                         <div class="col-4">
-                                            <select class="form-control datatable-input" id="store_availability_filter" name="store_availability_filter" multiple>
+                                            <select class="form-control datatable-input-multiselect" id="store_availability_filter" name="store_availability_filter" multiple>
                                                 @foreach($storeAvailability as $categoryKey => $categoryEl)
                                                     <option value="{{ $categoryKey }}" >{{ $categoryEl }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-                                            <select class="form-control datatable-input" id="picker_filter" name="picker_filter" multiple>
+                                            <select class="form-control datatable-input-multiselect" id="picker_filter" name="picker_filter" multiple>
                                                 <option value="0" >Unassigned</option>
                                                 @if(count($pickers->mappedUsers) > 0)
                                                     @foreach($pickers->mappedUsers as $userEl)
@@ -100,6 +99,7 @@
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
+                                            <input type="hidden" name="emirates_region" id="emirates_region" value="" />
                                             <input type="hidden" name="items_selected_values" id="items_selected_values" value="" />
                                             <input type="hidden" name="order_status_values" id="order_status_values" value="" />
                                             <input type="hidden" name="product_category_values" id="product_category_values" value="" />

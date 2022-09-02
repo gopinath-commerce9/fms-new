@@ -142,8 +142,15 @@ var SupervisorCustomJsBlocks = function() {
 
     var getSalesChartData = function (chartObj) {
         var targetForm = $('#filter_supervisor_order_form');
+        $('#action').val('sales_chart');
+        var regionValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#emirates_region').val(regionValues);
         var formData = targetForm.serializeArray();
-        formData.push({name: 'action', value: 'sales_chart'});
         $.ajax({
             url: targetForm.attr('action'),
             method: targetForm.attr('method'),
@@ -169,8 +176,15 @@ var SupervisorCustomJsBlocks = function() {
 
     var getStatusChartData = function (chartObj) {
         var targetForm = $('#filter_supervisor_order_form');
+        $('#action').val('status_chart');
+        var regionValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#emirates_region').val(regionValues);
         var formData = targetForm.serializeArray();
-        formData.push({name: 'action', value: 'status_chart'});
         $.ajax({
             url: targetForm.attr('action'),
             method: targetForm.attr('method'),
@@ -198,6 +212,14 @@ var SupervisorCustomJsBlocks = function() {
         return $(this.header()).text().trim();
     });
 
+    var select2ElementsInitiator = function () {
+
+        $('#emirates_filter').select2({
+            placeholder: "Select Emirate Regions",
+        });
+
+    };
+
     var initSupervisorSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart, hostUrl, tokenValue) {
 
         var table = $('#supervisor_order_filter_table');
@@ -219,9 +241,22 @@ var SupervisorCustomJsBlocks = function() {
                 url: targetForm.attr('action'),
                 type: targetForm.attr('method'),
                 data: function(d) {
+
+                    var regionValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
-                        d[val.name] = val.value;
+                        if (val.name === 'action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            if (val.name === 'emirates_filter') {
+                                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+                            } else  {
+                                d[val.name] = val.value;
+                            }
+                        }
                     });
+
+                    d['emirates_region'] = regionValues;
+
                     d['columnsDef'] = [
                         'incrementId', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryDriver', 'orderStatus', 'actions'
@@ -268,6 +303,9 @@ var SupervisorCustomJsBlocks = function() {
             e.preventDefault();
             $('.datatable-input').each(function() {
                 $(this).val('');
+            });
+            $('.datatable-input-multiselect').each(function() {
+                $(this).val('').trigger('change');
             });
             $('.datatable-date-input').each(function() {
                 var d = new Date();
@@ -366,6 +404,7 @@ var SupervisorCustomJsBlocks = function() {
             var saleOrderStatusChart = saleOrderStatusBarChartSetter();
             getSalesChartData(saleOrderSalesChart);
             getStatusChartData(saleOrderStatusChart);
+            select2ElementsInitiator();
             initSupervisorSaleOrderTable(saleOrderSalesChart, saleOrderStatusChart, hostUrl, token);
         },
         orderViewPage: function(hostUrl, orderId) {

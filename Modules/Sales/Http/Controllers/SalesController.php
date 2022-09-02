@@ -1023,8 +1023,7 @@ class SalesController extends Controller
         $region = (
             $request->has('emirates_region')
             && (trim($request->input('emirates_region')) != '')
-            && array_key_exists(trim($request->input('emirates_region')), $emirates)
-        ) ? trim($request->input('emirates_region')) : '';
+        ) ? explode(',', trim($request->input('emirates_region'))) : [];
 
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $apiChannel = (

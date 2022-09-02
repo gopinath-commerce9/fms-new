@@ -60,8 +60,7 @@
 
                                     <div class="form-group row">
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="emirates_region" name="emirates_region" >
-                                                <option value="" >Select a Region</option>
+                                            <select class="form-control datatable-input-multiselect" id="emirates_filter" name="emirates_filter" multiple>
                                                 @foreach($emirates as $emirateKey => $emirateName)
                                                     <option value="{{ $emirateKey }}" >{{ $emirateName }}</option>
                                                 @endforeach
@@ -100,6 +99,8 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
+                                            <input type="hidden" name="action" id="action" value="datatable" />
+                                            <input type="hidden" name="emirates_region" id="emirates_region" value="" />
                                             <button type="button" id="filter_supervisor_order_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>

@@ -207,8 +207,15 @@ var AdminCustomJsBlocks = function() {
 
     var getSalesChartData = function (chartObj) {
         var targetForm = $('#fetch_admin_sale_orders_form');
+        $('#action').val('sales_chart');
+        var regionValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#emirates_region').val(regionValues);
         var formData = targetForm.serializeArray();
-        formData.push({name: 'action', value: 'sales_chart'});
         $.ajax({
             url: targetForm.attr('action'),
             method: targetForm.attr('method'),
@@ -234,8 +241,15 @@ var AdminCustomJsBlocks = function() {
 
     var getStatusChartData = function (chartObj) {
         var targetForm = $('#fetch_admin_sale_orders_form');
+        $('#action').val('status_chart');
+        var regionValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#emirates_region').val(regionValues);
         var formData = targetForm.serializeArray();
-        formData.push({name: 'action', value: 'status_chart'});
         $.ajax({
             url: targetForm.attr('action'),
             method: targetForm.attr('method'),
@@ -263,6 +277,14 @@ var AdminCustomJsBlocks = function() {
         return $(this.header()).text().trim();
     });
 
+    var select2ElementsInitiator = function () {
+
+        $('#emirates_filter').select2({
+            placeholder: "Select Emirate Regions",
+        });
+
+    };
+
     var initAdminSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart) {
 
         var table = $('#admin_order_filter_table');
@@ -284,10 +306,22 @@ var AdminCustomJsBlocks = function() {
                 url: targetForm.attr('action'),
                 type: targetForm.attr('method'),
                 data: function(d) {
+
+                    var regionValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
-                        d[val.name] = val.value;
+                        if (val.name === 'action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            if (val.name === 'emirates_filter') {
+                                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+                            } else  {
+                                d[val.name] = val.value;
+                            }
+                        }
                     });
-                    d['action'] = 'datatable';
+
+                    d['emirates_region'] = regionValues;
+
                     d['columnsDef'] = [
                         'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryPickerTime', 'deliveryDriver', 'deliveryDriverTime', 'orderStatus', 'actions'
@@ -336,6 +370,9 @@ var AdminCustomJsBlocks = function() {
             e.preventDefault();
             $('.datatable-input').each(function() {
                 $(this).val('');
+            });
+            $('.datatable-input-multiselect').each(function() {
+                $(this).val('').trigger('change');
             });
             $('.datatable-date-input').each(function() {
                 var d = new Date();
@@ -415,6 +452,7 @@ var AdminCustomJsBlocks = function() {
         indexPage: function(hostUrl){
             initApiDeliveryDateRangePicker();
             initFilterDeliveryDateRangePicker();
+            select2ElementsInitiator();
             var saleOrderSalesChart = saleOrderSalesBarChartSetter();
             var saleOrderStatusChart = saleOrderStatusBarChartSetter();
             getSalesChartData(saleOrderSalesChart);
