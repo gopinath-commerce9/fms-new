@@ -1369,7 +1369,24 @@ class SalesController extends Controller
 
                     $fulfilledBy = config('fms.fulfillment.done_by');
 
-                    $pdfContent = view('sales::print-picklist', compact('filteredOrderData', 'filteredOrderTotalWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();
+                    /*$pdfContent = view('sales::print-picklist', compact('filteredOrderData', 'filteredOrderTotalWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();*/
+
+                    $pdfContent = "";
+                    $newOrderPrintData = $filteredOrderData;
+                    $filteredOrderData = [];
+                    if (is_array($newOrderPrintData) && (count($newOrderPrintData) > 0)) {
+                        foreach ($newOrderPrintData as $dateOrderKey => $dateOrderEl) {
+                            foreach ($dateOrderEl as $slotOrderKey => $slotOrderEl) {
+                                foreach ($slotOrderEl as $idOrderKey => $idOrderEl) {
+
+                                    $filteredOrderData = [];
+                                    $filteredOrderData[$dateOrderKey][$slotOrderKey][$idOrderKey] = $idOrderEl;
+                                    $pdfContent .= view('sales::print-picklist', compact('filteredOrderData', 'filteredOrderTotalWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();
+
+                                }
+                            }
+                        }
+                    }
 
                     $pdfName = "print-sales-picklist-" . date('Ymd-His') . ".pdf";
                     $outputMode = 'D';
