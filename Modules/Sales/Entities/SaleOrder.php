@@ -36,6 +36,9 @@ class SaleOrder extends Model
     const SALE_ORDER_STATUS_DELIVERED = 'delivered';
     const SALE_ORDER_STATUS_CANCELED = 'canceled';
 
+    const KERABIYA_DELIVERY_YES = 1;
+    const KERABIYA_DELIVERY_NO = 0;
+
     /**
      * The table associated with the model.
      *
@@ -91,6 +94,11 @@ class SaleOrder extends Model
         'invoice_number',
         'to_be_synced',
         'is_synced',
+        'is_kerabiya_delivery',
+        'kerabiya_set_at',
+        'kerabiya_set_by',
+        'kerabiya_awb_number',
+        'kerabiya_awb_pdf',
         'is_active',
         'is_amount_verified',
         'amount_verified_at',
@@ -343,6 +351,16 @@ class SaleOrder extends Model
      */
     public function collectionVerifier() {
         return $this->belongsTo(User::class, 'amount_verified_by', 'id');
+    }
+
+    /**
+     * Checks whether the Order is delivered through Kerabiya Logistics.
+     * @return bool
+     */
+    public function isKerabiyaDelivery() {
+        return ($this->is_kerabiya_delivery === self::KERABIYA_DELIVERY_YES)
+            ? true
+            : false;
     }
 
 }

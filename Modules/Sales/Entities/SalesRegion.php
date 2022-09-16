@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class SalesRegion extends Model
 {
 
+    const KERABIYA_ACCESS_ENABLED = 1;
+    const KERABIYA_ACCESS_DISABLED = 0;
+
     /**
      * The table associated with the model.
      *
@@ -25,6 +28,7 @@ class SalesRegion extends Model
         'entity_id',
         'region_id',
         'country_id',
+        'kerabiya_access',
         'name',
     ];
 
@@ -34,5 +38,15 @@ class SalesRegion extends Model
      * @var array
      */
     protected $hidden = [];
+
+    /**
+     * Checks whether the Region has Kerabiya Logistics Access enabled.
+     * @return bool
+     */
+    public function isKerabiyaEnabled() {
+        return ($this->kerabiya_access === self::KERABIYA_ACCESS_ENABLED)
+            ? true
+            : false;
+    }
 
 }
