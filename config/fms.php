@@ -268,9 +268,9 @@ return [
         'contact' => '(+971) 50 150 5873'
     ],
 
-    'kebariya' => [
+    'kerabiya' => [
         'development' => [
-            'url' => 'https://delivery.tsssmart.com/webservice/CustomerBooking',
+            'url' => 'https://delivery.tsssmart.com/webservice/',
             'api_key' => 'baae33c9936521d27ca2d734fa948b59',
             'company_code' => 'AZ1198',
             'weight' => '10.00',
@@ -278,7 +278,7 @@ return [
             'branch_name' => 'Dubai'
         ],
         'testing' => [
-            'url' => 'https://delivery.tsssmart.com/webservice/CustomerBooking',
+            'url' => 'https://delivery.tsssmart.com/webservice/',
             'api_key' => 'baae33c9936521d27ca2d734fa948b59',
             'company_code' => 'AZ1198',
             'weight' => '10.00',
@@ -286,7 +286,7 @@ return [
             'branch_name' => 'Dubai'
         ],
         'staging' => [
-            'url' => 'https://delivery.tsssmart.com/webservice/CustomerBooking',
+            'url' => 'https://delivery.tsssmart.com/webservice/',
             'api_key' => 'baae33c9936521d27ca2d734fa948b59',
             'company_code' => 'AZ1198',
             'weight' => '10.00',
@@ -294,7 +294,7 @@ return [
             'branch_name' => 'Dubai'
         ],
         'production' => [
-            'url' => 'https://delivery.tsssmart.com/webservice/CustomerBooking',
+            'url' => 'https://delivery.tsssmart.com/webservice/',
             'api_key' => 'baae33c9936521d27ca2d734fa948b59',
             'company_code' => 'AZ1198',
             'weight' => '10.00',

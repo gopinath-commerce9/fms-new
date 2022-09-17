@@ -595,15 +595,194 @@ var SalesCustomJsBlocks = function() {
     };
 
     var initRegionsListTable = function() {
+
         var table = $('#regions_list_table');
+        var targetForm = $('form#filter_sales_region_form');
         var dataTable = table.DataTable({
             responsive: true,
             dom: `<'row'<'col-sm-12'tr>>
 			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
-            lengthMenu: [5, 10, 25, 50],
+            lengthMenu: [5, 10, 25, 50, 100],
             pageLength: 5,
             order: [[0, 'asc']],
-            columnDefs: []
+            searchDelay: 500,
+            processing: true,
+            language: {
+                processing: '<div class="btn btn-secondary spinner spinner-dark spinner-right">Please Wait</div>',
+            },
+            serverSide: true,
+            ajax: {
+                url: targetForm.attr('action'),
+                type: targetForm.attr('method'),
+                timeout: 600000,
+                data: function(d) {
+
+                    $.each(targetForm.serializeArray(), function(key, val) {
+                        if (val.name === 'filter_action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            d[val.name] = val.value;
+                        }
+                    });
+
+                    d['columnsDef'] = [
+                        'itemSelector', 'apiChannel', 'regionId', 'regionName', 'countryId', 'kerabiyaAccess'
+                    ];
+
+                },
+            },
+            columns: [
+                {data: 'itemSelector'},
+                {data: 'apiChannel'},
+                {data: 'regionId'},
+                {data: 'regionName'},
+                {data: 'countryId'},
+                {data: 'kerabiyaAccess'}
+            ],
+            columnDefs: [{
+                targets: 5,
+                title: 'Kerabiya Logistics',
+                orderable: true,
+                render: function(data, type, full, meta) {
+                    return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
+                },
+            }],
+            drawCallback: function( settings ) {
+                var itemIdList = $('#region_items_selected_values').val();
+                var itemIdListArray = (itemIdList.trim() !== '') ? itemIdList.trim().split(',') : [];
+                if (itemIdListArray.length > 0) {
+                    table.find('input.sales-region-item').each(function(index, element) {
+                        var itemId = $(this).data('item-id');
+                        if (itemIdListArray.indexOf(itemId.toString()) >= 0) {
+                            $(this).attr('checked', 'checked');
+                        }
+                    });
+                }
+            }
+        });
+
+        $('button#regions_update_btn').on('click', function(e) {
+            e.preventDefault();
+            getSalesRegionSynced(dataTable);
+        });
+
+        $('a#filter_sales_region_kerabiya_enable_all_btn').on('click', function(e) {
+            e.preventDefault();
+            var itemIdList = $('#region_items_selected_values').val();
+            $('#region_items_selected_values').val('');
+            getSalesRegionKerabiyaEnabled(dataTable);
+            $('#region_items_selected_values').val(itemIdList);
+        });
+
+        $('a#filter_sales_region_kerabiya_enable_selected_btn').on('click', function(e) {
+            e.preventDefault();
+            getSalesRegionKerabiyaEnabled(dataTable);
+        });
+
+        $('a#filter_sales_region_kerabiya_disable_all_btn').on('click', function(e) {
+            e.preventDefault();
+            var itemIdList = $('#region_items_selected_values').val();
+            $('#region_items_selected_values').val('');
+            getSalesRegionKerabiyaDisabled(dataTable);
+            $('#region_items_selected_values').val(itemIdList);
+        });
+
+        $('a#filter_sales_region_kerabiya_disable_selected_btn').on('click', function(e) {
+            e.preventDefault();
+            getSalesRegionKerabiyaDisabled(dataTable);
+        });
+
+        $(document).on('change', 'input.sales-region-item', function(e) {
+            var itemId = $(this).data('item-id');
+            var itemIdList = $('#region_items_selected_values').val();
+            var itemIdListArray = (itemIdList.trim() !== '') ? itemIdList.trim().split(',') : [];
+            if ($(this).is(':checked')) {
+                if (itemIdListArray.indexOf(itemId.toString()) < 0) {
+                    itemIdListArray.push(itemId);
+                    $('#region_items_selected_values').val(itemIdListArray.join(','));
+                }
+            } else {
+                if (itemIdListArray.indexOf(itemId.toString()) >= 0) {
+                    itemIdListArray.splice(itemIdListArray.indexOf(itemId.toString()), 1);
+                    $('#region_items_selected_values').val(itemIdListArray.join(','));
+                }
+            }
+        });
+
+    };
+
+    var getSalesRegionSynced = function (dataTable) {
+        var targetForm = $('#filter_sales_region_form');
+        $('#filter_action').val('server_sync');
+        var formData = targetForm.serializeArray();
+        $.ajax({
+            url: targetForm.attr('action'),
+            method: targetForm.attr('method'),
+            data: formData,
+            beforeSend: function() {
+                KTApp.blockPage({
+                    overlayColor: '#000000',
+                    state: 'danger',
+                    message: 'Please wait...'
+                });
+            },
+            success: function(data){
+                KTApp.unblockPage();
+                showAlertMessage(data.message);
+                $('#filter_action').val('datatable');
+                $('#region_items_selected_values').val('');
+                dataTable.table().draw();
+            }
+        });
+    };
+
+    var getSalesRegionKerabiyaEnabled = function (dataTable) {
+        var targetForm = $('#filter_sales_region_form');
+        $('#filter_action').val('kerabiya_enable');
+        var formData = targetForm.serializeArray();
+        $.ajax({
+            url: targetForm.attr('action'),
+            method: targetForm.attr('method'),
+            data: formData,
+            beforeSend: function() {
+                KTApp.blockPage({
+                    overlayColor: '#000000',
+                    state: 'danger',
+                    message: 'Please wait...'
+                });
+            },
+            success: function(data){
+                KTApp.unblockPage();
+                showAlertMessage(data.message);
+                $('#filter_action').val('datatable');
+                $('#region_items_selected_values').val('');
+                dataTable.table().draw();
+            }
+        });
+    };
+
+    var getSalesRegionKerabiyaDisabled = function (dataTable) {
+        var targetForm = $('#filter_sales_region_form');
+        $('#filter_action').val('kerabiya_disable');
+        var formData = targetForm.serializeArray();
+        $.ajax({
+            url: targetForm.attr('action'),
+            method: targetForm.attr('method'),
+            data: formData,
+            beforeSend: function() {
+                KTApp.blockPage({
+                    overlayColor: '#000000',
+                    state: 'danger',
+                    message: 'Please wait...'
+                });
+            },
+            success: function(data){
+                KTApp.unblockPage();
+                showAlertMessage(data.message);
+                $('#filter_action').val('datatable');
+                $('#region_items_selected_values').val('');
+                dataTable.table().draw();
+            }
         });
     };
 

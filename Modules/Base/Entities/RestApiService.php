@@ -20,6 +20,13 @@ class RestApiService
     private $apiDefaultCountry = '';
     private $apiCountry = '';
     private $apiUserTokenSessionKey = 'api_user_token';
+    private $kerabiyaConfigKey = 'kerabiya';
+    private $kerabiyaStaticValueArray = [
+        'company_code',
+        'weight',
+        'currency_code',
+        'branch_name',
+    ];
 
     /**
      * RestApiService constructor.
@@ -501,6 +508,70 @@ class RestApiService
      */
     public function processDeleteApi($url = '', $params = [], $headers = [], $authenticate = true, $forceAuthenticate = false) {
         return $this->processRestApiCall('DELETE', $url, $params, $headers, $authenticate, $forceAuthenticate);
+    }
+
+    /**
+     * Get the Kerabiya Logistics API Configuration.
+     *
+     * @param string $env
+     * @return array|mixed
+     */
+    public function getKerabiyaConfigs($env = '') {
+
+        $envClean = $this->getApiEnvironment();
+        if (!is_null($env) && (trim($env) != '')) {
+            $envs = $this->getAllAvailableApiEnvironments();
+            $targetEnv = strtolower(str_replace(' ', '_', trim($env)));
+            if (in_array($targetEnv, $envs)) {
+                $envClean = $targetEnv;
+            }
+        }
+
+        $mainConfigs = config($this->mainConfigKey);
+        $kerabiyaMainConfigs = $mainConfigs[$this->kerabiyaConfigKey];
+
+        return array_key_exists($envClean, $kerabiyaMainConfigs) ? $kerabiyaMainConfigs[$envClean] : [];
+
+    }
+
+    /**
+     * Get the Kerabiya Logistics API Url.
+     *
+     * @param string $env
+     * @return mixed|string
+     */
+    public function getKerabiyaApiUrl($env = '') {
+        $config = $this->getKerabiyaConfigs($env);
+        return ((count($config) > 0) && array_key_exists('url', $config)) ? $config['url'] : '';
+    }
+
+    /**
+     * Get the Kerabiya Logistics API Key.
+     *
+     * @param string $env
+     * @return mixed|string
+     */
+    public function getKerabiyaApiKey($env = '') {
+        $config = $this->getKerabiyaConfigs($env);
+        return ((count($config) > 0) && array_key_exists('api_key', $config)) ? $config['api_key'] : '';
+    }
+
+    /**
+     * Get the Kerabiya Logistics API Static Values.
+     *
+     * @param string $env
+     * @return mixed|string
+     */
+    public function getKerabiyaApiStaticValues($env = '') {
+
+        $config = $this->getKerabiyaConfigs($env);
+
+        $returnStaticValuesArray = [];
+        foreach ($this->kerabiyaStaticValueArray as $staticKey) {
+            $returnStaticValuesArray[$staticKey] = ((count($config) > 0) && array_key_exists($staticKey, $config)) ? $config[$staticKey] : '';
+        }
+
+        return $returnStaticValuesArray;
     }
 
 }

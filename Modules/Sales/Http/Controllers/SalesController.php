@@ -7,6 +7,7 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Sales\Entities\ProductCategory;
+use Modules\Sales\Entities\SalesRegion;
 use Modules\Sales\Entities\SalesServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
@@ -1612,15 +1613,125 @@ class SalesController extends Controller
 
     }
 
-    public function regionsListUpdate(Request $request) {
-
-        $pageTitle = 'Fulfillment Center';
-        $pageSubTitle = 'Sales Regions List';
+    public function regionsListFilter(Request $request) {
 
         $serviceHelper = new SalesServiceHelper();
-        $emirates = $serviceHelper->getAvailableRegionsList('', '', '', true);
 
-        return redirect()->route('sales.regionsList')->with('success', 'The Sales Regions updated successfully!');
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+
+        $availableActions = ['datatable', 'server_sync', 'kerabiya_enable', 'kerabiya_disable'];
+        $methodAction = (
+            $request->has('filter_action')
+            && (trim($request->input('filter_action')) != '')
+            && in_array(trim($request->input('filter_action')), $availableActions)
+        ) ? trim($request->input('filter_action')) : 'datatable';
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        $itemSelectedFilter = (
+            $request->has('region_items_selected_values')
+            && (trim($request->input('region_items_selected_values')) != '')
+        ) ? explode(',', trim($request->input('region_items_selected_values'))) : [];
+
+        if ($methodAction == 'datatable') {
+
+            $filteredEmiratesData = [];
+            $totalRec = 0;
+
+            $filteredEmirates = $serviceHelper->getAvailableRegionsList('', '', '', false, true);
+            if (is_array($filteredEmirates) && (count($filteredEmirates) > 0)) {
+
+                $collectRecStart = $dtStart;
+                $collectRecEnd = $collectRecStart + $dtPageLength;
+                $currentRec = -1;
+
+                foreach ($filteredEmirates as $record) {
+
+                    $totalRec++;
+                    $currentRec++;
+                    if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                        continue;
+                    }
+
+                    $itemSelector = '<label class="checkbox checkbox-single checkbox-solid checkbox-primary mb-0 justify-content-center">';
+                    $itemSelector .= '<input type="checkbox" value="" class="checkable sales-region-item" id="sales-region-item-' . $record['id'];
+                    $itemSelector .= '" name="sales-region-item-' . $record['id'] .'" data-item-id="' . $record['id'] . '"/><span></span></label>';
+
+                    $tempRecord = [];
+                    $tempRecord['itemSelector'] = $itemSelector;
+                    $tempRecord['apiChannel'] = $availableApiChannels[$record['channel']]['name'];
+                    $tempRecord['regionId'] = $record['region_id'];
+                    $tempRecord['regionName'] = $record['name'];
+                    $tempRecord['countryId'] = $record['country_id'];
+                    $tempRecord['kerabiyaAccess'] = ($record['kerabiya_access'] == SalesRegion::KERABIYA_ACCESS_ENABLED) ? 'Yes' : 'No';
+
+                    $filteredEmiratesData[] = $tempRecord;
+
+                }
+
+            }
+
+            $returnData = [
+                'draw' => $dtDraw,
+                'recordsTotal' => $totalRec,
+                'recordsFiltered' => $totalRec,
+                'data' => $filteredEmiratesData
+            ];
+            return response()->json($returnData, 200);
+
+
+        } elseif ($methodAction == 'server_sync') {
+
+            $emiratesSync = $serviceHelper->getAvailableRegionsList('', '', '', true);
+
+            return response()->json([ 'message' => 'The Sales Regions updated successfully!' ], 200);
+
+        } elseif ($methodAction == 'kerabiya_enable') {
+
+            $updatableIds = [];
+            $filteredEmirates = $serviceHelper->getAvailableRegionsList('', '', '', false, true);
+            if (is_array($filteredEmirates) && (count($filteredEmirates) > 0)) {
+                foreach ($filteredEmirates as $record) {
+                    if ((count($itemSelectedFilter) == 0) || in_array($record['id'], $itemSelectedFilter)) {
+                        $updatableIds[] = $record['id'];
+                    }
+                }
+            }
+
+            SalesRegion::whereIn('id', $updatableIds)->update([ 'kerabiya_access' => SalesRegion::KERABIYA_ACCESS_ENABLED ]);
+
+            return response()->json([ 'message' => 'The Sales Regions Kerabiya Enable Status updated successfully!' ], 200);
+
+        } elseif ($methodAction == 'kerabiya_disable') {
+
+            $updatableIds = [];
+            $filteredEmirates = $serviceHelper->getAvailableRegionsList('', '', '', false, true);
+            if (is_array($filteredEmirates) && (count($filteredEmirates) > 0)) {
+                foreach ($filteredEmirates as $record) {
+                    if ((count($itemSelectedFilter) == 0) || in_array($record['id'], $itemSelectedFilter)) {
+                        $updatableIds[] = $record['id'];
+                    }
+                }
+            }
+
+            SalesRegion::whereIn('id', $updatableIds)->update([ 'kerabiya_access' => SalesRegion::KERABIYA_ACCESS_DISABLED ]);
+
+            return response()->json([ 'message' => 'The Sales Regions Kerabiya Disable Status updated successfully!' ], 200);
+
+        }
 
     }
 
