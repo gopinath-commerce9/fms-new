@@ -42,4 +42,8 @@ Route::prefix('supervisor')->middleware([
         ->name('supervisor.orderResync');
     Route::post('/assign-order-oms-status/{orderId}', 'SupervisorController@setOrderOmsStatus')
         ->name('supervisor.setOrderOmsStatus');
+    Route::get('/sync-order-delivery-kerabiya/{orderId}', 'SupervisorController@syncOrderDeliveryKerabiya')
+        ->name('supervisor.syncOrderDeliveryKerabiya');
+    Route::get('/print-order-delivery-kerabiya/{orderId}', 'SupervisorController@printOrderDeliveryKerabiya')
+        ->name('supervisor.printOrderDeliveryKerabiya');
 });

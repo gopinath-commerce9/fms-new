@@ -10,6 +10,7 @@ use \Exception;
 use Modules\Base\Entities\BaseServiceHelper;
 use App\Models\User;
 use Modules\Sales\Entities\SaleOrderAddress;
+use Modules\Sales\Entities\SaleOrderAmountCollection;
 use Modules\Sales\Entities\SaleOrderItem;
 use Modules\Sales\Entities\SaleOrderPayment;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
@@ -1004,6 +1005,172 @@ class SupervisorServiceHelper
             'status' => true,
             'message' => 'The Sale Order Invoice data is fetched successfully',
             'invoiceData' => $saleInvoiceEl
+        ];
+
+    }
+
+    public function syncOrderToKerabiya(SaleOrder $order = null, $userId = 0) {
+
+        if (is_null($order)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order is empty!'
+            ];
+        }
+
+        $apiService = new RestApiService();
+        $kerabiyaUrl = $apiService->getKerabiyaApiUrl();
+        $kerabiyaKey = $apiService->getKerabiyaApiKey();
+        $kerabiyaStaticValues = $apiService->getKerabiyaApiStaticValues();
+
+        $order->saleCustomer;
+        $order->orderItems;
+        $order->billingAddress;
+        $order->shippingAddress;
+        $order->paymentData;
+        $order->paidAmountCollections;
+        $order->statusHistory;
+        $saleOrderData = $order->toArray();
+
+        $shipAddress = array_key_exists('shipping_address', $saleOrderData) ?  $saleOrderData['shipping_address'] : [];
+
+        $shipAddressString = '';
+        $customerName = '';
+        if (count($shipAddress) > 0) {
+            $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
+            $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
+            $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
+            $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
+            $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+            $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+            $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
+            $customerName = $shipAddress['first_name'] . ' ' . $shipAddress['last_name'];
+        }
+
+        $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $totalOrderValueOrig = (float)$saleOrderData['order_total'];
+        $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
+        $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
+        $totalDueValue = $saleOrderData['order_due'];
+        $initialPaidValue = (float)$saleOrderData['order_total'] - (float)$saleOrderData['order_due'];
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
+            $totalDueValue = $totalOrderValue;
+            $initialPaidValue = 0;
+        }
+
+        $paymentMethodTitle = '';
+        $payInfoLoopTargetLabel = 'method_title';
+        if (isset($saleOrderData['payment_data'][0]['extra_info'])) {
+            $paymentAddInfo = json5_decode($saleOrderData['payment_data'][0]['extra_info'], true);
+            if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                foreach ($paymentAddInfo as $paymentInfoEl) {
+                    if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                        $paymentMethodTitle = $paymentInfoEl['value'];
+                    }
+                }
+            }
+        }
+
+        $amountCollectionData = [];
+        $totalCollectedAmount = 0;
+        foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
+            $amountCollectionData[$cMethod] = 0;
+        }
+
+        if (count($saleOrderData['paid_amount_collections']) > 0) {
+            foreach ($saleOrderData['paid_amount_collections'] as $paidCollEl) {
+                $amountCollectionData[$paidCollEl['method']] += (float) $paidCollEl['amount'];
+                $totalCollectedAmount += (float) $paidCollEl['amount'];
+                $totalDueValue -= (float) $paidCollEl['amount'];
+            }
+        }
+
+        $paymentStatus = '';
+        $epsilon = 0.00001;
+        if (!(abs($totalOrderValue - 0) < $epsilon)) {
+            if (abs($totalDueValue - 0) < $epsilon) {
+                $paymentStatus = 'paid';
+            } else {
+                if ($totalDueValue < 0) {
+                    $paymentStatus = 'overpaid';
+                } else {
+                    $paymentStatus = 'due';
+                }
+            }
+        }
+
+        $finalCollectionValue = ($paymentStatus === 'due') ? $totalDueValue : 0;
+
+        $timeSlotSplitter = explode('-', $saleOrderData['delivery_time_slot'], 2);
+        $fromTimeSlot = trim($timeSlotSplitter[0]);
+        $toTimeSlot = trim($timeSlotSplitter[1]);
+
+        $fromSlotDateTime = new \DateTime($fromTimeSlot);
+        $fromSlot24Format = $fromSlotDateTime->format('H:i');
+
+        $toSlotDateTime = new \DateTime($toTimeSlot);
+        $toSlot24Format = $toSlotDateTime->format('H:i');
+
+        $postData = [
+            "ToCompany" => $customerName,
+            "ToAddress" => $shipAddressString,
+            "ToCity" => $shipAddress['region'],
+            "ToLocation" => $shipAddress['city'],
+            "ToCountry" => $shipAddress['country_id'],
+            "ToCperson" => $customerName,
+            "ToContactno" => $shipAddress['contact_number'],
+            "ToMobileno" => $shipAddress['contact_number'],
+            "ReferenceNumber" => "#" . $saleOrderData['increment_id'],
+            "CompanyCode" => $kerabiyaStaticValues['company_code'],
+            "Weight" => $kerabiyaStaticValues['weight'],
+            "Pieces" => $saleOrderData['box_count'],
+            "PackageType" => "Next Day", // Next Day/Same Day
+            "CurrencyCode" => $kerabiyaStaticValues['currency_code'],
+            "NcndAmount" => number_format($finalCollectionValue, 2, '.', ','),
+            "ItemDescription" => "",
+            "SpecialInstruction" => $saleOrderData['delivery_notes'],
+            "BranchName" => $kerabiyaStaticValues['branch_name'],
+            "TimeSlot"  => trim($fromSlot24Format) . ' to ' . trim($toSlot24Format),
+            "PreferedDate"  => $saleOrderData['delivery_date'],
+        ];
+
+        $uri = $kerabiyaUrl . 'CustomerBooking';
+        $headers = [
+            'API-KEY' => $kerabiyaKey
+        ];
+        $kerabiyaApiResult = $apiService->processPostApi($uri, $postData, $headers, false);
+        if (!$kerabiyaApiResult['status']) {
+            return [
+                'status' => false,
+                'message' => $kerabiyaApiResult['message']
+            ];
+        }
+
+        $apiResponse = $kerabiyaApiResult['response'];
+        if (!is_array($apiResponse) || (count($apiResponse) == 0)) {
+            return [
+                'status' => false,
+                'message' => 'Could not fetch the data from Kerabiya Logistics!'
+            ];
+        }
+
+        if ($apiResponse['success'] != '1') {
+            return [
+                'status' => false,
+                'message' => $apiResponse['message']
+            ];
+        }
+
+        $order->is_kerabiya_delivery = 1;
+        $order->kerabiya_set_at = date('Y-m-d H:i:s');
+        $order->kerabiya_set_by = $userId;
+        $order->kerabiya_awb_number = $apiResponse['AwbNumber'];
+        $order->kerabiya_awb_pdf = $apiResponse['AwbPdf'];
+        $order->saveQuietly();
+
+        return [
+            'status' => true,
+            'message' => 'The Sale Order is synced to Kerabiya Logistics successfully',
         ];
 
     }

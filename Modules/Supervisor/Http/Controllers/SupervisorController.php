@@ -7,9 +7,11 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\API\Entities\ApiServiceHelper;
+use Modules\Base\Entities\RestApiService;
 use Modules\Sales\Entities\SaleOrderAddress;
 use Illuminate\Support\Facades\DB;
 use Modules\Sales\Entities\SaleOrderItem;
+use Modules\Sales\Entities\SalesRegion;
 use Modules\Supervisor\Entities\SupervisorServiceHelper;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderProcessHistory;
@@ -492,6 +494,8 @@ class SupervisorController extends Controller
 
         $resyncStatuses = $serviceHelper->getResyncStatuses();
 
+        $saleRegionDetails = SalesRegion::firstWhere('region_id', $saleOrderData['region_id']);
+
         if ($saleOrderObj->order_status == SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
             return view('supervisor::prepare-order-view', compact(
                 'pageTitle',
@@ -504,7 +508,8 @@ class SupervisorController extends Controller
                 'orderStatuses',
                 'pickers',
                 'drivers',
-                'resyncStatuses'
+                'resyncStatuses',
+                'saleRegionDetails'
             ));
         } else {
             return view('supervisor::order-view', compact(
@@ -518,7 +523,8 @@ class SupervisorController extends Controller
                 'orderStatuses',
                 'pickers',
                 'drivers',
-                'resyncStatuses'
+                'resyncStatuses',
+                'saleRegionDetails'
             ));
         }
 
@@ -773,6 +779,64 @@ class SupervisorController extends Controller
 
     }
 
+    public function printOrderDeliveryKerabiya($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        if ($saleOrderObj->is_kerabiya_delivery === SaleOrder::KERABIYA_DELIVERY_NO) {
+            return back()
+                ->with('error', 'The Sale Order is not synced to the Kerabiya Logistics!');
+        }
+
+        $apiService = new RestApiService();
+
+        $source = $apiService->getKerabiyaApiUrl() . 'GetPdf/' . $saleOrderObj->kerabiya_awb_number;
+
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $source,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => [
+                'API-KEY: ' . $apiService->getKerabiyaApiKey()
+            ]
+        ]);
+        $pdfResponse = curl_exec($curl);
+
+        $fileName =  "aanacart_" . $saleOrderObj->increment_id . "_kerabiya_awb_" . $saleOrderObj->kerabiya_awb_number . ".pdf";
+        $headers = array(
+            "Content-type"              => "application/pdf",
+            "Content-Disposition"       => "attachment; filename=$fileName",
+            "Content-Transfer-Encoding" => "binary",
+            "Pragma"                    => "no-cache",
+            "Cache-Control"             => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"                   => "0"
+        );
+
+        $callback = function() use($pdfResponse) {
+            $file = fopen('php://output', 'w');
+            fputs($file, $pdfResponse);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+
+    }
+
     public function printShippingLabel($orderId) {
 
         if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
@@ -925,6 +989,62 @@ class SupervisorController extends Controller
             return back()
                 ->with('error', $formatter->getMessage());
         }
+
+    }
+
+    public function syncOrderDeliveryKerabiya($orderId) {
+
+        if (is_null($orderId) || !is_numeric($orderId) || ((int)$orderId <= 0)) {
+            return back()
+                ->with('error', 'The Sale Order Id input is invalid!');
+        }
+
+        $saleOrderObj = SaleOrder::find($orderId);
+        if(!$saleOrderObj) {
+            return back()
+                ->with('error', 'The Sale Order does not exist!');
+        }
+
+        $invoiceNotAllowedStatues = [
+            SaleOrder::SALE_ORDER_STATUS_PENDING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_PENDING,
+            SaleOrder::SALE_ORDER_STATUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_PROCESSING,
+            SaleOrder::SALE_ORDER_STATUS_NGENIUS_COMPLETE,
+            SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED,
+            SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
+            SaleOrder::SALE_ORDER_STATUS_ORDER_UPDATED,
+        ];
+        if(in_array($saleOrderObj->order_status, $invoiceNotAllowedStatues)) {
+            return back()
+                ->with('error', 'Cannot sync to the Kerabiya Logistics for the Sale Order!');
+        }
+
+        if ($saleOrderObj->is_kerabiya_delivery === SaleOrder::KERABIYA_DELIVERY_YES) {
+            return back()
+                ->with('error', 'Already synced to the Kerabiya Logistics for the Sale Order!');
+        }
+
+        $saleRegionDetails = SalesRegion::firstWhere('region_id', $saleOrderObj->region_id);
+        if ($saleRegionDetails->kerabiya_access === SalesRegion::KERABIYA_ACCESS_DISABLED) {
+            return back()
+                ->with('error', 'The Region of the Sale Order currently does not support Kerabiya Logistics!');
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
+        $serviceHelper = new SupervisorServiceHelper();
+        $kerabiyaResult = $serviceHelper->syncOrderToKerabiya($saleOrderObj, $processUserId);
+        if ($kerabiyaResult['status'] === false) {
+            return back()
+                ->with('error', 'Cannot sync the Sale Order to the Kerabiya Logistics. ' . $kerabiyaResult['message']);
+        }
+
+        return back()->with('success', 'The Sale Order is synced to the Kerabiya Logistics successfully!');
 
     }
 

@@ -226,6 +226,7 @@
                                         <div class="row">
                                             <div class="col col-12">
                                                 <table class="table table-borderless">
+
                                                     <tr>
                                                         <td>
                                                             <select class="form-control" name="assign_delivery_to" id="assign_delivery_to">
@@ -241,6 +242,31 @@
                                                             <input type="submit" name="btnsubmit" class="btn btn-primary font-weight-bold" value="Assign Driver">
                                                         </td>
                                                     </tr>
+
+                                                    @if($saleOrderData['is_kerabiya_delivery'] === \Modules\Sales\Entities\SaleOrder::KERABIYA_DELIVERY_YES)
+
+                                                        <tr>
+                                                            <td>
+                                                                Kebariya AWB Number : <?= $saleOrderData['kerabiya_awb_number'] ?>
+                                                            </td>
+                                                            <td>
+                                                                {{--<a href="{{ url('/supervisor/print-order-delivery-kerabiya/' . $saleOrderData['id']) }}" target="_blank" class="btn btn-primary font-weight-bold">Print AirWay Bill</a>--}}
+                                                            </td>
+                                                        </tr>
+
+                                                    @elseif($saleRegionDetails->kerabiya_access === \Modules\Sales\Entities\SalesRegion::KERABIYA_ACCESS_ENABLED)
+
+                                                        <tr>
+                                                            <td>
+                                                                <a href="{{ url('/supervisor/sync-order-delivery-kerabiya/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Sync To Kerabiya</a>
+                                                            </td>
+                                                            <td>
+
+                                                            </td>
+                                                        </tr>
+
+                                                    @endif
+
                                                     <tr>
                                                         <td>
                                                             <a href="{{ url('/supervisor/print-shipping-label/' . $saleOrderData['id']) }}" class="btn btn-primary font-weight-bold">Print Shipping Label</a>
