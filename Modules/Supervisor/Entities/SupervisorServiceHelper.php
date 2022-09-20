@@ -679,7 +679,7 @@ class SupervisorServiceHelper
 
                 $saleOrderEl = $orderApiResult['response'];
 
-                if(is_array($saleOrderEl['status_histories']) && (count($saleOrderEl['status_histories']) > 0)) {
+                if(!is_null($saleOrderEl['status_histories']) && is_array($saleOrderEl['status_histories']) && (count($saleOrderEl['status_histories']) > 0)) {
                     foreach ($saleOrderEl['status_histories'] as $historyEl) {
                         $statusHistoryObj = SaleOrderStatusHistory::firstOrCreate([
                             'order_id' => $order->id,
