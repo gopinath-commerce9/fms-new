@@ -1107,9 +1107,13 @@ class SupervisorServiceHelper
 
         $fromSlotDateTime = new \DateTime($fromTimeSlot);
         $fromSlot24Format = $fromSlotDateTime->format('H:i');
+        $fromSlot24FormatSplitter = explode(':', $fromSlot24Format);
+        $fromSlot24FormatClean = (trim($fromSlot24FormatSplitter[1]) == '00') ? trim($fromSlot24FormatSplitter[0]) : trim($fromSlot24Format);
 
         $toSlotDateTime = new \DateTime($toTimeSlot);
         $toSlot24Format = $toSlotDateTime->format('H:i');
+        $toSlot24FormatSplitter = explode(':', $toSlot24Format);
+        $toSlot24FormatClean = (trim($toSlot24FormatSplitter[1]) == '00') ? trim($toSlot24FormatSplitter[0]) : trim($toSlot24Format);
 
         $postData = [
             "ToCompany" => $customerName,
@@ -1130,7 +1134,7 @@ class SupervisorServiceHelper
             "ItemDescription" => "",
             "SpecialInstruction" => $saleOrderData['delivery_notes'],
             "BranchName" => $kerabiyaStaticValues['branch_name'],
-            "TimeSlot"  => trim($fromSlot24Format) . ' to ' . trim($toSlot24Format),
+            "TimeSlot"  => $fromSlot24FormatClean . ' to ' . $toSlot24FormatClean,
             "PreferedDate"  => $saleOrderData['delivery_date'],
         ];
 
