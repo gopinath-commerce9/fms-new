@@ -816,6 +816,8 @@ class SupervisorController extends Controller
             ]
         ]);
         $pdfResponse = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
 
         $fileName =  "aanacart_" . $saleOrderObj->increment_id . "_kerabiya_awb_" . $saleOrderObj->kerabiya_awb_number . ".pdf";
         $headers = array(

@@ -294,8 +294,8 @@ return [
             'branch_name' => 'Dubai'
         ],
         'production' => [
-            'url' => 'https://delivery.tsssmart.com/webservice/',
-            'api_key' => 'baae33c9936521d27ca2d734fa948b59',
+            'url' => 'https://booking.kerabiya.com/webservice/',
+            'api_key' => 'e810e8583ab8d819c80975cacc7adfef',
             'company_code' => 'AZ1198',
             'weight' => '10.00',
             'currency_code' => 'AED',
