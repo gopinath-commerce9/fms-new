@@ -93,7 +93,7 @@
                                                         }
                                                     }
                                                     if ($amountCollectable === false) {
-                                                        if ($statEl['collectionVerified'] == '1') {
+                                                        if ($statEl['collectionVerified'] == \Modules\Sales\Entities\SaleOrder::COLLECTION_VERIFIED_YES) {
                                                             $amountCollectionVerified = true;
                                                         }
                                                     }

@@ -376,7 +376,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
+    public function getDriverOrderStats($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $collVerifyFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
 
         $statsList = [];
 
@@ -388,6 +388,12 @@ class UserRoleServiceHelper
             $feederFlagClean = 1;
         } elseif (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '2')) {
             $feederFlagClean = 0;
+        }
+        $collVerifyFlagClean = 2;
+        if (!is_null($collVerifyFlag) && (trim($collVerifyFlag) != '') && (trim($collVerifyFlag) == '1')) {
+            $collVerifyFlagClean = SaleOrder::COLLECTION_VERIFIED_YES;
+        } elseif (!is_null($collVerifyFlag) && (trim($collVerifyFlag) != '') && (trim($collVerifyFlag) == '2')) {
+            $collVerifyFlagClean = SaleOrder::COLLECTION_VERIFIED_NO;
         }
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
@@ -508,6 +514,10 @@ class UserRoleServiceHelper
                     $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
                 } elseif (count($givenTimeSlots) > 0) {
                     $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+                }
+
+                if ($collVerifyFlagClean < 2) {
+                    $orderRequest->where('is_amount_verified', $collVerifyFlagClean);
                 }
 
                 $orderList = $orderRequest->get();
@@ -648,7 +658,7 @@ class UserRoleServiceHelper
 
     }
 
-    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
+    public function getDriverOrderStatsExcel($region = '', $apiChannel = '', $driver = [], $feederFlag = '', $collVerifyFlag = '', $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
 
         $statsList = [];
 
@@ -660,6 +670,12 @@ class UserRoleServiceHelper
             $feederFlagClean = 1;
         } elseif (!is_null($feederFlag) && (trim($feederFlag) != '') && (trim($feederFlag) == '2')) {
             $feederFlagClean = 0;
+        }
+        $collVerifyFlagClean = 2;
+        if (!is_null($collVerifyFlag) && (trim($collVerifyFlag) != '') && (trim($collVerifyFlag) == '1')) {
+            $collVerifyFlagClean = SaleOrder::COLLECTION_VERIFIED_YES;
+        } elseif (!is_null($collVerifyFlag) && (trim($collVerifyFlag) != '') && (trim($collVerifyFlag) == '2')) {
+            $collVerifyFlagClean = SaleOrder::COLLECTION_VERIFIED_NO;
         }
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
@@ -782,6 +798,10 @@ class UserRoleServiceHelper
                     $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
                 } elseif (count($givenTimeSlots) > 0) {
                     $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+                }
+
+                if ($collVerifyFlagClean < 2) {
+                    $orderRequest->where('is_amount_verified', $collVerifyFlagClean);
                 }
 
                 $orderList = $orderRequest->get();

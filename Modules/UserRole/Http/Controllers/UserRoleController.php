@@ -669,9 +669,14 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_slot_filter')) != '')
         ) ? trim($request->input('delivery_slot_filter')) : '';
 
+        $collVerifyFlag = (
+            $request->has('collection_verify_filter')
+            && (trim($request->input('collection_verify_filter')) != '')
+        ) ? trim($request->input('collection_verify_filter')) : '';
+
         if ($methodAction == 'datatable') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStats($region, $apiChannel, $drivers, $feederFlag, $collVerifyFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
 
             $filteredOrderData = [];
             $totalRec = 0;
@@ -691,6 +696,7 @@ class UserRoleController extends Controller
                     'filter_type' => $datePurpose,
                     'delivery_date' => date('Y-m-d', strtotime($record['date'])),
                     'delivery_slot' => $deliverySlot,
+                    'collection_verify' => $collVerifyFlag,
                 ]);
                 $filteredOrderData[] = [
                     'driverId' => $record['driverId'],
@@ -717,7 +723,7 @@ class UserRoleController extends Controller
 
         }  elseif ($methodAction == 'excel_sheet') {
 
-            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $drivers, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
+            $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $drivers, $feederFlag, $collVerifyFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
             if (count($filteredOrderStats) <= 0) {
                 return back()
                     ->with('error', "There is no record to export the CSV file.");
@@ -847,6 +853,11 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_slot')) != '')
         ) ? trim($request->input('delivery_slot')) : '';
 
+        $collVerifyFlag = (
+            $request->has('collection_verify')
+            && (trim($request->input('collection_verify')) != '')
+        ) ? trim($request->input('collection_verify')) : '';
+
         if (is_null($driver) || !is_array($driver) || (count($driver) == 0)) {
             return back()
                 ->with('error', 'The Driver Id input is invalid!');
@@ -878,7 +889,7 @@ class UserRoleController extends Controller
         $pageTitle = 'Fulfillment Center';
         $pageSubTitle = 'Drivers (' . implode(', ', $driverNames) . ') ' . (($datePurpose == 2) ? 'Assignments' : 'Activities') . ' on ' . date('d-m-Y', strtotime($startDate)) . '';
 
-        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $feederFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
+        $filteredOrderStats = $serviceHelper->getDriverOrderStatsExcel($region, $apiChannel, $driver, $feederFlag, $collVerifyFlag, $startDate, $endDate, $deliverySlot, $datePurpose);
         if (count($filteredOrderStats) <= 0) {
             return back()
                 ->with('error', "There is no record of Activities of the Driver.");
@@ -1159,7 +1170,7 @@ class UserRoleController extends Controller
             ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
         }*/
 
-        if ((int)$saleOrderData['is_amount_verified'] === 1) {
+        if ((int)$saleOrderData['is_amount_verified'] === SaleOrder::COLLECTION_VERIFIED_YES) {
             return response()->json([
                 'success' => false,
                 'message' => 'The Sale Order is already verified for Driver Amount Collection!',
@@ -1173,7 +1184,7 @@ class UserRoleController extends Controller
         }
 
         $affectedRows = SaleOrder::where("id", $saleOrderData['id'])->update([
-            "is_amount_verified" => 1,
+            "is_amount_verified" => SaleOrder::COLLECTION_VERIFIED_YES,
             "amount_verified_at" => date('Y-m-d H:i:s'),
             "amount_verified_by" => $processUserId
         ]);
@@ -1388,7 +1399,7 @@ class UserRoleController extends Controller
                     }
                 }
                 if ($amountCollectable === false) {
-                    if ($record['collectionVerified'] == '1') {
+                    if ($record['collectionVerified'] == SaleOrder::COLLECTION_VERIFIED_YES) {
                         $amountCollectionVerified = true;
                     }
                 }

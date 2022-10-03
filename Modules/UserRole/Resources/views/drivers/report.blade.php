@@ -88,7 +88,11 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4">
-
+                                            <select class="form-control datatable-input" id="collection_verify_filter" name="collection_verify_filter" >
+                                                <option value="" >Select Collection Verification Option</option>
+                                                <option value="1" >Verified</option>
+                                                <option value="2" >Not Verified</option>
+                                            </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />

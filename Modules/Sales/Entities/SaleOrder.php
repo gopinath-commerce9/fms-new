@@ -36,6 +36,9 @@ class SaleOrder extends Model
     const SALE_ORDER_STATUS_DELIVERED = 'delivered';
     const SALE_ORDER_STATUS_CANCELED = 'canceled';
 
+    const COLLECTION_VERIFIED_YES = 1;
+    const COLLECTION_VERIFIED_NO = 0;
+
     const KERABIYA_DELIVERY_YES = 1;
     const KERABIYA_DELIVERY_NO = 0;
 
@@ -359,6 +362,16 @@ class SaleOrder extends Model
      */
     public function isKerabiyaDelivery() {
         return ($this->is_kerabiya_delivery === self::KERABIYA_DELIVERY_YES)
+            ? true
+            : false;
+    }
+
+    /**
+     * Checks whether the Order amount collection is verified.
+     * @return bool
+     */
+    public function isCollectionVerified() {
+        return ($this->is_amount_verified === self::COLLECTION_VERIFIED_YES)
             ? true
             : false;
     }
