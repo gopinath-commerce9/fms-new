@@ -677,7 +677,7 @@ class SupervisorController extends Controller
 
         $validator = Validator::make($request->all() , [
             'box_qty' => ['required', 'numeric', 'integer', 'min:1'],
-            'store_availability' => ['required', 'array', 'size:' . $orderItemCount],
+            'store_availability' => ['required', 'array', 'max:' . $orderItemCount],
             'store_availability.*' => [Rule::in($allowedAvailabilityValues)],
         ], [
             'box_qty.required' => 'The Box Count should not be empty.',
