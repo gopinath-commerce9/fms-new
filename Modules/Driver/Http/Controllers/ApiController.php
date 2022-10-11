@@ -157,12 +157,16 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $fixTotalPaidArray = ['adminpaymentmethod'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                    $totalDueValue = 0;
                 }
                 if (
                     isset($saleOrderData['paid_amount_collections'])
@@ -335,12 +339,16 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $fixTotalPaidArray = ['adminpaymentmethod'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                    $totalDueValue = 0;
                 }
                 if (
                     isset($saleOrderData['paid_amount_collections'])
@@ -513,12 +521,16 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $fixTotalPaidArray = ['adminpaymentmethod'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                    $totalDueValue = 0;
                 }
                 if (
                     isset($saleOrderData['paid_amount_collections'])
@@ -696,12 +708,16 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                $fixTotalPaidArray = ['adminpaymentmethod'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
                 $totalDueValue = $saleOrderData['order_due'];
                 if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                     $totalDueValue = $totalOrderValue;
+                }
+                if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                    $totalDueValue = 0;
                 }
                 if (
                     isset($saleOrderData['paid_amount_collections'])
@@ -921,12 +937,16 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $fixTotalPaidArray = ['adminpaymentmethod'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
         $totalDueValue = $saleOrderData['order_due'];
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             $totalDueValue = $totalOrderValue;
+        }
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+            $totalDueValue = 0;
         }
         if (
             isset($saleOrderData['paid_amount_collections'])
@@ -1321,12 +1341,16 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $fixTotalPaidArray = ['adminpaymentmethod'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
         $totalDueValue = $saleOrderData['order_due'];
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             $totalDueValue = $totalOrderValue;
+        }
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+            $totalDueValue = 0;
         }
         if (
             isset($saleOrderData['paid_amount_collections'])
@@ -1405,12 +1429,16 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $fixTotalPaidArray = ['adminpaymentmethod'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
         $totalDueValue = $saleOrderData['order_due'];
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             $totalDueValue = $totalOrderValue;
+        }
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+            $totalDueValue = 0;
         }
         if (
             isset($saleOrderData['paid_amount_collections'])

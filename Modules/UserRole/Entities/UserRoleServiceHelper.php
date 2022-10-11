@@ -917,6 +917,7 @@ class UserRoleServiceHelper
                                 $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
 
                                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                                $fixTotalPaidArray = ['adminpaymentmethod'];
                                 $totalOrderValueOrig = (float)$orderEl['order_total'];
                                 $totalCanceledValue = (!is_null($orderEl['canceled_total'])) ? (float)$orderEl['canceled_total'] : 0;
                                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -925,6 +926,10 @@ class UserRoleServiceHelper
                                 if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalDueArray)) {
                                     $totalDueValue = $totalOrderValue;
                                     $initialPaidValue = 0;
+                                }
+                                if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                                    $totalDueValue = 0;
+                                    $initialPaidValue = $totalOrderValue;
                                 }
 
                                 $paymentMethodTitle = '';
@@ -1262,6 +1267,7 @@ class UserRoleServiceHelper
                                 $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
 
                                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                                $fixTotalPaidArray = ['adminpaymentmethod'];
                                 $totalOrderValueOrig = (float)$orderEl['order_total'];
                                 $totalCanceledValue = (!is_null($orderEl['canceled_total'])) ? (float)$orderEl['canceled_total'] : 0;
                                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -1270,6 +1276,10 @@ class UserRoleServiceHelper
                                 if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalDueArray)) {
                                     $totalDueValue = $totalOrderValue;
                                     $initialPaidValue = 0;
+                                }
+                                if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                                    $totalDueValue = 0;
+                                    $initialPaidValue = $totalOrderValue;
                                 }
 
                                 $paymentMethodTitle = '';

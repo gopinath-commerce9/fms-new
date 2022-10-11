@@ -198,9 +198,13 @@ class SalesApiServiceHelper
                     $totalDueValue = (float)$saleOrderData['order_due'];
 
                     $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                    $fixTotalPaidArray = ['adminpaymentmethod'];
                     if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                         $paymentMethodString = '';
                         $totalDueValue = $totalOrderValue;
+                    }
+                    if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                        $totalDueValue = 0;
                     }
                     $collectedAmount = $totalOrderValue - $totalDueValue;
 

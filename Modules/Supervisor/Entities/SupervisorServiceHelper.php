@@ -1048,6 +1048,7 @@ class SupervisorServiceHelper
         }
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+        $fixTotalPaidArray = ['adminpaymentmethod'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -1056,6 +1057,10 @@ class SupervisorServiceHelper
         if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
             $totalDueValue = $totalOrderValue;
             $initialPaidValue = 0;
+        }
+        if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+            $totalDueValue = 0;
+            $initialPaidValue = $totalOrderValue;
         }
 
         $paymentMethodTitle = '';
