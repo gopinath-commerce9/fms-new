@@ -639,7 +639,7 @@ class SupervisorServiceHelper
         }
         $orderStatusNew = ($allItemsAvailable) ? SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH : SaleOrder::SALE_ORDER_STATUS_ON_HOLD;
 
-        if ($allItemsAvailable) {
+        if (count($orderItemPostAQData) > 0) {
 
             $uri = $apiService->getRestApiUrl() . 'changeorderstatus';
             $params = [
@@ -697,10 +697,11 @@ class SupervisorServiceHelper
                     }
                 }
 
-                if (
-                    ($saleOrderEl['status'] === SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED)
-                    || ($saleOrderEl['status'] !== SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH)
-                ) {
+                $permittedStatusesArray = [
+                    SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
+                    SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH
+                ];
+                if (!in_array($saleOrderEl['status'], $permittedStatusesArray)) {
                     return [
                         'status' => false,
                         'message' => "Sale Order status could not update!"

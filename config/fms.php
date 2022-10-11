@@ -19,10 +19,10 @@ return [
                 'ac-1' => [
                     'id' => 'ac-1',
                     'name' => 'Magento UAT',
-                    'url' => 'https://staging.aanacart.com/',
+                    'url' => 'https://dev.aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
-                    'accessToken' => '6cxvsesia7flvsdmu9gn3z0uoaqfz2i2',
+                    'accessToken' => 'okhuely2fy5trw9srqengpn8nd3yo2u0',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
                     'authKey' => 'gopicommerce',
