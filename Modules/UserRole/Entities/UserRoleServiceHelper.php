@@ -181,15 +181,16 @@ class UserRoleServiceHelper
 
     }
 
-    public function getPickerOrderStats($region = '', $apiChannel = '', $picker = '', $startDate = '', $endDate = '') {
+    public function getPickerOrderStats($region = '', $apiChannel = '', $picker = [], $startDate = '', $endDate = '', $timeSlot = '') {
 
         $statsList = [];
 
         $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
-        $pickerClean = (!is_null($picker) && (trim($picker) != '')) ? trim($picker) : null;
+        $pickerClean = (!is_null($picker) && is_array($picker) && (count($picker) > 0)) ? $picker : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
         $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
         $fromDate = null;
         $toDate = null;
         if (!is_null($startDateClean) && !is_null($endDateClean)) {
@@ -211,7 +212,7 @@ class UserRoleServiceHelper
             $pickersArray = $pickers->mappedUsers->toArray();
             foreach($pickersArray as $userEl) {
 
-                if (!is_null($pickerClean) && ($userEl['id'] != $pickerClean)) {
+                if (!is_null($pickerClean) && !in_array($userEl['id'], $pickerClean)) {
                     continue;
                 }
 
@@ -270,6 +271,13 @@ class UserRoleServiceHelper
                     $orderRequest->whereIn('channel', array_keys($availableApiChannels));
                 }
 
+                $givenTimeSlots = $this->getDeliveryTimeSlots();
+                if (!is_null($timeSlotClean) && (trim($timeSlotClean) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlotClean), $givenTimeSlots)) {
+                    $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
+                } elseif (count($givenTimeSlots) > 0) {
+                    $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+                }
+
                 $orderList = $orderRequest->get();
 
                 if ($orderList && (count($orderList) > 0)) {
@@ -319,6 +327,7 @@ class UserRoleServiceHelper
                                 $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
                                 $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
 
+                                $currentTotalCount = 0;
                                 $currentAssignCount = 0;
                                 $currentPickedCount = 0;
                                 $currentHoldedCount = 0;
@@ -326,6 +335,7 @@ class UserRoleServiceHelper
                                     array_key_exists($currentUserId, $statsList)
                                     && array_key_exists(date('Y-m-d', strtotime($historyObj->done_at)), $statsList[$currentUserId])
                                 ) {
+                                    $currentTotalCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['totalOrders'];
                                     $currentAssignCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['assignedOrders'];
                                     $currentPickedCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['pickedOrders'];
                                     $currentHoldedCount = (int) $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))]['holdedOrders'];
@@ -341,12 +351,15 @@ class UserRoleServiceHelper
                                     }
                                 }
 
+                                $currentTotalCount++;
+
                                 if (($currentPickedCount > 0) || ($currentAssignCount > 0) || ($currentHoldedCount > 0)) {
                                     $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))] = [
                                         'pickerId' => $currentUserId,
                                         'picker' => $currentUserName,
                                         'active' => $currentUserActive,
                                         'date' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                        'totalOrders' => $currentTotalCount,
                                         'assignedOrders' => $currentAssignCount,
                                         'pickedOrders' => $currentPickedCount,
                                         'holdedOrders' => $currentHoldedCount
@@ -369,6 +382,244 @@ class UserRoleServiceHelper
         foreach ($tempStatsList as $pickerKey => $dateData) {
             foreach ($dateData as $dateKey => $reportData) {
                 $statsList[] = $reportData;
+            }
+        }
+
+        return $statsList;
+
+    }
+
+    public function getPickerOrderStatsExcel($region = '', $apiChannel = '', $picker = [], $startDate = '', $endDate = '', $timeSlot = '') {
+
+        $statsList = [];
+
+        $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
+        $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
+        $pickerClean = (!is_null($picker) && is_array($picker) && (count($picker) > 0)) ? $picker : null;
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
+        $fromDate = null;
+        $toDate = null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+        }
+
+        $availableStatuses = $this->getAvailableStatuses();
+
+        $filterableSaleOrderIds = [];
+        $filterableUserOrderIds = [];
+
+        $userRoleObj = new UserRole();
+        $pickers = $userRoleObj->allPickers();
+        if(count($pickers->mappedUsers) > 0) {
+            $pickersArray = $pickers->mappedUsers->toArray();
+            foreach($pickersArray as $userEl) {
+
+                if (!is_null($pickerClean) && !in_array($userEl['id'], $pickerClean)) {
+                    continue;
+                }
+
+                $pickedDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                $currentPickupOrders = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($fromDate)), date('Y-m-d 23:59:59', strtotime($toDate))])
+                    ->get();
+
+                if ($pickedDataList && (count($pickedDataList) > 0)) {
+                    $pickedDataArray = $pickedDataList->toArray();
+                    $pickedOrderIds = array_column($pickedDataArray, 'order_id');
+                    foreach($pickedOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
+                    }
+                }
+
+                if ($currentPickupOrders && (count($currentPickupOrders) > 0)) {
+                    $currentPickupArray = $currentPickupOrders->toArray();
+                    $currentPickupOrderIds = array_column($currentPickupArray, 'order_id');
+                    foreach($currentPickupOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
+                    }
+                }
+
+            }
+        }
+
+        if (count($filterableSaleOrderIds) > 0) {
+
+            $chunkedArraySize = 5000;
+            foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
+
+                $orderRequest = SaleOrder::select('*');
+                $orderRequest->whereIn('id', $chunkedSaleOrderIds);
+
+                $emirates = $this->getAvailableRegionsList();
+                if (!is_null($regionClean) && (trim($regionClean) != '')) {
+                    $orderRequest->where('region_id', trim($regionClean));
+                } else {
+                    $orderRequest->whereIn('region_id', array_keys($emirates));
+                }
+
+                $availableApiChannels = $this->getAllAvailableChannels();
+                if (!is_null($apiChannelClean) && (trim($apiChannelClean) != '')) {
+                    $orderRequest->where('channel', trim($apiChannelClean));
+                } else {
+                    $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+                }
+
+                $givenTimeSlots = $this->getDeliveryTimeSlots();
+                if (!is_null($timeSlotClean) && (trim($timeSlotClean) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlotClean), $givenTimeSlots)) {
+                    $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
+                } elseif (count($givenTimeSlots) > 0) {
+                    $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+                }
+
+                $orderList = $orderRequest->get();
+                if ($orderList && (count($orderList) > 0)) {
+                    $orderListArray = $orderList->toArray();
+                    foreach($orderListArray as $orderEl) {
+
+                        $pickedData = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKED)
+                            ->limit(1)->get();
+
+                        $currentPicker = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
+                            ->orderBy('done_at', 'desc')
+                            ->limit(1)->get();
+
+                        $currentPickerAssigner = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP_ASSIGN)
+                            ->orderBy('done_at', 'desc')
+                            ->limit(1)->get();
+
+                        $historyObj = null;
+                        if ($pickedData && (count($pickedData) > 0)) {
+                            $historyObj = $pickedData->first();
+                        } elseif ($currentPicker && (count($currentPicker) > 0)) {
+                            $historyObj = $currentPicker->first();
+                        }
+
+                        $assignerObj = null;
+                        if ($currentPickerAssigner && (count($currentPickerAssigner) > 0)) {
+                            $assignerObj = $currentPickerAssigner->first();
+                        }
+
+                        if (!is_null($historyObj) && !is_null($assignerObj)) {
+
+                            $canProceed = true;
+                            if (!is_null($historyObj->done_by) && !array_key_exists($historyObj->done_by, $filterableUserOrderIds)) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($historyObj->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($historyObj->done_at)))) {
+                                $canProceed = false;
+                            }
+
+                            if ($canProceed) {
+
+                                $userElQ = User::select('*')
+                                    ->where('id', $historyObj->done_by)->get();
+                                $userEl = ($userElQ) ? $userElQ->first() : $historyObj->actionDoer;
+
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+
+                                $assignerElQ = User::select('*')
+                                    ->where('id', $assignerObj->done_by)->get();
+                                $assignerEl = ($assignerElQ) ? $assignerElQ->first() : $assignerObj->actionDoer;
+
+                                $currentAssignerId = (!is_null($assignerEl)) ? $assignerEl->id : $assignerObj->done_by;
+                                $currentAssignerName = (!is_null($assignerEl)) ? $assignerEl->name : '[Deleted User]';
+                                $currentAssignerActive = (!is_null($assignerEl) && ($assignerEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+
+                                $saleOrderExtraData = [
+                                    'shipping_address' => [],
+                                ];
+
+                                $shippingAddressRequest = SaleOrderAddress::select('*')
+                                    ->where('order_id', $orderEl['id'])
+                                    ->where('type', 'shipping')
+                                    ->limit(1)
+                                    ->get();
+                                if ($shippingAddressRequest && (count($shippingAddressRequest) > 0)) {
+                                    $saleOrderExtraData['shipping_address'] = $shippingAddressRequest->first()->toArray();
+                                }
+
+                                $shipAddress = $saleOrderExtraData['shipping_address'];
+                                $customerNameString = '';
+                                $customerNameString .= (isset($shipAddress['first_name'])) ? $shipAddress['first_name'] : '';
+                                $customerNameString .= (isset($shipAddress['last_name'])) ? ' ' . $shipAddress['last_name'] : '';
+                                $customerContactString = (isset($shipAddress['contact_number'])) ? ' ' . $shipAddress['contact_number'] : '';
+                                $shipAddressString = '';
+                                $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
+                                $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
+                                $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+                                $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+                                $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
+
+                                $tempArrayRecord = [
+                                    'pickerId' => $currentUserId,
+                                    'picker' => $currentUserName,
+                                    'orderDeliveryDate' => date('Y-m-d', strtotime($orderEl['delivery_date'])),
+                                    'orderDeliverySlot' => $orderEl['delivery_time_slot'],
+                                    'pickerAssignedDate' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                    'pickerAssignedAt' => date('Y-m-d H:i:s', strtotime($historyObj->done_at)),
+                                    'pickerAssignedBy' => $currentAssignerId,
+                                    'pickerAssignerName' => $currentAssignerName,
+                                    'orderRecordId' => $orderEl['id'],
+                                    'orderId' => $orderEl['order_id'],
+                                    'orderNumber' => "#" . $orderEl['increment_id'],
+                                    'emirates' => $orderEl['region'],
+                                    'customerName' => $customerNameString,
+                                    'shippingAddress' => $shipAddressString,
+                                    'customerContact' => $customerContactString,
+                                    'orderStatus' => (array_key_exists($orderEl['order_status'], $availableStatuses)) ? $availableStatuses[$orderEl['order_status']] : $orderEl['order_status'],
+                                ];
+                                $statsList[$currentUserId][date('Y-m-d', strtotime($historyObj->done_at))][$orderEl['id']] = $tempArrayRecord;
+
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+
+        $tempStatsList = $statsList;
+        $statsList = [];
+        foreach ($tempStatsList as $pickerKey => $dateData) {
+            foreach ($dateData as $dateKey => $reportData) {
+                foreach ($reportData as $recordKey => $recordData) {
+                    $statsList[] = $recordData;
+                }
             }
         }
 

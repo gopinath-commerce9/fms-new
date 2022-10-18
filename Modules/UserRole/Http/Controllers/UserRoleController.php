@@ -426,10 +426,10 @@ class UserRoleController extends Controller
             && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
         ) ? trim($request->input('channel_filter')) : '';
 
-        $picker = (
-            $request->has('picker_filter')
-            && (trim($request->input('picker_filter')) != '')
-        ) ? trim($request->input('picker_filter')) : '';
+        $pickers = (
+            $request->has('picker_values')
+            && (trim($request->input('picker_values')) != '')
+        ) ? explode(',', trim($request->input('picker_values'))) : [];
 
         $startDate = (
             $request->has('delivery_date_start_filter')
@@ -441,7 +441,12 @@ class UserRoleController extends Controller
             && (trim($request->input('delivery_date_end_filter')) != '')
         ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
 
-        $filteredOrderStats = $serviceHelper->getPickerOrderStats($region, $apiChannel, $picker, $startDate, $endDate);
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
+        $filteredOrderStats = $serviceHelper->getPickerOrderStats($region, $apiChannel, $pickers, $startDate, $endDate, $deliverySlot);
 
         $filteredOrderData = [];
         $totalRec = 0;
@@ -454,14 +459,23 @@ class UserRoleController extends Controller
             if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
                 continue;
             }
+            $actionLinkUrl = route('roles.pickersReportViewMore', [
+                'region' => $region,
+                'channel' => $apiChannel,
+                'picker' => $record['pickerId'],
+                'delivery_date' => date('Y-m-d', strtotime($record['date'])),
+                'delivery_slot' => $deliverySlot
+            ]);
             $filteredOrderData[] = [
                 'pickerId' => $record['pickerId'],
                 'picker' => $record['picker'],
                 'active' => $record['active'],
                 'date' => date('d-m-Y', strtotime($record['date'])),
-                'assignedOrders' => $record['assignedOrders'],
-                'pickedOrders' => $record['pickedOrders'],
-                'holdedOrders' => $record['holdedOrders']
+                'totalOrders' => $record['totalOrders'],
+                'pending' => $record['assignedOrders'],
+                'holded' => $record['holdedOrders'],
+                'completed' => $record['pickedOrders'],
+                'actions' => $actionLinkUrl
             ];
         }
 
@@ -473,6 +487,102 @@ class UserRoleController extends Controller
         ];
 
         return response()->json($returnData, 200);
+
+    }
+
+    public function pickersReportViewMore(Request $request) {
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $region = (
+            $request->has('region')
+            && (trim($request->input('region')) != '')
+            && array_key_exists(trim($request->input('region')), $emirates)
+        ) ? trim($request->input('region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel')
+            && (trim($request->input('channel')) != '')
+            && array_key_exists(trim($request->input('channel')), $availableApiChannels)
+        ) ? trim($request->input('channel')) : '';
+
+        $picker = (
+            $request->has('picker')
+            && (trim($request->input('picker')) != '')
+        ) ? explode(',', trim($request->input('picker'))) : [];
+
+        $startDate = (
+            $request->has('delivery_date')
+            && (trim($request->input('delivery_date')) != '')
+        ) ? trim($request->input('delivery_date')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date')
+            && (trim($request->input('delivery_date')) != '')
+        ) ? trim($request->input('delivery_date')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot')
+            && (trim($request->input('delivery_slot')) != '')
+        ) ? trim($request->input('delivery_slot')) : '';
+
+        if (is_null($picker) || !is_array($picker) || (count($picker) == 0)) {
+            return back()
+                ->with('error', 'The Picker Id input is invalid!');
+        }
+
+        $pickerObject = User::select('*')->whereIn('id', $picker)->get();
+        if (!$pickerObject || (count($pickerObject) == 0)) {
+            return back()
+                ->with('error', 'The Picker does not exist!');
+        }
+
+        $pickerFlag = true;
+        $pickerNames = [];
+        foreach ($pickerObject as $pickerObj) {
+            if (is_null($pickerObj->mappedRole) || (count($pickerObj->mappedRole) == 0)) {
+                $pickerFlag = false;
+            } elseif (!$pickerObj->mappedRole[0]->isPicker()) {
+                $pickerFlag = false;
+            } else {
+                $pickerNames[] =  $pickerObj->name;
+            }
+        }
+
+        if ($pickerFlag === false) {
+            return back()
+                ->with('error', 'The given User is not a Picker!');
+        }
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Pickers (' . implode(', ', $pickerNames) . ') ' . 'Activities on ' . date('d-m-Y', strtotime($startDate)) . '';
+
+        $filteredOrderStats = $serviceHelper->getPickerOrderStatsExcel($region, $apiChannel, $picker, $startDate, $endDate, $deliverySlot);
+        if (count($filteredOrderStats) <= 0) {
+            return back()
+                ->with('error', "There is no record of Activities of the Picker.");
+        }
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        $givenUserData = $pickerObject;
+
+        return view('userrole::pickers.report-view', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'givenUserData',
+            'serviceHelper',
+            'emirates',
+            'availableApiChannels',
+            'filteredOrderStats',
+            'currentRole'
+        ));
 
     }
 

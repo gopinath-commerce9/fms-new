@@ -46,6 +46,14 @@ var RolePickersCustomJsBlocks = function() {
         });
     };
 
+    var select2ElementsInitiator = function () {
+
+        $('#picker_filter').select2({
+            placeholder: "Select Pickers",
+        });
+
+    };
+
     var initPickerSaleOrderReportTable = function() {
 
         var table = $('#picker_report_filter_table');
@@ -68,11 +76,21 @@ var RolePickersCustomJsBlocks = function() {
                 type: targetForm.attr('method'),
                 timeout:600000,
                 data: function(d) {
+                    var pickerValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
-                        d[val.name] = val.value;
+                        if (val.name === 'filter_action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            if (val.name === 'picker_filter') {
+                                pickerValues = pickerValues + ((pickerValues === '') ? '' : ',') + val.value;
+                            } else {
+                                d[val.name] = val.value;
+                            }
+                        }
                     });
+                    d['picker_values'] = pickerValues;
                     d['columnsDef'] = [
-                        'pickerId', 'picker', 'active', 'date', 'assignedOrders', 'pickedOrders', 'holdedOrders'
+                        'pickerId', 'picker', 'active', 'date', 'totalOrders', 'pending', 'holded', 'completed', 'actions'
                     ];
                 },
             },
@@ -81,11 +99,20 @@ var RolePickersCustomJsBlocks = function() {
                 {data: 'picker'},
                 {data: 'active'},
                 {data: 'date'},
-                {data: 'assignedOrders'},
-                {data: 'pickedOrders'},
-                {data: 'holdedOrders'},
+                {data: 'totalOrders'},
+                {data: 'pending'},
+                {data: 'holded'},
+                {data: 'completed'},
+                {data: 'actions', className: 'text-wrap', responsivePriority: -1},
             ],
             columnDefs: [{
+                targets: -1,
+                title: 'Actions',
+                orderable: false,
+                render: function(data, type, full, meta) {
+                    return '<a href="' + data + '" target="_blank">View More</a>';
+                },
+            }, {
                 targets: 2,
                 title: 'Active',
                 orderable: true,
@@ -110,13 +137,30 @@ var RolePickersCustomJsBlocks = function() {
 
     };
 
+    var initRolePickersReportViewTable = function() {
+        var table = $('#role_picker_report_view_table');
+        var dataTable = table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [10, 25, 50, 100],
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: []
+        });
+    };
+
     return {
         listPage: function(hostUrl){
             initRolePickersListTable();
         },
         reportPage: function(hostUrl){
             initPickerReportDateRangePicker();
+            select2ElementsInitiator();
             initPickerSaleOrderReportTable();
+        },
+        reportViewPage: function(hostUrl, token) {
+            initRolePickersReportViewTable();
         },
         viewPage: function(hostUrl) {
             initRolePickerOrderListTable();

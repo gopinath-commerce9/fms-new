@@ -72,6 +72,8 @@ Route::prefix('userrole')->middleware([
         ->name('roles.pickersReportList');
     Route::post('/pickers-report-filter', 'UserRoleController@pickersReportFilter')
         ->name('roles.pickersReportFilter');
+    Route::get('/pickers-report-view-more', 'UserRoleController@pickersReportViewMore')
+        ->name('roles.pickersReportViewMore');
     Route::get('/pickers/view/{pickerId}', 'UserRoleController@pickerView')
         ->name('roles.pickerView');
 
