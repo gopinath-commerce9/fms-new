@@ -125,6 +125,17 @@ return [
             'children' => null,
         ],
         [
+            'name' => 'Yango Logistics Report',
+            'path' => '/userrole/yango-logistics-report',
+            'icon' => 'fas fa-list',
+            'customIcon' => false,
+            'toolTip' => 'Yango Logistics Report',
+            'permission_type' => 'role',
+            'permission' => ['admin', 'supervisor'],
+            'active' => true,
+            'children' => null,
+        ],
+        [
             'name' => 'Update Stock',
             'path' => '/sales/stock-update',
             'icon' => 'fas fa-redo',

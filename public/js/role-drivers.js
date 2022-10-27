@@ -400,6 +400,151 @@ var RoleDriversCustomJsBlocks = function() {
         });
     };
 
+    var initYangoReportDateRangePicker = function () {
+        var apiDRPicker = $('#delivery_date_range_filter').daterangepicker({
+            buttonClasses: ' btn',
+            applyClass: 'btn-primary',
+            cancelClass: 'btn-secondary',
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
+        }, function(start, end, label) {
+            $('input#delivery_date_start_filter').val(start.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(end.format('YYYY-MM-DD'));
+        });
+        apiDRPicker.on('show.daterangepicker', function(ev, picker) {
+            //do something, like clearing an input
+            $('input#delivery_date_start_filter').val(picker.startDate.format('YYYY-MM-DD'));
+            $('input#delivery_date_end_filter').val(picker.endDate.format('YYYY-MM-DD'));
+        });
+    };
+
+    var yangoViewSelect2ElementsInitiator = function () {
+
+        $('#driver_filter').select2({
+            placeholder: "Select Drivers",
+        });
+
+    };
+
+    var initYangoSaleOrderReportTable = function() {
+
+        var table = $('#yango_report_filter_table');
+        var targetForm = $('form#filter_yango_report_form');
+        var dataTable = table.DataTable({
+            responsive: true,
+            dom: `<'row'<'col-sm-12'tr>>
+			<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 dataTables_pager'lp>>`,
+            lengthMenu: [50, 100, 200],
+            pageLength: 50,
+            order: [[0, 'asc']],
+            searchDelay: 500,
+            processing: true,
+            language: {
+                processing: '<div class="btn btn-secondary spinner spinner-dark spinner-right">Please Wait</div>',
+            },
+            serverSide: true,
+            ajax: {
+                url: targetForm.attr('action'),
+                type: targetForm.attr('method'),
+                timeout:600000,
+                data: function(d) {
+                    var driverValues = '';
+                    $.each(targetForm.serializeArray(), function(key, val) {
+                        if (val.name === 'filter_action') {
+                            d[val.name] = 'datatable';
+                        } else {
+                            if (val.name === 'driver_filter') {
+                                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+                            } else {
+                                d[val.name] = val.value;
+                            }
+                        }
+                    });
+                    d['driver_values'] = driverValues;
+                    d['columnsDef'] = [
+                        'orderNumber', 'channel', 'region', 'latitude', 'longitude', 'orderAssignmentDate', 'orderDeliveryDate', 'orderDeliverySlot', 'customerName', 'customerAddress', 'customerPhone', 'paymentMethod',
+                        'orderTotal', 'paymentStatus', 'codAmount', 'deliveryNote', 'orderStatus', 'action',
+                    ];
+                },
+            },
+            columns: [
+                {data: 'orderNumber', className: 'text-wrap'},
+                {data: 'channel', className: 'text-wrap'},
+                {data: 'region', className: 'text-wrap'},
+                {data: 'latitude', className: 'text-wrap'},
+                {data: 'longitude', className: 'text-wrap'},
+                {data: 'orderAssignmentDate', className: 'text-wrap'},
+                {data: 'orderDeliveryDate', className: 'text-wrap'},
+                {data: 'orderDeliverySlot', className: 'text-wrap'},
+                {data: 'customerName', className: 'text-wrap'},
+                {data: 'customerAddress', className: 'text-wrap'},
+                {data: 'customerPhone', className: 'text-wrap'},
+                {data: 'paymentMethod', className: 'text-wrap'},
+                {data: 'orderTotal', className: 'text-wrap'},
+                {data: 'paymentStatus', className: 'text-nowrap'},
+                {data: 'codAmount', className: 'text-wrap'},
+                {data: 'deliveryNote', className: 'text-wrap'},
+                {data: 'orderStatus', className: 'text-nowrap'},
+                {data: 'actions', className: 'text-nowrap', responsivePriority: -1},
+            ],
+            columnDefs: [{
+                targets: -1,
+                title: 'Actions',
+                orderable: false,
+                render: function(data, type, full, meta) {
+                    return '<a href="' + data + '" target="_blank">View</a>';
+                },
+            }, {
+                targets: 13,
+                title: 'Payment Status',
+                orderable: true,
+                render: function(data, type, full, meta) {
+                    return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
+                },
+            }, {
+                targets: 16,
+                title: 'Status',
+                orderable: true,
+                render: function(data, type, full, meta) {
+                    return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
+                },
+            }],
+        });
+
+        $('button#filter_yango_report_filter_btn').on('click', function(e) {
+            e.preventDefault();
+            dataTable.table().draw();
+        });
+
+        $('button#filter_yango_report_reset_btn').on('click', function(e) {
+            e.preventDefault();
+            $('.datatable-input').each(function() {
+                $(this).val('');
+            });
+            dataTable.table().draw();
+        });
+
+        $('button#filter_yango_report_excel_btn').on('click', function(e) {
+            e.preventDefault();
+            getYangoReportExcel();
+        });
+
+    };
+
+    var getYangoReportExcel = function () {
+        var targetForm = $('#filter_yango_report_form');
+        $('#filter_action').val('excel_sheet');
+        var driverValues = '';
+        $.each(targetForm.serializeArray(), function(key, val) {
+            if (val.name === 'driver_filter') {
+                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+            }
+        });
+        $('#driver_values').val(driverValues);
+        targetForm.submit();
+    };
+
     var showAlertMessage = function(message) {
         $("div.custom_alert_trigger_messages_area")
             .html('<div class="alert alert-custom alert-dark alert-light-dark fade show" role="alert">' +
@@ -437,6 +582,11 @@ var RoleDriversCustomJsBlocks = function() {
         },
         reportEditViewPage: function(hostUrl) {
             reportEditViewFormActions();
+        },
+        yangoReportPage: function(hostUrl, token) {
+            initYangoReportDateRangePicker();
+            yangoViewSelect2ElementsInitiator();
+            initYangoSaleOrderReportTable();
         },
     };
 

@@ -97,5 +97,9 @@ Route::prefix('userrole')->middleware([
         ->name('roles.feedersReportList');
     Route::post('/feeders-report-filter', 'UserRoleController@feedersReportFilter')
         ->name('roles.feedersReportFilter');
+    Route::get('/yango-logistics-report', 'UserRoleController@yangoLogisticsReportList')
+        ->name('roles.yangoLogisticsReportList');
+    Route::post('/yango-logistics-report-filter', 'UserRoleController@yangoLogisticsReportFilter')
+        ->name('roles.yangoLogisticsReportFilter');
 
 });

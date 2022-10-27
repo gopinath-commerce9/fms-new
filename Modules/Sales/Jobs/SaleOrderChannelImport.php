@@ -547,6 +547,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                 'region' => $saleOrderEl['billing_address']['region'],
                 'country_id' => $saleOrderEl['billing_address']['country_id'],
                 'post_code' => $saleOrderEl['billing_address']['postcode'],
+                'latitude' => ((array_key_exists('latitude', $saleOrderEl['billing_address'])) ? $saleOrderEl['billing_address']['latitude'] : null),
+                'longitude' => ((array_key_exists('longitude', $saleOrderEl['billing_address'])) ? $saleOrderEl['billing_address']['longitude'] : null),
                 'contact_number' => $saleOrderEl['billing_address']['telephone'],
                 'is_active' => 1
             ]);
@@ -598,6 +600,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                 'region' => $orderShippingAddress['region'],
                 'country_id' => $orderShippingAddress['country_id'],
                 'post_code' => $orderShippingAddress['postcode'],
+                'latitude' => ((array_key_exists('latitude', $orderShippingAddress)) ? $orderShippingAddress['latitude'] : null),
+                'longitude' => ((array_key_exists('longitude', $orderShippingAddress)) ? $orderShippingAddress['longitude'] : null),
                 'contact_number' => $orderShippingAddress['telephone'],
                 'is_active' => 1
             ]);

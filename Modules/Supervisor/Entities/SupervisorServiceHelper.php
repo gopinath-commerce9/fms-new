@@ -1458,6 +1458,8 @@ class SupervisorServiceHelper
                 'region' => $orderShippingAddress['region'],
                 'country_id' => $orderShippingAddress['country_id'],
                 'post_code' => $orderShippingAddress['postcode'],
+                'latitude' => ((array_key_exists('latitude', $orderShippingAddress)) ? $orderShippingAddress['latitude'] : null),
+                'longitude' => ((array_key_exists('longitude', $orderShippingAddress)) ? $orderShippingAddress['longitude'] : null),
                 'contact_number' => $orderShippingAddress['telephone'],
                 'is_active' => 1
             ]);

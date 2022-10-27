@@ -1658,4 +1658,247 @@ class UserRoleController extends Controller
 
     }
 
+    public function yangoLogisticsReportList() {
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Drivers Report - Yango Logistics';
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+
+        $todayDate = date('Y-m-d');
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+
+        $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        return view('userrole::drivers.yango-report', compact(
+            'pageTitle',
+            'pageSubTitle',
+            'emirates',
+            'todayDate',
+            'availableApiChannels',
+            'deliveryTimeSlots',
+            'serviceHelper',
+            'drivers',
+            'collectionMethods',
+            'currentRole',
+        ));
+
+    }
+
+    public function yangoLogisticsReportFilter(Request $request) {
+
+        set_time_limit(600);
+
+        $serviceHelper = new UserRoleServiceHelper();
+
+        $availableActions = ['datatable', 'excel_sheet'];
+        $methodAction = (
+            $request->has('filter_action')
+            && (trim($request->input('filter_action')) != '')
+            && in_array(trim($request->input('filter_action')), $availableActions)
+        ) ? trim($request->input('filter_action')) : 'datatable';
+
+        $dtDraw = (
+            $request->has('draw')
+            && (trim($request->input('draw')) != '')
+        ) ? (int)trim($request->input('draw')) : 1;
+
+        $dtStart = (
+            $request->has('start')
+            && (trim($request->input('start')) != '')
+        ) ? (int)trim($request->input('start')) : 0;
+
+        $dtPageLength = (
+            $request->has('length')
+            && (trim($request->input('length')) != '')
+        ) ? (int)trim($request->input('length')) : 10;
+
+        /*$emirates = config('fms.emirates');*/
+        $emirates = $serviceHelper->getAvailableRegionsList();
+        $region = (
+            $request->has('emirates_region')
+            && (trim($request->input('emirates_region')) != '')
+            && array_key_exists(trim($request->input('emirates_region')), $emirates)
+        ) ? trim($request->input('emirates_region')) : '';
+
+        $availableApiChannels = $serviceHelper->getAllAvailableChannels();
+        $apiChannel = (
+            $request->has('channel_filter')
+            && (trim($request->input('channel_filter')) != '')
+            && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
+        ) ? trim($request->input('channel_filter')) : '';
+
+        $drivers = (
+            $request->has('driver_values')
+            && (trim($request->input('driver_values')) != '')
+        ) ? explode(',', trim($request->input('driver_values'))) : [];
+
+        $startDate = (
+            $request->has('delivery_date_start_filter')
+            && (trim($request->input('delivery_date_start_filter')) != '')
+        ) ? trim($request->input('delivery_date_start_filter')) : date('Y-m-d');
+
+        $endDate = (
+            $request->has('delivery_date_end_filter')
+            && (trim($request->input('delivery_date_end_filter')) != '')
+        ) ? trim($request->input('delivery_date_end_filter')) : date('Y-m-d');
+
+        $deliverySlot = (
+            $request->has('delivery_slot_filter')
+            && (trim($request->input('delivery_slot_filter')) != '')
+        ) ? trim($request->input('delivery_slot_filter')) : '';
+
+        $datePurpose = (
+            $request->has('date_purpose_filter')
+            && (trim($request->input('date_purpose_filter')) != '')
+            && (
+                ((int)trim($request->input('date_purpose_filter')) === 1)
+                || ((int)trim($request->input('date_purpose_filter')) === 2)
+            )
+        ) ? (int)trim($request->input('date_purpose_filter')) : 1;
+
+        if ($methodAction == 'datatable') {
+
+            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot, $datePurpose);
+
+            $filteredOrderData = [];
+            $totalRec = 0;
+            $collectRecStart = $dtStart;
+            $collectRecEnd = $collectRecStart + $dtPageLength;
+            $currentRec = -1;
+            foreach ($filteredOrderStats as $record) {
+                $totalRec++;
+                $currentRec++;
+                if (($currentRec < $collectRecStart) || ($currentRec >= $collectRecEnd)) {
+                    continue;
+                }
+
+                $currentRole = null;
+                if (session()->has('authUserData')) {
+                    $sessionUser = session('authUserData');
+                    $currentRole = $sessionUser['roleCode'];
+                }
+
+                $roleUrlFragment = '';
+                if (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_ADMIN)) {
+                    $roleUrlFragment = 'admin';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_SUPERVISOR)) {
+                    $roleUrlFragment = 'supervisor';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_PICKER)) {
+                    $roleUrlFragment = 'picker';
+                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_DRIVER)) {
+                    $roleUrlFragment = 'driver';
+                }
+
+                $actionLinkUrl = (trim($roleUrlFragment) != '') ?  url('/' . trim($roleUrlFragment) . '/order-view/' . $record['orderRecordId']) : 'javascript:void(0)';
+
+                $filteredOrderData[] = [
+                    'recordId' => $record['orderRecordId'],
+                    'orderNumber' => $record['orderNumber'],
+                    'channel' => $record['channel'],
+                    'region' => $record['emirates'],
+                    'latitude' => $record['shippingLatitude'],
+                    'longitude' => $record['shippingLongitude'],
+                    'orderAssignmentDate' => $record['driverDeliveryDate'],
+                    'orderDeliveryDate' => $record['orderDeliveryDate'],
+                    'orderDeliverySlot' => $record['orderDeliverySlot'],
+                    'customerName' => $record['customerName'],
+                    'customerAddress' => $record['shippingAddress'],
+                    'customerPhone' => $record['customerContact'],
+                    'paymentMethod' => $record['paymentMethod'],
+                    'orderTotal' => number_format($record['orderTotal'], 2)  . " " . $record['orderCurrency'],
+                    'paymentStatus' => ucwords($record['paymentStatus']),
+                    'codAmount' => number_format($record['totalDue'], 2) . " " . $record['orderCurrency'],
+                    'deliveryNote' => $record['orderDeliveryNote'],
+                    'orderStatus' => ucwords($record['orderStatus']),
+                    'actions' => $actionLinkUrl
+                ];
+            }
+
+            $returnData = [
+                'draw' => $dtDraw,
+                'recordsTotal' => $totalRec,
+                'recordsFiltered' => $totalRec,
+                'data' => $filteredOrderData
+            ];
+
+            return response()->json($returnData, 200);
+
+        }  elseif ($methodAction == 'excel_sheet') {
+
+            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot, $datePurpose);
+            if (count($filteredOrderStats) <= 0) {
+                return back()
+                    ->with('error', "There is no record to export the CSV file.");
+            }
+
+            $fileName =  "yango_delivery_report_" . date('d-m-Y', strtotime($startDate)) . "_" . date('d-m-Y', strtotime($endDate)) . ".csv";
+            $headers = array(
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            );
+
+            $headingColumns = [
+                "Date",
+                "Order Id",
+                "Customer Name",
+                "Emirate",
+                "Latitude",
+                "Longitude",
+                "Phone Number",
+                "Time Slot",
+                "Customer Address",
+                "Payment Method",
+                "COD Amount",
+                "Delivery Note"
+            ];
+
+            $callback = function() use($filteredOrderStats, $headingColumns) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, array_values($headingColumns));
+                if(!empty($filteredOrderStats)) {
+                    foreach($filteredOrderStats as $row) {
+                        $rowDataArray = [
+                            date('d-m-Y', strtotime($row['orderDeliveryDate'])),
+                            $row['orderNumber'],
+                            $row['customerName'],
+                            $row['emirates'],
+                            $row['shippingLatitude'],
+                            $row['shippingLongitude'],
+                            $row['customerContact'],
+                            $row['orderDeliverySlot24'],
+                            $row['shippingAddress'],
+                            $row['paymentMethod'],
+                            number_format($row['totalDue'], 2) . " " . $row['orderCurrency'],
+                            $row['orderDeliveryNote'],
+                        ];
+                        fputcsv($file, $rowDataArray);
+                    }
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        }
+
+    }
+
 }

@@ -36,6 +36,8 @@ class SaleOrderAddress extends Model
         'region',
         'country_id',
         'post_code',
+        'latitude',
+        'longitude',
         'contact_number',
         'is_active',
     ];

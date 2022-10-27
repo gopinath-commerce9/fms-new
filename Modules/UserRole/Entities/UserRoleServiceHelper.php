@@ -1633,6 +1633,378 @@ class UserRoleServiceHelper
 
     }
 
+    public function getYangoDriverOrderStats($region = '', $apiChannel = '', $driver = [], $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '') {
+
+        $statsList = [];
+
+        $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
+        $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
+        $driverClean = (!is_null($driver) && is_array($driver) && (count($driver) > 0)) ? $driver : null;
+        $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
+        $endDateClean = (!is_null($endDate) && (trim($endDate) != '')) ? date('Y-m-d', strtotime(trim($endDate))) : null;
+        $timeSlotClean = (!is_null($timeSlot) && (trim($timeSlot) != '')) ? trim($timeSlot) : null;
+        $datePurposeClean = (!is_null($datePurpose) && (trim($datePurpose) != '') && ((trim($datePurpose) == '1') || (trim($datePurpose) == '2'))) ? (int)trim($datePurpose) : 1;
+        $fromDate = null;
+        $toDate = null;
+        if (!is_null($startDateClean) && !is_null($endDateClean)) {
+            if ($endDateClean > $startDateClean) {
+                $fromDate = $startDateClean;
+                $toDate = $endDateClean;
+            } else {
+                $fromDate = $endDateClean;
+                $toDate = $startDateClean;
+            }
+        }
+        $expandedFromDate = $fromDate;
+        $expandedToDate = $toDate;
+        if ($datePurposeClean == '1') {
+            $expandedFromDate = date('Y-m-d', strtotime(trim($fromDate) . ' - 2 days'));
+            $expandedToDate = date('Y-m-d', strtotime(trim($toDate) . ' + 2 days'));
+        }
+
+        $availableStatuses = $this->getAvailableStatuses();
+
+        $filterableSaleOrderIds = [];
+        $filterableUserOrderIds = [];
+
+        $userRoleObj = new UserRole();
+        $drivers = $userRoleObj->allDrivers();
+        if(count($drivers->mappedUsers) > 0) {
+            $driversArray = $drivers->mappedUsers->toArray();
+            foreach($driversArray as $userEl) {
+
+                if (!is_null($driverClean) && !in_array($userEl['id'], $driverClean)) {
+                    continue;
+                }
+
+                $deliveredDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($expandedFromDate)), date('Y-m-d 23:59:59', strtotime($expandedToDate))])
+                    ->get();
+
+                $canceledDataList = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($expandedFromDate)), date('Y-m-d 23:59:59', strtotime($expandedToDate))])
+                    ->get();
+
+                $currentDeliveryOrders = SaleOrderProcessHistory::select('*')
+                    ->where('done_by', $userEl['id'])
+                    ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                    ->whereBetween('done_at', [date('Y-m-d 00:00:00', strtotime($expandedFromDate)), date('Y-m-d 23:59:59', strtotime($expandedToDate))])
+                    ->get();
+
+                if ($deliveredDataList && (count($deliveredDataList) > 0)) {
+                    $deliveredDataArray = $deliveredDataList->toArray();
+                    $deliveredOrderIds = array_column($deliveredDataArray, 'order_id');
+                    foreach($deliveredOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
+                    }
+                }
+
+                if ($canceledDataList && (count($canceledDataList) > 0)) {
+                    $canceledDataArray = $canceledDataList->toArray();
+                    $canceledOrderIds = array_column($canceledDataArray, 'order_id');
+                    foreach($canceledOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
+                    }
+                }
+
+                if ($currentDeliveryOrders && (count($currentDeliveryOrders) > 0)) {
+                    $currentDeliveryArray = $currentDeliveryOrders->toArray();
+                    $currentDeliveryOrderIds = array_column($currentDeliveryArray, 'order_id');
+                    foreach($currentDeliveryOrderIds as $orderIdEl) {
+                        $filterableSaleOrderIds[] = $orderIdEl;
+                        $filterableUserOrderIds[$userEl['id']][] = $orderIdEl;
+                    }
+                }
+
+            }
+        }
+
+        if (count($filterableSaleOrderIds) > 0) {
+
+            $chunkedArraySize = 5000;
+            foreach (array_chunk($filterableSaleOrderIds, $chunkedArraySize) as $chunkedKey => $chunkedSaleOrderIds) {
+
+                $orderRequest = SaleOrder::select('*');
+                $orderRequest->whereIn('id', $chunkedSaleOrderIds);
+
+                $emirates = $this->getAvailableRegionsList();
+                if (!is_null($regionClean) && (trim($regionClean) != '')) {
+                    $orderRequest->where('region_id', trim($regionClean));
+                } else {
+                    $orderRequest->whereIn('region_id', array_keys($emirates));
+                }
+
+                $availableApiChannels = $this->getAllAvailableChannels();
+                if (!is_null($apiChannelClean) && (trim($apiChannelClean) != '')) {
+                    $orderRequest->where('channel', trim($apiChannelClean));
+                } else {
+                    $orderRequest->whereIn('channel', array_keys($availableApiChannels));
+                }
+
+                $givenTimeSlots = $this->getDeliveryTimeSlots();
+                if (!is_null($timeSlotClean) && (trim($timeSlotClean) != '') && (count($givenTimeSlots) > 0) && in_array(trim($timeSlotClean), $givenTimeSlots)) {
+                    $orderRequest->where('delivery_time_slot', trim($timeSlotClean));
+                } elseif (count($givenTimeSlots) > 0) {
+                    $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
+                }
+
+                if ($datePurposeClean == '1') {
+                    $orderRequest->whereBetween('delivery_date', [$fromDate, $toDate]);
+                }
+
+                $orderList = $orderRequest->get();
+                if ($orderList && (count($orderList) > 0)) {
+                    $orderListArray = $orderList->toArray();
+                    foreach($orderListArray as $orderEl) {
+
+                        $deliveredData = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERED)
+                            ->limit(1)->get();
+
+                        $canceledData = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_CANCELED)
+                            ->limit(1)->get();
+
+                        $currentDriver = SaleOrderProcessHistory::select('*')
+                            ->where('order_id', $orderEl['id'])
+                            ->where('action', SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
+                            ->orderBy('done_at', 'desc')
+                            ->limit(1)->get();
+
+                        $deliveryHistory = null;
+                        if ($currentDriver && (count($currentDriver) > 0)) {
+                            $deliveryHistory = $currentDriver->first();
+                        }
+
+                        $historyObj = null;
+                        if ($deliveredData && (count($deliveredData) > 0)) {
+                            $historyObj = $deliveredData->first();
+                        } elseif ($canceledData && (count($canceledData) > 0)) {
+                            $historyObj = $canceledData->first();
+                        } else {
+                            $historyObj = $deliveryHistory;
+                        }
+
+                        $filterHistory = $historyObj;
+
+                        if (!is_null($deliveryHistory) && !is_null($historyObj) && !is_null($filterHistory)) {
+
+                            $canProceed = true;
+                            if (!is_null($filterHistory->done_by) && !array_key_exists($filterHistory->done_by, $filterableUserOrderIds)) {
+                                $canProceed = false;
+                            }
+
+                            if ($datePurposeClean == '2') {
+                                if (!is_null($fromDate) && (date('Y-m-d', strtotime($fromDate)) > date('Y-m-d', strtotime($filterHistory->done_at)))) {
+                                    $canProceed = false;
+                                }
+
+                                if (!is_null($toDate) && (date('Y-m-d', strtotime($toDate)) < date('Y-m-d', strtotime($filterHistory->done_at)))) {
+                                    $canProceed = false;
+                                }
+                            }
+
+                            if ($canProceed) {
+
+                                $userElQ = User::select('*')
+                                    ->where('id', $filterHistory->done_by)->get();
+                                $userEl = ($userElQ) ? $userElQ->first() : $filterHistory->actionDoer;
+
+                                $currentUserId = (!is_null($userEl)) ? $userEl->id : $historyObj->done_by;
+                                $currentUserName = (!is_null($userEl)) ? $userEl->name : '[Deleted User]';
+                                $currentUserActive = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_active == '1')) ? 'Yes': 'No';
+                                $currentUserFeeder = (!is_null($userEl) && ($userEl->mappedRole->first()->pivot->is_feeder_driver == '1')) ? 'Yes': 'No';
+
+                                $saleOrderExtraData = [
+                                    'shipping_address' => [],
+                                    'payment_data' => [],
+                                    'paid_amount_collections' => [],
+                                ];
+
+                                $shippingAddressRequest = SaleOrderAddress::select('*')
+                                    ->where('order_id', $orderEl['id'])
+                                    ->where('type', 'shipping')
+                                    ->limit(1)
+                                    ->get();
+                                if ($shippingAddressRequest && (count($shippingAddressRequest) > 0)) {
+                                    $saleOrderExtraData['shipping_address'] = $shippingAddressRequest->first()->toArray();
+                                }
+
+                                $paymentDataRequest = SaleOrderPayment::select('*')
+                                    ->where('order_id', $orderEl['id'])
+                                    ->get();
+                                if ($paymentDataRequest && (count($paymentDataRequest) > 0)) {
+                                    $saleOrderExtraData['payment_data'] = $paymentDataRequest->toArray();
+                                }
+
+                                $paidAmountCollectionRequest = SaleOrderAmountCollection::select('*')
+                                    ->where('order_id', $orderEl['id'])
+                                    ->where('status',  SaleOrderAmountCollection::PAYMENT_COLLECTION_STATUS_PAID)
+                                    ->get();
+                                if ($paidAmountCollectionRequest && (count($paidAmountCollectionRequest) > 0)) {
+                                    $saleOrderExtraData['paid_amount_collections'] = $paidAmountCollectionRequest->toArray();
+                                }
+
+                                $shipAddress = $saleOrderExtraData['shipping_address'];
+                                $customerNameString = '';
+                                $customerNameString .= (isset($shipAddress['first_name'])) ? $shipAddress['first_name'] : '';
+                                $customerNameString .= (isset($shipAddress['last_name'])) ? ' ' . $shipAddress['last_name'] : '';
+                                $customerContactString = (isset($shipAddress['contact_number'])) ? ' ' . $shipAddress['contact_number'] : '';
+                                $shipAddressString = '';
+                                $shipAddressString .= (isset($shipAddress['company'])) ? $shipAddress['company'] . ' ' : '';
+                                $shipAddressString .= (isset($shipAddress['address_1'])) ? $shipAddress['address_1'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_2'])) ? ', ' . $shipAddress['address_2'] : '';
+                                $shipAddressString .= (isset($shipAddress['address_3'])) ? ', ' . $shipAddress['address_3'] : '';
+                                $shipAddressString .= (isset($shipAddress['city'])) ? ', ' . $shipAddress['city'] : '';
+                                $shipAddressString .= (isset($shipAddress['region'])) ? ', ' . $shipAddress['region'] : '';
+                                $shipAddressString .= (isset($shipAddress['post_code'])) ? ', ' . $shipAddress['post_code'] : '';
+                                $shippingLatitude = (isset($shipAddress['latitude'])) ? ', ' . $shipAddress['latitude'] : '';
+                                $shippingLongitude = (isset($shipAddress['longitude'])) ? ', ' . $shipAddress['longitude'] : '';
+
+                                $timeSlotSplitter = explode('-', $orderEl['delivery_time_slot'], 2);
+                                $fromTimeSlot = trim($timeSlotSplitter[0]);
+                                $toTimeSlot = trim($timeSlotSplitter[1]);
+
+                                $fromSlotDateTime = new \DateTime($fromTimeSlot);
+                                $fromSlot24Format = $fromSlotDateTime->format('H:i');
+                                $fromSlot24FormatSplitter = explode(':', $fromSlot24Format);
+                                /*$fromSlot24FormatClean = (trim($fromSlot24FormatSplitter[1]) == '00') ? trim($fromSlot24FormatSplitter[0]) : trim($fromSlot24Format);*/
+                                $fromSlot24FormatClean = trim($fromSlot24Format);
+
+                                $toSlotDateTime = new \DateTime($toTimeSlot);
+                                $toSlot24Format = $toSlotDateTime->format('H:i');
+                                $toSlot24FormatSplitter = explode(':', $toSlot24Format);
+                                /*$toSlot24FormatClean = (trim($toSlot24FormatSplitter[1]) == '00') ? trim($toSlot24FormatSplitter[0]) : trim($toSlot24Format);*/
+                                $toSlot24FormatClean = trim($toSlot24Format);
+
+                                $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
+                                $fixTotalPaidArray = ['adminpaymentmethod'];
+                                $totalOrderValueOrig = (float)$orderEl['order_total'];
+                                $totalCanceledValue = (!is_null($orderEl['canceled_total'])) ? (float)$orderEl['canceled_total'] : 0;
+                                $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
+                                $totalDueValue = $orderEl['order_due'];
+                                $initialPaidValue = (float)$orderEl['order_total'] - (float)$orderEl['order_due'];
+                                if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalDueArray)) {
+                                    $totalDueValue = $totalOrderValue;
+                                    $initialPaidValue = 0;
+                                }
+                                if (in_array($saleOrderExtraData['payment_data'][0]['method'], $fixTotalPaidArray)) {
+                                    $totalDueValue = 0;
+                                    $initialPaidValue = $totalOrderValue;
+                                }
+
+                                $paymentMethodTitle = '';
+                                $payInfoLoopTargetLabel = 'method_title';
+                                if (isset($saleOrderExtraData['payment_data'][0]['extra_info'])) {
+                                    $paymentAddInfo = json5_decode($saleOrderExtraData['payment_data'][0]['extra_info'], true);
+                                    if (is_array($paymentAddInfo) && (count($paymentAddInfo) > 0)) {
+                                        foreach ($paymentAddInfo as $paymentInfoEl) {
+                                            if ($paymentInfoEl['key'] == $payInfoLoopTargetLabel) {
+                                                $paymentMethodTitle = $paymentInfoEl['value'];
+                                            }
+                                        }
+                                    }
+                                }
+
+                                $amountCollectionData = [];
+                                $totalCollectedAmount = 0;
+                                foreach(SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS as $cMethod) {
+                                    $amountCollectionData[$cMethod] = 0;
+                                }
+
+                                if (count($saleOrderExtraData['paid_amount_collections']) > 0) {
+                                    foreach ($saleOrderExtraData['paid_amount_collections'] as $paidCollEl) {
+                                        $amountCollectionData[$paidCollEl['method']] += (float) $paidCollEl['amount'];
+                                        $totalCollectedAmount += (float) $paidCollEl['amount'];
+                                        $totalDueValue -= (float) $paidCollEl['amount'];
+                                    }
+                                }
+
+                                $paymentStatus = '';
+                                $epsilon = 0.00001;
+                                if (!(abs($totalOrderValue - 0) < $epsilon)) {
+                                    if (abs($totalDueValue - 0) < $epsilon) {
+                                        $paymentStatus = 'paid';
+                                    } else {
+                                        if ($totalDueValue < 0) {
+                                            $paymentStatus = 'overpaid';
+                                        } else {
+                                            $paymentStatus = 'due';
+                                        }
+                                    }
+                                }
+
+                                $tempArrayRecord = [
+                                    'driverId' => $currentUserId,
+                                    'driver' => $currentUserName,
+                                    'orderDeliveryDate' => date('Y-m-d', strtotime($orderEl['delivery_date'])),
+                                    'orderDeliverySlot' => $orderEl['delivery_time_slot'],
+                                    'orderDeliverySlot24' => $fromSlot24FormatClean . ' - ' . $toSlot24FormatClean,
+                                    'orderDeliveryNote' => $orderEl['delivery_notes'],
+                                    'driverAssignedDate' => date('Y-m-d', strtotime($deliveryHistory->done_at)),
+                                    'driverDeliveryDate' => date('Y-m-d', strtotime($historyObj->done_at)),
+                                    'channel' => $availableApiChannels[$orderEl['channel']]['name'],
+                                    'orderRecordId' => $orderEl['id'],
+                                    'orderId' => $orderEl['order_id'],
+                                    'orderNumber' => "#" . $orderEl['increment_id'],
+                                    'emirates' => $orderEl['region'],
+                                    'customerName' => $customerNameString,
+                                    'shippingAddress' => $shipAddressString,
+                                    'shippingLatitude' => $shippingLatitude,
+                                    'shippingLongitude' => $shippingLongitude,
+                                    'customerContact' => $customerContactString,
+                                    'orderStatus' => (array_key_exists($orderEl['order_status'], $availableStatuses)) ? $availableStatuses[$orderEl['order_status']] : $orderEl['order_status'],
+                                    'orderTotal' => $totalOrderValue,
+                                    'paymentMethod' => (trim($paymentMethodTitle) != '') ? $paymentMethodTitle : 'Online',
+                                    'paymentMethodCode' => $saleOrderExtraData['payment_data'][0]['method'],
+                                    'initialPay' => $initialPaidValue,
+                                    'collectedAmount' => $totalCollectedAmount,
+                                    'totalPaid' => ($initialPaidValue + $totalCollectedAmount),
+                                    'totalDue' => $totalDueValue,
+                                    'orderCurrency' => $orderEl['order_currency'],
+                                    'paymentStatus' => $paymentStatus,
+                                    'collectionVerified' => $orderEl['is_amount_verified'],
+                                    'collectionVerifiedAt' => $orderEl['amount_verified_at'],
+                                    'collectionVerifiedBy' => $orderEl['amount_verified_by'],
+                                ];
+                                foreach ($amountCollectionData as $collectionKey => $collectionValue) {
+                                    $tempArrayRecord[$collectionKey] = $collectionValue . " " . $orderEl['order_currency'];
+                                }
+                                $statsList[$currentUserId][date('Y-m-d', strtotime($filterHistory->done_at))][$orderEl['id']] = $tempArrayRecord;
+
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+
+        $tempStatsList = $statsList;
+        $statsList = [];
+        foreach ($tempStatsList as $driverKey => $dateData) {
+            foreach ($dateData as $dateKey => $reportData) {
+                foreach ($reportData as $recordKey => $recordData) {
+                    $statsList[] = $recordData;
+                }
+            }
+        }
+
+        return $statsList;
+
+    }
+
     public function getFileUrl($path = '') {
         return $this->baseService->getFileUrl($path);
     }
