@@ -421,8 +421,8 @@ var RoleDriversCustomJsBlocks = function() {
 
     var yangoViewSelect2ElementsInitiator = function () {
 
-        $('#driver_filter').select2({
-            placeholder: "Select Drivers",
+        $('#order_status_filter').select2({
+            placeholder: "Select Order Statuses",
         });
 
     };
@@ -449,21 +449,21 @@ var RoleDriversCustomJsBlocks = function() {
                 type: targetForm.attr('method'),
                 timeout:600000,
                 data: function(d) {
-                    var driverValues = '';
+                    var orderStatusValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'filter_action') {
                             d[val.name] = 'datatable';
                         } else {
-                            if (val.name === 'driver_filter') {
-                                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+                            if (val.name === 'order_status_filter') {
+                                orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
                             } else {
                                 d[val.name] = val.value;
                             }
                         }
                     });
-                    d['driver_values'] = driverValues;
+                    d['order_status_values'] = orderStatusValues;
                     d['columnsDef'] = [
-                        'orderNumber', 'channel', 'region', 'latitude', 'longitude', 'orderAssignmentDate', 'orderDeliveryDate', 'orderDeliverySlot', 'customerName', 'customerAddress', 'customerPhone', 'paymentMethod',
+                        'orderNumber', 'channel', 'region', 'latitude', 'longitude', 'orderDeliveryDate', 'orderDeliverySlot', 'customerName', 'customerAddress', 'customerPhone', 'paymentMethod',
                         'orderTotal', 'paymentStatus', 'codAmount', 'deliveryNote', 'orderStatus', 'action',
                     ];
                 },
@@ -474,7 +474,6 @@ var RoleDriversCustomJsBlocks = function() {
                 {data: 'region', className: 'text-wrap'},
                 {data: 'latitude', className: 'text-wrap'},
                 {data: 'longitude', className: 'text-wrap'},
-                {data: 'orderAssignmentDate', className: 'text-wrap'},
                 {data: 'orderDeliveryDate', className: 'text-wrap'},
                 {data: 'orderDeliverySlot', className: 'text-wrap'},
                 {data: 'customerName', className: 'text-wrap'},
@@ -496,14 +495,14 @@ var RoleDriversCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View</a>';
                 },
             }, {
-                targets: 13,
+                targets: 12,
                 title: 'Payment Status',
                 orderable: true,
                 render: function(data, type, full, meta) {
                     return '<span class="label label-lg font-weight-bold label-light-primary label-inline">' + data + '</span>';
                 },
             }, {
-                targets: 16,
+                targets: 15,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {
@@ -522,6 +521,9 @@ var RoleDriversCustomJsBlocks = function() {
             $('.datatable-input').each(function() {
                 $(this).val('');
             });
+            $('.datatable-input-multiselect').each(function() {
+                $(this).val('').trigger('change');
+            });
             dataTable.table().draw();
         });
 
@@ -535,13 +537,13 @@ var RoleDriversCustomJsBlocks = function() {
     var getYangoReportExcel = function () {
         var targetForm = $('#filter_yango_report_form');
         $('#filter_action').val('excel_sheet');
-        var driverValues = '';
+        var orderStatusValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
-            if (val.name === 'driver_filter') {
-                driverValues = driverValues + ((driverValues === '') ? '' : ',') + val.value;
+            if (val.name === 'order_status_filter') {
+                orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             }
         });
-        $('#driver_values').val(driverValues);
+        $('#order_status_values').val(orderStatusValues);
         targetForm.submit();
     };
 

@@ -13,7 +13,7 @@
 
                     <div class="card-header flex-wrap border-0 pt-6 pb-0">
                         <div class="card-title">
-                            <h3 class="card-label">Drivers Report Filter</h3>
+                            <h3 class="card-label">Sale Orders Report Filter</h3>
                         </div>
                         <div class="card-toolbar">
 
@@ -47,14 +47,10 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4">
-                                            <select class="form-control datatable-input" id="driver_filter" name="driver_filter" multiple>
-                                                @if(count($drivers->mappedUsers) > 0)
-                                                    @foreach($drivers->mappedUsers as $userEl)
-                                                        @if($userEl->pivot->is_feeder_driver == '1')
-                                                            <option value="{{ $userEl->id }}" >{{ $userEl->name }}</option>
-                                                        @endif
-                                                    @endforeach
-                                                @endif
+                                            <select class="form-control datatable-input-multiselect" id="order_status_filter" name="order_status_filter" multiple>
+                                                @foreach($availableStatuses as $statusKey => $statusEl)
+                                                    <option value="{{ $statusKey }}" >{{ $statusEl }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -74,23 +70,8 @@
                                             </select>
                                         </div>
                                         <div class="col-lg-4 text-right">
-                                            <select class="form-control" id="date_purpose_filter" name="date_purpose_filter" >
-                                                <option value="1" selected>Order Delivery Date Based</option>
-                                                <option value="2" >Driver Delivery Date Based</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group row">
-                                        <div class="col-lg-4">
-
-                                        </div>
-                                        <div class="col-lg-4">
-
-                                        </div>
-                                        <div class="col-lg-4 text-right">
                                             <input type="hidden" name="filter_action" id="filter_action" value="datatable" />
-                                            <input type="hidden" name="driver_values" id="driver_values" value="" />
+                                            <input type="hidden" name="order_status_values" id="order_status_values" value="" />
                                             <button type="button" id="filter_yango_report_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                 <span><i class="la la-search"></i>Search</span>
                                             </button>
@@ -125,7 +106,7 @@
 
                     <div class="card-header flex-wrap border-0 pt-6 pb-0">
                         <div class="card-title">
-                            <h3 class="card-label">Drivers Report Result</h3>
+                            <h3 class="card-label">Sale Orders Report Result</h3>
                         </div>
                         <div class="card-toolbar">
 
@@ -148,7 +129,6 @@
                                                 <th>Emirates</th>
                                                 <th>Latitude</th>
                                                 <th>Longitude</th>
-                                                <th>Driver Delivery Date</th>
                                                 <th>Order Delivery Date</th>
                                                 <th>Order Time Slot</th>
                                                 <th>Customer Name</th>

@@ -1673,15 +1673,26 @@ class UserRoleController extends Controller
 
         $todayDate = date('Y-m-d');
 
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
 
         $collectionMethods = SaleOrderAmountCollection::PAYMENT_COLLECTION_METHODS;
 
-        $currentRole = null;
-        if (session()->has('authUserData')) {
-            $sessionUser = session('authUserData');
-            $currentRole = $sessionUser['roleCode'];
+        $availableStatuses = [];
+        if (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_ADMIN)) {
+            $availableStatuses = $serviceHelper->getAvailableStatuses();
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_SUPERVISOR)) {
+            $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_PICKER)) {
+            $availableStatuses = $serviceHelper->getPickersAllowedStatuses();
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_DRIVER)) {
+            $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
         }
 
         return view('userrole::drivers.yango-report', compact(
@@ -1690,6 +1701,7 @@ class UserRoleController extends Controller
             'emirates',
             'todayDate',
             'availableApiChannels',
+            'availableStatuses',
             'deliveryTimeSlots',
             'serviceHelper',
             'drivers',
@@ -1704,6 +1716,28 @@ class UserRoleController extends Controller
         set_time_limit(600);
 
         $serviceHelper = new UserRoleServiceHelper();
+
+        $currentRole = null;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $currentRole = $sessionUser['roleCode'];
+        }
+
+        $availableStatuses = [];
+        $roleUrlFragment = '';
+        if (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_ADMIN)) {
+            $availableStatuses = $serviceHelper->getAvailableStatuses();
+            $roleUrlFragment = 'admin';
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_SUPERVISOR)) {
+            $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
+            $roleUrlFragment = 'supervisor';
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_PICKER)) {
+            $availableStatuses = $serviceHelper->getPickersAllowedStatuses();
+            $roleUrlFragment = 'picker';
+        } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_DRIVER)) {
+            $availableStatuses = $serviceHelper->getDriversAllowedStatuses();
+            $roleUrlFragment = 'driver';
+        }
 
         $availableActions = ['datatable', 'excel_sheet'];
         $methodAction = (
@@ -1742,10 +1776,10 @@ class UserRoleController extends Controller
             && array_key_exists(trim($request->input('channel_filter')), $availableApiChannels)
         ) ? trim($request->input('channel_filter')) : '';
 
-        $drivers = (
-            $request->has('driver_values')
-            && (trim($request->input('driver_values')) != '')
-        ) ? explode(',', trim($request->input('driver_values'))) : [];
+        $orderStatus = (
+            $request->has('order_status_values')
+            && (trim($request->input('order_status_values')) != '')
+        ) ? explode(',', trim($request->input('order_status_values'))) : [];
 
         $startDate = (
             $request->has('delivery_date_start_filter')
@@ -1773,7 +1807,7 @@ class UserRoleController extends Controller
 
         if ($methodAction == 'datatable') {
 
-            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot, $datePurpose);
+            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot, $datePurpose, $currentRole);
 
             $filteredOrderData = [];
             $totalRec = 0;
@@ -1787,23 +1821,6 @@ class UserRoleController extends Controller
                     continue;
                 }
 
-                $currentRole = null;
-                if (session()->has('authUserData')) {
-                    $sessionUser = session('authUserData');
-                    $currentRole = $sessionUser['roleCode'];
-                }
-
-                $roleUrlFragment = '';
-                if (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_ADMIN)) {
-                    $roleUrlFragment = 'admin';
-                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_SUPERVISOR)) {
-                    $roleUrlFragment = 'supervisor';
-                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_PICKER)) {
-                    $roleUrlFragment = 'picker';
-                } elseif (!is_null($currentRole) && ($currentRole === UserRole::USER_ROLE_DRIVER)) {
-                    $roleUrlFragment = 'driver';
-                }
-
                 $actionLinkUrl = (trim($roleUrlFragment) != '') ?  url('/' . trim($roleUrlFragment) . '/order-view/' . $record['orderRecordId']) : 'javascript:void(0)';
 
                 $filteredOrderData[] = [
@@ -1813,7 +1830,6 @@ class UserRoleController extends Controller
                     'region' => $record['emirates'],
                     'latitude' => $record['shippingLatitude'],
                     'longitude' => $record['shippingLongitude'],
-                    'orderAssignmentDate' => $record['driverDeliveryDate'],
                     'orderDeliveryDate' => $record['orderDeliveryDate'],
                     'orderDeliverySlot' => $record['orderDeliverySlot'],
                     'customerName' => $record['customerName'],
@@ -1840,7 +1856,7 @@ class UserRoleController extends Controller
 
         }  elseif ($methodAction == 'excel_sheet') {
 
-            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $drivers, $startDate, $endDate, $deliverySlot, $datePurpose);
+            $filteredOrderStats = $serviceHelper->getYangoDriverOrderStats($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot, $datePurpose, $currentRole);
             if (count($filteredOrderStats) <= 0) {
                 return back()
                     ->with('error', "There is no record to export the CSV file.");
