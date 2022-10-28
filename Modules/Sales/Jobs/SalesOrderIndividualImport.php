@@ -297,7 +297,31 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
     private function getOrderDetailsById(string $orderId = ''): array
     {
 
+        if (is_null($orderId) || (trim($orderId) == '') || !is_numeric(trim($orderId)) || ((int) trim($orderId) <= 0)) {
+            return [];
+        }
+
         $uri = $this->restApiService->getRestApiUrl() . 'orders/' . $orderId;
+        $apiResult = $this->restApiService->processGetApi($uri);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
+    /**
+     * Fetch the Sale Order Customer details from the API Channel.
+     *
+     * @param string $customerId
+     *
+     * @return array
+     */
+    private function getCustomerDetailsById($customerId = ''): array {
+
+        if (is_null($customerId) || (trim($customerId) == '') || !is_numeric(trim($customerId)) || ((int) trim($customerId) <= 0)) {
+            return [];
+        }
+
+        $uri = $this->restApiService->getRestApiUrl() . 'customers/' . $customerId;
         $apiResult = $this->restApiService->processGetApi($uri);
 
         return ($apiResult['status']) ? $apiResult['response'] : [];
@@ -516,6 +540,31 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
 
         try {
 
+            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id']);
+            $latitude = null;
+            $longitude = null;
+            $addressId = $saleOrderEl['billing_address']['customer_address_id'];
+            if (is_array($customerData) && (count($customerData) > 0)) {
+                if (array_key_exists('addresses', $customerData) && is_array($customerData['addresses']) && (count($customerData['addresses']) > 0)) {
+                    $customerAddressList = $customerData['addresses'];
+                    foreach ($customerAddressList as $currentAddressEl) {
+                        if ($currentAddressEl['id'] == $addressId) {
+                            $addressCustAttrBase = (array_key_exists('custom_attributes', $currentAddressEl) && (count($currentAddressEl['custom_attributes']) > 0)) ? $currentAddressEl['custom_attributes'] : [];
+                            $addressCustAttr = [];
+                            foreach ($addressCustAttrBase as $attrObj) {
+                                $addressCustAttr[$attrObj['attribute_code']] = $attrObj['value'];
+                            }
+                            if (array_key_exists('latitude', $addressCustAttr) && !is_null($addressCustAttr['latitude'])) {
+                                $latitude = $addressCustAttr['latitude'];
+                            }
+                            if (array_key_exists('longitude', $addressCustAttr) && !is_null($addressCustAttr['longitude'])) {
+                                $longitude = $addressCustAttr['longitude'];
+                            }
+                        }
+                    }
+                }
+            }
+
             $billingAddressObj = SaleOrderAddress::firstOrCreate([
                 'order_id' => $saleOrderObj->id,
                 'address_id' => $saleOrderEl['billing_address']['entity_id'],
@@ -534,8 +583,8 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
                 'region' => $saleOrderEl['billing_address']['region'],
                 'country_id' => $saleOrderEl['billing_address']['country_id'],
                 'post_code' => $saleOrderEl['billing_address']['postcode'],
-                'latitude' => ((array_key_exists('latitude', $saleOrderEl['billing_address'])) ? $saleOrderEl['billing_address']['latitude'] : null),
-                'longitude' => ((array_key_exists('longitude', $saleOrderEl['billing_address'])) ? $saleOrderEl['billing_address']['longitude'] : null),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'contact_number' => $saleOrderEl['billing_address']['telephone'],
                 'is_active' => 1
             ]);
@@ -569,6 +618,31 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id']);
+            $latitude = null;
+            $longitude = null;
+            $addressId = $orderShippingAddress['customer_address_id'];
+            if (is_array($customerData) && (count($customerData) > 0)) {
+                if (array_key_exists('addresses', $customerData) && is_array($customerData['addresses']) && (count($customerData['addresses']) > 0)) {
+                    $customerAddressList = $customerData['addresses'];
+                    foreach ($customerAddressList as $currentAddressEl) {
+                        if ($currentAddressEl['id'] == $addressId) {
+                            $addressCustAttrBase = (array_key_exists('custom_attributes', $currentAddressEl) && (count($currentAddressEl['custom_attributes']) > 0)) ? $currentAddressEl['custom_attributes'] : [];
+                            $addressCustAttr = [];
+                            foreach ($addressCustAttrBase as $attrObj) {
+                                $addressCustAttr[$attrObj['attribute_code']] = $attrObj['value'];
+                            }
+                            if (array_key_exists('latitude', $addressCustAttr) && !is_null($addressCustAttr['latitude'])) {
+                                $latitude = $addressCustAttr['latitude'];
+                            }
+                            if (array_key_exists('longitude', $addressCustAttr) && !is_null($addressCustAttr['longitude'])) {
+                                $longitude = $addressCustAttr['longitude'];
+                            }
+                        }
+                    }
+                }
+            }
+
             $shippingAddressObj = SaleOrderAddress::firstOrCreate([
                 'order_id' => $saleOrderObj->id,
                 'address_id' => $orderShippingAddress['entity_id'],
@@ -587,8 +661,8 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
                 'region' => $orderShippingAddress['region'],
                 'country_id' => $orderShippingAddress['country_id'],
                 'post_code' => $orderShippingAddress['postcode'],
-                'latitude' => ((array_key_exists('latitude', $orderShippingAddress)) ? $orderShippingAddress['latitude'] : null),
-                'longitude' => ((array_key_exists('longitude', $orderShippingAddress)) ? $orderShippingAddress['longitude'] : null),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'contact_number' => $orderShippingAddress['telephone'],
                 'is_active' => 1
             ]);

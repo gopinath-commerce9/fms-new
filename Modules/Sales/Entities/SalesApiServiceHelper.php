@@ -501,6 +501,31 @@ class SalesApiServiceHelper
 
     }
 
+    private function getCustomerDetailsById($customerId = '', $env = '', $apiChannel = '') {
+
+        if (is_null($customerId) || (trim($customerId) == '') || !is_numeric(trim($customerId)) || ((int) trim($customerId) <= 0)) {
+            return [];
+        }
+
+        if (is_null($env) || (trim($env) == '')) {
+            return [];
+        }
+
+        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
+            return [];
+        }
+
+        $apiService = new RestApiService();
+        $apiService->setApiEnvironment($env);
+        $apiService->setApiChannel($apiChannel);
+
+        $uri = $apiService->getRestApiUrl() . 'customers/' . $customerId;
+        $apiResult = $apiService->processGetApi($uri);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
     private function processSaleCustomer($currentApiEnv = '', $currentApiChannel = '', $saleOrderEl = []) {
 
         try {
@@ -696,6 +721,33 @@ class SalesApiServiceHelper
 
         try {
 
+            $orderEnv = $saleOrderObj->env;
+            $orderChannel = $saleOrderObj->channel;
+            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
+            $latitude = null;
+            $longitude = null;
+            $addressId = $saleOrderEl['billing_address']['customer_address_id'];
+            if (is_array($customerData) && (count($customerData) > 0)) {
+                if (array_key_exists('addresses', $customerData) && is_array($customerData['addresses']) && (count($customerData['addresses']) > 0)) {
+                    $customerAddressList = $customerData['addresses'];
+                    foreach ($customerAddressList as $currentAddressEl) {
+                        if ($currentAddressEl['id'] == $addressId) {
+                            $addressCustAttrBase = (array_key_exists('custom_attributes', $currentAddressEl) && (count($currentAddressEl['custom_attributes']) > 0)) ? $currentAddressEl['custom_attributes'] : [];
+                            $addressCustAttr = [];
+                            foreach ($addressCustAttrBase as $attrObj) {
+                                $addressCustAttr[$attrObj['attribute_code']] = $attrObj['value'];
+                            }
+                            if (array_key_exists('latitude', $addressCustAttr) && !is_null($addressCustAttr['latitude'])) {
+                                $latitude = $addressCustAttr['latitude'];
+                            }
+                            if (array_key_exists('longitude', $addressCustAttr) && !is_null($addressCustAttr['longitude'])) {
+                                $longitude = $addressCustAttr['longitude'];
+                            }
+                        }
+                    }
+                }
+            }
+
             $billingAddressObj = SaleOrderAddress::updateOrInsert([
                 'order_id' => $saleOrderObj->id,
                 'address_id' => $saleOrderEl['billing_address']['entity_id'],
@@ -714,6 +766,8 @@ class SalesApiServiceHelper
                 'region' => $saleOrderEl['billing_address']['region'],
                 'country_id' => $saleOrderEl['billing_address']['country_id'],
                 'post_code' => $saleOrderEl['billing_address']['postcode'],
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'contact_number' => $saleOrderEl['billing_address']['telephone'],
                 'is_active' => 1
             ]);
@@ -739,6 +793,33 @@ class SalesApiServiceHelper
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $orderEnv = $saleOrderObj->env;
+            $orderChannel = $saleOrderObj->channel;
+            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
+            $latitude = null;
+            $longitude = null;
+            $addressId = $orderShippingAddress['customer_address_id'];
+            if (is_array($customerData) && (count($customerData) > 0)) {
+                if (array_key_exists('addresses', $customerData) && is_array($customerData['addresses']) && (count($customerData['addresses']) > 0)) {
+                    $customerAddressList = $customerData['addresses'];
+                    foreach ($customerAddressList as $currentAddressEl) {
+                        if ($currentAddressEl['id'] == $addressId) {
+                            $addressCustAttrBase = (array_key_exists('custom_attributes', $currentAddressEl) && (count($currentAddressEl['custom_attributes']) > 0)) ? $currentAddressEl['custom_attributes'] : [];
+                            $addressCustAttr = [];
+                            foreach ($addressCustAttrBase as $attrObj) {
+                                $addressCustAttr[$attrObj['attribute_code']] = $attrObj['value'];
+                            }
+                            if (array_key_exists('latitude', $addressCustAttr) && !is_null($addressCustAttr['latitude'])) {
+                                $latitude = $addressCustAttr['latitude'];
+                            }
+                            if (array_key_exists('longitude', $addressCustAttr) && !is_null($addressCustAttr['longitude'])) {
+                                $longitude = $addressCustAttr['longitude'];
+                            }
+                        }
+                    }
+                }
+            }
+
             $shippingAddressObj = SaleOrderAddress::updateOrInsert([
                 'order_id' => $saleOrderObj->id,
                 'address_id' => $orderShippingAddress['entity_id'],
@@ -757,6 +838,8 @@ class SalesApiServiceHelper
                 'region' => $orderShippingAddress['region'],
                 'country_id' => $orderShippingAddress['country_id'],
                 'post_code' => $orderShippingAddress['postcode'],
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'contact_number' => $orderShippingAddress['telephone'],
                 'is_active' => 1
             ]);
