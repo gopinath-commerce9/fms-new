@@ -948,12 +948,12 @@ class AdminServiceHelper
             $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
             $latitude = null;
             $longitude = null;
-            $addressId = $orderShippingAddress['customer_address_id'];
+            $addressId = array_key_exists('customer_address_id', $orderShippingAddress) ?  $orderShippingAddress['customer_address_id'] : null;
             if (is_array($customerData) && (count($customerData) > 0)) {
                 if (array_key_exists('addresses', $customerData) && is_array($customerData['addresses']) && (count($customerData['addresses']) > 0)) {
                     $customerAddressList = $customerData['addresses'];
                     foreach ($customerAddressList as $currentAddressEl) {
-                        if ($currentAddressEl['id'] == $addressId) {
+                        if (!is_null($addressId) && ($currentAddressEl['id'] == $addressId)) {
                             $addressCustAttrBase = (array_key_exists('custom_attributes', $currentAddressEl) && (count($currentAddressEl['custom_attributes']) > 0)) ? $currentAddressEl['custom_attributes'] : [];
                             $addressCustAttr = [];
                             foreach ($addressCustAttrBase as $attrObj) {
