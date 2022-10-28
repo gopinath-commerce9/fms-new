@@ -1661,11 +1661,11 @@ class UserRoleServiceHelper
 
     }
 
-    public function getYangoDriverOrderStats($region = '', $apiChannel = '', $orderStatus = [], $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '', $currentRole = '') {
+    public function getYangoDriverOrderStats($region = [], $apiChannel = '', $orderStatus = [], $startDate = '', $endDate = '', $timeSlot = '', $datePurpose = '', $currentRole = '') {
 
         $statsList = [];
 
-        $regionClean = (!is_null($region) && (trim($region) != '')) ? trim($region) : null;
+        $regionClean = (!is_null($region) && is_array($region) && (count($region) > 0)) ? $region : null;
         $apiChannelClean = (!is_null($apiChannel) && (trim($apiChannel) != '')) ? trim($apiChannel) : null;
         $orderStatusClean = (!is_null($orderStatus) && is_array($orderStatus) && (count($orderStatus) > 0)) ? $orderStatus : null;
         $startDateClean = (!is_null($startDate) && (trim($startDate) != '')) ? date('Y-m-d', strtotime(trim($startDate))) : null;
@@ -1690,10 +1690,16 @@ class UserRoleServiceHelper
         $orderRequest = SaleOrder::select('*');
 
         $emirates = $this->getAvailableRegionsList();
-        if (!is_null($regionClean) && (trim($regionClean) != '')) {
-            $orderRequest->where('region_id', trim($regionClean));
+        $regionKeys = array_keys($emirates);
+        if (
+            !is_null($regionClean)
+            && is_array($regionClean)
+            && (count($regionClean) > 0)
+            && (array_intersect($regionClean, $regionKeys) == $regionClean)
+        ) {
+            $orderRequest->whereIn('region_id', $regionClean);
         } else {
-            $orderRequest->whereIn('region_id', array_keys($emirates));
+            $orderRequest->whereIn('region_id', $regionKeys);
         }
 
         $availableApiChannels = $this->getAllAvailableChannels();

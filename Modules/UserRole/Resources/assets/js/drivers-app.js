@@ -421,6 +421,10 @@ var RoleDriversCustomJsBlocks = function() {
 
     var yangoViewSelect2ElementsInitiator = function () {
 
+        $('#emirates_filter').select2({
+            placeholder: "Select Emirate Regions",
+        });
+
         $('#order_status_filter').select2({
             placeholder: "Select Order Statuses",
         });
@@ -449,18 +453,22 @@ var RoleDriversCustomJsBlocks = function() {
                 type: targetForm.attr('method'),
                 timeout:600000,
                 data: function(d) {
+                    var regionValues = '';
                     var orderStatusValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'filter_action') {
                             d[val.name] = 'datatable';
                         } else {
-                            if (val.name === 'order_status_filter') {
+                            if (val.name === 'emirates_filter') {
+                                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'order_status_filter') {
                                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
                             } else {
                                 d[val.name] = val.value;
                             }
                         }
                     });
+                    d['emirates_region'] = regionValues;
                     d['order_status_values'] = orderStatusValues;
                     d['columnsDef'] = [
                         'orderNumber', 'channel', 'region', 'latitude', 'longitude', 'orderDeliveryDate', 'orderDeliverySlot', 'customerName', 'customerAddress', 'customerPhone', 'paymentMethod',
@@ -537,12 +545,16 @@ var RoleDriversCustomJsBlocks = function() {
     var getYangoReportExcel = function () {
         var targetForm = $('#filter_yango_report_form');
         $('#filter_action').val('excel_sheet');
+        var regionValues = '';
         var orderStatusValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
-            if (val.name === 'order_status_filter') {
+            if (val.name === 'emirates_filter') {
+                regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'order_status_filter') {
                 orderStatusValues = orderStatusValues + ((orderStatusValues === '') ? '' : ',') + val.value;
             }
         });
+        $('#emirates_region').val(regionValues);
         $('#order_status_values').val(orderStatusValues);
         targetForm.submit();
     };
