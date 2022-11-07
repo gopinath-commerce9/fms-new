@@ -386,57 +386,71 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $saleOrderUpdateData = [
+                'order_created_at' => $saleOrderEl['created_at'],
+                'order_updated_at' => $saleOrderEl['updated_at'],
+                'customer_id' => $customerObj->id,
+                'is_guest' => $saleOrderEl['customer_is_guest'],
+                'customer_firstname' => $saleOrderEl['customer_firstname'],
+                'customer_lastname' => $saleOrderEl['customer_lastname'],
+                'region_id' => $orderShippingAddress['region_id'],
+                'region_code' => $orderShippingAddress['region_code'],
+                'region' => $orderShippingAddress['region'],
+                'city' => $orderShippingAddress['city'],
+                'zone_id' => ((array_key_exists('zone_id', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone_id'] : null),
+                'store' => $saleOrderEl['store_name'],
+                'delivery_date' => ((array_key_exists('order_delivery_date', $saleOrderEl['extension_attributes'])) ? date('Y-m-d', strtotime($saleOrderEl['extension_attributes']['order_delivery_date'])) : null),
+                'delivery_time_slot' => ((array_key_exists('order_delivery_time', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_time'] : null),
+                'delivery_notes' => ((array_key_exists('order_delivery_note', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_note'] : null),
+                'total_item_count' => $saleOrderEl['total_item_count'],
+                'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
+                'order_weight' => $saleOrderEl['weight'],
+                'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
+                'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : 1,
+                'order_currency' => $saleOrderEl['order_currency_code'],
+                'order_subtotal' => $saleOrderEl['subtotal'],
+                'order_tax' => $saleOrderEl['tax_amount'],
+                'discount_amount' => $saleOrderEl['discount_amount'],
+                'shipping_total' => $saleOrderEl['shipping_amount'],
+                'shipping_method' => $saleOrderEl['shipping_description'],
+                'eco_friendly_packing_fee' => (isset($saleOrderEl['extension_attributes']['eco_friendly_packing'])) ? $saleOrderEl['extension_attributes']['eco_friendly_packing'] : null,
+                'order_total' => $saleOrderEl['grand_total'],
+                'order_due' => (!array_key_exists('total_canceled', $saleOrderEl)) ? $saleOrderEl['total_due'] : 0,
+                'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
+                'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
+                'order_state' => $saleOrderEl['state'],
+                'order_status' => $saleOrderEl['status'],
+                'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,
+                'to_be_synced' => 0,
+                'is_synced' => 0,
+                'is_active' => 1,
+            ];
+
             $orderAlreadyCreated = true;
             $saleOrderObj = SaleOrder::where('env', $currentApiEnv)
                 ->where('channel', $currentApiChannel)
                 ->where('order_id', $saleOrderEl['entity_id'])
                 ->where('increment_id', $saleOrderEl['increment_id'])
                 ->first();
+
             if (!$saleOrderObj) {
+
                 $orderAlreadyCreated = false;
-                $saleOrderObj = (new SaleOrder())->create([
+
+                $saleOrderUpdateData['env'] = $currentApiEnv;
+                $saleOrderUpdateData['channel'] = $currentApiChannel;
+                $saleOrderUpdateData['order_id'] = $saleOrderEl['entity_id'];
+                $saleOrderUpdateData['increment_id'] = $saleOrderEl['increment_id'];
+
+                $saleOrderObj = (new SaleOrder())->create($saleOrderUpdateData);
+
+            } else {
+                $saleOrderObj = SaleOrder::updateOrCreate([
                     'env' => $currentApiEnv,
                     'channel' => $currentApiChannel,
                     'order_id' => $saleOrderEl['entity_id'],
                     'increment_id' => $saleOrderEl['increment_id'],
-                    'order_created_at' => $saleOrderEl['created_at'],
-                    'order_updated_at' => $saleOrderEl['updated_at'],
-                    'customer_id' => $customerObj->id,
-                    'is_guest' => $saleOrderEl['customer_is_guest'],
-                    'customer_firstname' => $saleOrderEl['customer_firstname'],
-                    'customer_lastname' => $saleOrderEl['customer_lastname'],
-                    'region_id' => $orderShippingAddress['region_id'],
-                    'region_code' => $orderShippingAddress['region_code'],
-                    'region' => $orderShippingAddress['region'],
-                    'city' => $orderShippingAddress['city'],
-                    'zone_id' => ((array_key_exists('zone_id', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone_id'] : null),
-                    'store' => $saleOrderEl['store_name'],
-                    'delivery_date' => ((array_key_exists('order_delivery_date', $saleOrderEl['extension_attributes'])) ? date('Y-m-d', strtotime($saleOrderEl['extension_attributes']['order_delivery_date'])) : null),
-                    'delivery_time_slot' => ((array_key_exists('order_delivery_time', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_time'] : null),
-                    'delivery_notes' => ((array_key_exists('order_delivery_note', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_note'] : null),
-                    'total_item_count' => $saleOrderEl['total_item_count'],
-                    'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
-                    'order_weight' => $saleOrderEl['weight'],
-                    'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
-                    'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : 1,
-                    'order_currency' => $saleOrderEl['order_currency_code'],
-                    'order_subtotal' => $saleOrderEl['subtotal'],
-                    'order_tax' => $saleOrderEl['tax_amount'],
-                    'discount_amount' => $saleOrderEl['discount_amount'],
-                    'shipping_total' => $saleOrderEl['shipping_amount'],
-                    'shipping_method' => $saleOrderEl['shipping_description'],
-                    'eco_friendly_packing_fee' => (isset($saleOrderEl['extension_attributes']['eco_friendly_packing'])) ? $saleOrderEl['extension_attributes']['eco_friendly_packing'] : null,
-                    'order_total' => $saleOrderEl['grand_total'],
-                    'order_due' => (!array_key_exists('total_canceled', $saleOrderEl)) ? $saleOrderEl['total_due'] : 0,
-                    'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
-                    'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
-                    'order_state' => $saleOrderEl['state'],
-                    'order_status' => $saleOrderEl['status'],
-                    'order_status_label' => (isset($saleOrderEl['extension_attributes']['order_status_label'])) ? $saleOrderEl['extension_attributes']['order_status_label'] : null,
-                    'to_be_synced' => 0,
-                    'is_synced' => 0,
-                    'is_active' => 1,
-                ]);
+                ], $saleOrderUpdateData);
             }
 
             return [
