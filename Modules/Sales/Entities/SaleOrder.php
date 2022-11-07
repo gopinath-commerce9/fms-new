@@ -86,6 +86,7 @@ class SaleOrder extends Model
         'shipping_total',
         'shipping_method',
         'order_total',
+        'eco_friendly_packing_fee',
         'canceled_total',
         'invoiced_total',
         'order_due',

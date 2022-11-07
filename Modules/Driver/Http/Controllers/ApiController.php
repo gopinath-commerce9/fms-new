@@ -224,6 +224,7 @@ class ApiController extends BaseController
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['eco_friendly_packing'] = (!is_null($saleOrderData['eco_friendly_packing_fee'])) ? $saleOrderData['eco_friendly_packing_fee'] : null;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['canceledTotal'] = $totalCanceledValue;
                 $tempRecord['orderDue'] = $totalDueValue;
@@ -406,6 +407,7 @@ class ApiController extends BaseController
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['eco_friendly_packing'] = (!is_null($saleOrderData['eco_friendly_packing_fee'])) ? $saleOrderData['eco_friendly_packing_fee'] : null;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['canceledTotal'] = $totalCanceledValue;
                 $tempRecord['orderDue'] = $totalDueValue;
@@ -588,6 +590,7 @@ class ApiController extends BaseController
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['eco_friendly_packing'] = (!is_null($saleOrderData['eco_friendly_packing_fee'])) ? $saleOrderData['eco_friendly_packing_fee'] : null;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['canceledTotal'] = $totalCanceledValue;
                 $tempRecord['orderDue'] = $totalDueValue;
@@ -775,6 +778,7 @@ class ApiController extends BaseController
                 $orderStatusId = $record->order_status;
                 $tempRecord['orderStatus'] = $statusList[$orderStatusId];
                 $tempRecord['orderItemCount'] = (!is_null($saleOrderData['order_items']) && is_array($saleOrderData['order_items'])) ? count($saleOrderData['order_items']) : 0;
+                $tempRecord['eco_friendly_packing'] = (!is_null($saleOrderData['eco_friendly_packing_fee'])) ? $saleOrderData['eco_friendly_packing_fee'] : null;
                 $tempRecord['orderTotal'] = $totalOrderValue;
                 $tempRecord['canceledTotal'] = $totalCanceledValue;
                 $tempRecord['orderDue'] = $totalDueValue;
@@ -1005,6 +1009,7 @@ class ApiController extends BaseController
             'discountAmount' => $saleOrderData['discount_amount'],
             'shippingTotal' => $saleOrderData['shipping_total'],
             'shippingMethod' => $saleOrderData['shipping_method'],
+            'eco_friendly_packing' => (!is_null($saleOrderData['eco_friendly_packing_fee'])) ? $saleOrderData['eco_friendly_packing_fee'] : null,
             'orderTotal' => $totalOrderValue,
             'canceledTotal' => $totalCanceledValue,
             'orderDue' => $totalDueValue,

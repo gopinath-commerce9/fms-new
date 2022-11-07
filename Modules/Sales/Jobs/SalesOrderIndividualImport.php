@@ -425,6 +425,7 @@ class SalesOrderIndividualImport implements ShouldQueue, ShouldBeUniqueUntilProc
                     'discount_amount' => $saleOrderEl['discount_amount'],
                     'shipping_total' => $saleOrderEl['shipping_amount'],
                     'shipping_method' => $saleOrderEl['shipping_description'],
+                    'eco_friendly_packing_fee' => (isset($saleOrderEl['extension_attributes']['eco_friendly_packing'])) ? $saleOrderEl['extension_attributes']['eco_friendly_packing'] : null,
                     'order_total' => $saleOrderEl['grand_total'],
                     'order_due' => (!array_key_exists('total_canceled', $saleOrderEl)) ? $saleOrderEl['total_due'] : 0,
                     'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,

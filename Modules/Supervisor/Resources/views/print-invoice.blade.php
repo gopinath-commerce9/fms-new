@@ -607,6 +607,12 @@
                                            <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="6">Subtotal: </td>
                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
+                                        <?php if(!is_null($orderData['eco_friendly_packing_fee']) ) {?>
+                                        <tr>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Eco-Friendly Packing</td>
+                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighte">{{ $orderData['order_currency'] . ' ' . number_format($orderData['eco_friendly_packing_fee'], 2, '.', ',') }}</td>
+                                        </tr>
+                                        <?php } ?>
                                         <tr>
                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Grand Total: </td>
                                            <td class="invoice-items-subtable-order-grandtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderGrandTotalAmount, 2, '.', ',') }}</td>

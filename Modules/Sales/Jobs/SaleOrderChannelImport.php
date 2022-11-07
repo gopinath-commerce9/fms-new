@@ -440,6 +440,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                     'discount_amount' => $saleOrderEl['discount_amount'],
                     'shipping_total' => $saleOrderEl['shipping_amount'],
                     'shipping_method' => $saleOrderEl['shipping_description'],
+                    'eco_friendly_packing_fee' => (isset($saleOrderEl['extension_attributes']['eco_friendly_packing'])) ? $saleOrderEl['extension_attributes']['eco_friendly_packing'] : null,
                     'order_total' => $saleOrderEl['grand_total'],
                     'order_due' => $saleOrderEl['total_due'],
                     'order_state' => $saleOrderEl['state'],

@@ -393,6 +393,12 @@
 
                                             </tr>
                                             <?php } ?>
+                                            <?php if(!is_null($saleOrderData['eco_friendly_packing_fee']) ) {?>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Eco-Friendly Packing</td>
+                                                <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['eco_friendly_packing_fee'];?></td>
+                                            </tr>
+                                            <?php } ?>
                                             <tr>
                                                 <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
                                                 <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_total'];?></td>
