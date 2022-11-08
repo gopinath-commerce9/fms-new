@@ -130,6 +130,57 @@ class PickerServiceHelper
         return $timeSlotArray;
     }
 
+    public function getDeliveryZones($region = [], $regionwise = false) {
+
+        $statusList = $this->getPickersAllowedStatuses();
+        $orderRequest = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->whereNotNull('zone_id')
+            ->groupBy('region_id', 'zone_id')
+            ->orderBy('region_id', 'asc')
+            ->orderBy('zone_id', 'asc')
+            ->select('region_id', 'zone_id', DB::raw('count(*) as total_orders'));
+
+        $emirates = $this->getAvailableRegionsList();
+        $regionKeys = array_keys($emirates);
+        if (
+            !is_null($region)
+            && is_array($region)
+            && (count($region) > 0)
+            && (array_intersect($region, $regionKeys) == $region)
+        ) {
+            $orderRequest->whereIn('region_id', $region);
+        } else {
+            $orderRequest->whereIn('region_id', $regionKeys);
+        }
+
+        $orders = $orderRequest->get();
+
+        $zoneArray = [];
+
+        $zoneArrayAssoc = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                if ((trim($orderEl->region_id) != '') && (trim($orderEl->zone_id) != '')) {
+                    $zoneArrayAssoc[$orderEl->region_id][$orderEl->zone_id] = $orderEl->zone_id;
+                }
+            }
+        }
+
+        if (is_bool($regionwise) && ($regionwise === true)) {
+            $zoneArray = $zoneArrayAssoc;
+            return $zoneArray;
+        }
+
+        foreach ($zoneArrayAssoc as $regionKey => $zoneData) {
+            foreach ($zoneData as $zoneKey => $zoneEl) {
+                $zoneArray[$zoneEl] = $zoneEl;
+            }
+        }
+
+        return $zoneArray;
+
+    }
+
     public function getPickerOrders($region = '', $apiChannel = '', $status = '', $deliveryDate = '', $timeSlot = '') {
 
         $orderRequest = SaleOrder::select('*');

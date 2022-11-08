@@ -209,12 +209,16 @@ var AdminCustomJsBlocks = function() {
         var targetForm = $('#fetch_admin_sale_orders_form');
         $('#action').val('sales_chart');
         var regionValues = '';
+        var zoneValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'emirates_filter') {
                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'zone_filter') {
+                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
             }
         });
         $('#emirates_region').val(regionValues);
+        $('#region_zone').val(zoneValues);
         var formData = targetForm.serializeArray();
         $.ajax({
             url: targetForm.attr('action'),
@@ -243,12 +247,16 @@ var AdminCustomJsBlocks = function() {
         var targetForm = $('#fetch_admin_sale_orders_form');
         $('#action').val('status_chart');
         var regionValues = '';
+        var zoneValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'emirates_filter') {
                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'zone_filter') {
+                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
             }
         });
         $('#emirates_region').val(regionValues);
+        $('#region_zone').val(zoneValues);
         var formData = targetForm.serializeArray();
         $.ajax({
             url: targetForm.attr('action'),
@@ -283,6 +291,10 @@ var AdminCustomJsBlocks = function() {
             placeholder: "Select Emirate Regions",
         });
 
+        $('#zone_filter').select2({
+            placeholder: "Select Zones",
+        });
+
     };
 
     var initAdminSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart) {
@@ -308,12 +320,15 @@ var AdminCustomJsBlocks = function() {
                 data: function(d) {
 
                     var regionValues = '';
+                    var zoneValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'action') {
                             d[val.name] = 'datatable';
                         } else {
                             if (val.name === 'emirates_filter') {
                                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+                            } else if (val.name === 'zone_filter') {
+                                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
                             } else  {
                                 d[val.name] = val.value;
                             }
@@ -321,9 +336,10 @@ var AdminCustomJsBlocks = function() {
                     });
 
                     d['emirates_region'] = regionValues;
+                    d['region_zone'] = zoneValues;
 
                     d['columnsDef'] = [
-                        'incrementId', 'channel', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
+                        'incrementId', 'channel', 'region', 'zone', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryPickerTime', 'deliveryDriver', 'deliveryDriverTime', 'orderStatus', 'actions'
                     ];
                 },
@@ -332,6 +348,7 @@ var AdminCustomJsBlocks = function() {
                 {data: 'incrementId', className: 'text-wrap'},
                 {data: 'channel', className: 'text-wrap'},
                 {data: 'region', className: 'text-wrap'},
+                {data: 'zone', className: 'text-wrap'},
                 {data: 'customerName', className: 'text-wrap'},
                 {data: 'customerAddress', className: 'text-wrap'},
                 {data: 'deliveryDate', className: 'text-wrap'},
@@ -351,7 +368,7 @@ var AdminCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 11,
+                targets: 12,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

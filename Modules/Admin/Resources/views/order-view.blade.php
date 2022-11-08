@@ -35,7 +35,7 @@
                     <div class="row justify-content-center py-8 px-8 py-md-27 px-md-0">
                         <div class="col-md-11">
                             <div class="d-flex justify-content-between pb-10 pb-md-20 flex-column flex-md-row">
-                                <h1 class="display-2 font-weight-boldest mb-10"><?php echo ($saleOrderData['zone_id']) ? $saleOrderData['zone_id'] : ''; ?></h1>
+                                <h1 class="display-2 font-weight-boldest mb-10"><?php echo ($saleOrderData['zone_id']) ? ucwords($saleOrderData['zone_id']) : ''; ?></h1>
                                 <div class="d-flex flex-column align-items-md-end px-0">
 
                                     <span class="d-flex flex-column align-items-md-end opacity-70">

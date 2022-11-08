@@ -144,12 +144,16 @@ var SupervisorCustomJsBlocks = function() {
         var targetForm = $('#filter_supervisor_order_form');
         $('#action').val('sales_chart');
         var regionValues = '';
+        var zoneValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'emirates_filter') {
                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'zone_filter') {
+                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
             }
         });
         $('#emirates_region').val(regionValues);
+        $('#region_zone').val(zoneValues);
         var formData = targetForm.serializeArray();
         $.ajax({
             url: targetForm.attr('action'),
@@ -178,12 +182,16 @@ var SupervisorCustomJsBlocks = function() {
         var targetForm = $('#filter_supervisor_order_form');
         $('#action').val('status_chart');
         var regionValues = '';
+        var zoneValues = '';
         $.each(targetForm.serializeArray(), function(key, val) {
             if (val.name === 'emirates_filter') {
                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
+            } else if (val.name === 'zone_filter') {
+                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
             }
         });
         $('#emirates_region').val(regionValues);
+        $('#region_zone').val(zoneValues);
         var formData = targetForm.serializeArray();
         $.ajax({
             url: targetForm.attr('action'),
@@ -218,6 +226,10 @@ var SupervisorCustomJsBlocks = function() {
             placeholder: "Select Emirate Regions",
         });
 
+        $('#zone_filter').select2({
+            placeholder: "Select Zones",
+        });
+
     };
 
     var initSupervisorSaleOrderTable = function(saleOrderSalesChart, saleOrderStatusChart, hostUrl, tokenValue) {
@@ -243,22 +255,26 @@ var SupervisorCustomJsBlocks = function() {
                 data: function(d) {
 
                     var regionValues = '';
+                    var zoneValues = '';
                     $.each(targetForm.serializeArray(), function(key, val) {
                         if (val.name === 'action') {
                             d[val.name] = 'datatable';
                         } else {
                             if (val.name === 'emirates_filter') {
                                 regionValues = regionValues + ((regionValues === '') ? '' : ',') + val.value;
-                            } else  {
+                            } else if (val.name === 'zone_filter') {
+                                zoneValues = zoneValues + ((zoneValues === '') ? '' : ',') + val.value;
+                            } else {
                                 d[val.name] = val.value;
                             }
                         }
                     });
 
                     d['emirates_region'] = regionValues;
+                    d['region_zone'] = zoneValues;
 
                     d['columnsDef'] = [
-                        'incrementId', 'region', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
+                        'incrementId', 'region', 'zone', 'customerName', 'customerAddress', 'deliveryDate', 'deliveryTimeSlot', 'deliveryPicker',
                         'deliveryDriver', 'orderStatus', 'actions'
                     ];
                 },
@@ -266,6 +282,7 @@ var SupervisorCustomJsBlocks = function() {
             columns: [
                 {data: 'incrementId', className: 'text-wrap'},
                 {data: 'region', className: 'text-wrap'},
+                {data: 'zone', className: 'text-wrap'},
                 {data: 'customerName', className: 'text-wrap'},
                 {data: 'customerAddress', className: 'text-wrap'},
                 {data: 'deliveryDate', className: 'text-wrap'},
@@ -283,7 +300,7 @@ var SupervisorCustomJsBlocks = function() {
                     return '<a href="' + data + '" target="_blank">View Order</a>';
                 },
             }, {
-                targets: 8,
+                targets: 9,
                 title: 'Status',
                 orderable: true,
                 render: function(data, type, full, meta) {

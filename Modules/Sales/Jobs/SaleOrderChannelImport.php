@@ -424,7 +424,7 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                     'region_code' => $orderShippingAddress['region_code'],
                     'region' => $orderShippingAddress['region'],
                     'city' => $orderShippingAddress['city'],
-                    'zone_id' => ((array_key_exists('zone_id', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone_id'] : null),
+                    'zone_id' => ((array_key_exists('zone', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone'] : null),
                     'store' => $saleOrderEl['store_name'],
                     'delivery_date' => ((array_key_exists('order_delivery_date', $saleOrderEl['extension_attributes'])) ? date('Y-m-d', strtotime($saleOrderEl['extension_attributes']['order_delivery_date'])) : null),
                     'delivery_time_slot' => ((array_key_exists('order_delivery_time', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['order_delivery_time'] : null),

@@ -145,6 +145,57 @@ class AdminServiceHelper
         return $timeSlotArray;
     }
 
+    public function getDeliveryZones($region = [], $regionwise = false) {
+
+        $statusList = $this->getAdminAllowedStatuses();
+        $orderRequest = SaleOrder::whereIn('order_status', array_keys($statusList))
+            ->whereNotNull('zone_id')
+            ->groupBy('region_id', 'zone_id')
+            ->orderBy('region_id', 'asc')
+            ->orderBy('zone_id', 'asc')
+            ->select('region_id', 'zone_id', DB::raw('count(*) as total_orders'));
+
+        $emirates = $this->getAvailableRegionsList();
+        $regionKeys = array_keys($emirates);
+        if (
+            !is_null($region)
+            && is_array($region)
+            && (count($region) > 0)
+            && (array_intersect($region, $regionKeys) == $region)
+        ) {
+            $orderRequest->whereIn('region_id', $region);
+        } else {
+            $orderRequest->whereIn('region_id', $regionKeys);
+        }
+
+        $orders = $orderRequest->get();
+
+        $zoneArray = [];
+
+        $zoneArrayAssoc = [];
+        if ($orders && (count($orders) > 0)) {
+            foreach ($orders as $orderEl) {
+                if ((trim($orderEl->region_id) != '') && (trim($orderEl->zone_id) != '')) {
+                    $zoneArrayAssoc[$orderEl->region_id][$orderEl->zone_id] = $orderEl->zone_id;
+                }
+            }
+        }
+
+        if (is_bool($regionwise) && ($regionwise === true)) {
+            $zoneArray = $zoneArrayAssoc;
+            return $zoneArray;
+        }
+
+        foreach ($zoneArrayAssoc as $regionKey => $zoneData) {
+            foreach ($zoneData as $zoneKey => $zoneEl) {
+                $zoneArray[$zoneEl] = $zoneEl;
+            }
+        }
+
+        return $zoneArray;
+
+    }
+
     public function getOrdersCountByRegion($region = '') {
 
         if (is_null($region) || (trim($region) == '')) {
@@ -269,7 +320,7 @@ class AdminServiceHelper
 
     }
 
-    public function getAdminSaleOrders($region = [], $apiChannel = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getAdminSaleOrders($region = [], $apiChannel = '', $status = '', $startDate = '', $endDate = '', $timeSlot = '', $zone = []) {
 
         $orderRequest = SaleOrder::select('*');
 
@@ -322,6 +373,10 @@ class AdminServiceHelper
             $orderRequest->whereIn('delivery_time_slot', $givenTimeSlots);
         }
 
+        if (!is_null($zone) && is_array($zone) && (count($zone) > 0)) {
+            $orderRequest->whereIn('zone_id', $zone);
+        }
+
         $orderRequest->orderBy('delivery_date', 'asc');
         $orderRequest->orderBy(DB::raw("STR_TO_DATE(TRIM(SUBSTRING_INDEX(delivery_time_slot, '-', 1)), '%l:%i %p')"), 'asc');
         $orderRequest->orderBy('order_id', 'asc');
@@ -330,7 +385,7 @@ class AdminServiceHelper
 
     }
 
-    public function getSaleOrderSalesChartData($apiChannel = '', $region = [], $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getSaleOrderSalesChartData($apiChannel = '', $region = [], $status = '', $startDate = '', $endDate = '', $timeSlot = '', $zone = []) {
 
         $returnData = [];
 
@@ -382,6 +437,10 @@ class AdminServiceHelper
             $orderRequest->where('delivery_time_slot', trim($timeSlot));
         }
 
+        if (!is_null($zone) && is_array($zone) && (count($zone) > 0)) {
+            $orderRequest->whereIn('zone_id', $zone);
+        }
+
         $queryResult = $orderRequest
             ->groupBy('delivery_date', 'order_currency')
             ->orderBy('delivery_date', 'asc')
@@ -398,7 +457,7 @@ class AdminServiceHelper
 
     }
 
-    public function getSaleOrderStatusChartData($apiChannel = '', $region = [], $status = '', $startDate = '', $endDate = '', $timeSlot = '') {
+    public function getSaleOrderStatusChartData($apiChannel = '', $region = [], $status = '', $startDate = '', $endDate = '', $timeSlot = '', $zone = []) {
 
         $returnData = [];
 
@@ -448,6 +507,10 @@ class AdminServiceHelper
 
         if (!is_null($timeSlot) && (trim($timeSlot) != '')) {
             $orderRequest->where('delivery_time_slot', trim($timeSlot));
+        }
+
+        if (!is_null($zone) && is_array($zone) && (count($zone) > 0)) {
+            $orderRequest->whereIn('zone_id', $zone);
         }
 
         $queryResult = $orderRequest
@@ -819,6 +882,7 @@ class AdminServiceHelper
                 'total_item_count' => $saleOrderEl['total_item_count'],
                 'total_qty_ordered' => $saleOrderEl['total_qty_ordered'],
                 'order_weight' => $saleOrderEl['weight'],
+                'zone_id' => ((array_key_exists('zone', $saleOrderEl['extension_attributes'])) ? $saleOrderEl['extension_attributes']['zone'] : null),
                 'box_count' => (isset($saleOrderEl['extension_attributes']['box_count'])) ? $saleOrderEl['extension_attributes']['box_count'] : null,
                 'not_require_pack' => (isset($saleOrderEl['extension_attributes']['not_require_pack'])) ? $saleOrderEl['extension_attributes']['not_require_pack'] : 1,
                 'order_subtotal' => $saleOrderEl['subtotal'],

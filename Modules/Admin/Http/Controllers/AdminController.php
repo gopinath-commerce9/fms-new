@@ -47,6 +47,7 @@ class AdminController extends Controller
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getAdminAllowedStatuses();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+        $deliveryZones = $serviceHelper->getDeliveryZones();
 
         return view('admin::index', compact(
             'pageTitle',
@@ -58,6 +59,7 @@ class AdminController extends Controller
             'driverData',
             'availableApiChannels',
             'deliveryTimeSlots',
+            'deliveryZones',
             'availableStatuses'
         ));
 
@@ -125,10 +127,15 @@ class AdminController extends Controller
             && (trim($request->input('delivery_slot_filter')) != '')
         ) ? trim($request->input('delivery_slot_filter')) : '';
 
+        $zone = (
+            $request->has('region_zone')
+            && (trim($request->input('region_zone')) != '')
+        ) ? explode(',', trim($request->input('region_zone'))) : [];
+
         $returnData = [];
         if ($methodAction == 'datatable') {
 
-            $filteredOrders = $serviceHelper->getAdminSaleOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $filteredOrders = $serviceHelper->getAdminSaleOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
             if ($filteredOrders) {
 
                 $filteredOrderData = [];
@@ -151,6 +158,7 @@ class AdminController extends Controller
                     $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
                     $emirateId = $record->region_id;
                     $tempRecord['region'] = $emirates[$emirateId];
+                    $tempRecord['zone'] = ucwords($record->zone_id);
                     $shipAddress = $record->shippingAddress;
                     $shipAddressString = '';
                     $shipAddressString .= (isset($shipAddress->company)) ? $shipAddress->company . ' ' : '';
@@ -208,7 +216,7 @@ class AdminController extends Controller
 
         } elseif ($methodAction == 'status_chart') {
 
-            $chartData = $serviceHelper->getSaleOrderStatusChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $chartData = $serviceHelper->getSaleOrderStatusChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
 
             $xAxisData = [];
             $seriesData = [];
@@ -252,7 +260,7 @@ class AdminController extends Controller
 
         } elseif ($methodAction == 'sales_chart') {
 
-            $chartData = $serviceHelper->getSaleOrderSalesChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $chartData = $serviceHelper->getSaleOrderSalesChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
 
             $xAxisData = [];
             $seriesData = [];

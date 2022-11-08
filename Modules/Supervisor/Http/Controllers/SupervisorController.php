@@ -54,6 +54,7 @@ class SupervisorController extends Controller
         $availableApiChannels = $serviceHelper->getAllAvailableChannels();
         $availableStatuses = $serviceHelper->getSupervisorsAllowedStatuses();
         $deliveryTimeSlots = $serviceHelper->getDeliveryTimeSlots();
+        $deliveryZones = $serviceHelper->getDeliveryZones();
 
         $supervisorOrders = $serviceHelper->getSupervisorOrders();
         $regionOrderCount = (!is_null($supervisorOrders)) ? count($supervisorOrders) : 0;
@@ -69,6 +70,7 @@ class SupervisorController extends Controller
             'availableApiChannels',
             'availableStatuses',
             'deliveryTimeSlots',
+            'deliveryZones',
             'serviceHelper'
         ));
 
@@ -183,9 +185,14 @@ class SupervisorController extends Controller
             && (trim($request->input('delivery_slot_filter')) != '')
         ) ? trim($request->input('delivery_slot_filter')) : '';
 
+        $zone = (
+            $request->has('region_zone')
+            && (trim($request->input('region_zone')) != '')
+        ) ? explode(',', trim($request->input('region_zone'))) : [];
+
         $returnData = [];
         if ($methodAction == 'datatable') {
-            $filteredOrders = $serviceHelper->getSupervisorOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $filteredOrders = $serviceHelper->getSupervisorOrders($region, $apiChannel, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
             if ($filteredOrders) {
 
                 $pickerStatues = [
@@ -274,6 +281,7 @@ class SupervisorController extends Controller
                     $tempRecord['channel'] = $availableApiChannels[$apiChannelId]['name'];
                     $emirateId = $record['region_id'];
                     $tempRecord['region'] = $emirates[$emirateId];
+                    $tempRecord['zone'] = ucwords($record['zone_id']);
                     $shipAddressString = '';
                     $customerName = '';
                     if (count($shipAddress) > 0) {
@@ -347,7 +355,7 @@ class SupervisorController extends Controller
             }
         } elseif ($methodAction == 'status_chart') {
 
-            $chartData = $serviceHelper->getSaleOrderStatusChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $chartData = $serviceHelper->getSaleOrderStatusChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
 
             $xAxisData = [];
             $seriesData = [];
@@ -391,7 +399,7 @@ class SupervisorController extends Controller
 
         } elseif ($methodAction == 'sales_chart') {
 
-            $chartData = $serviceHelper->getSaleOrderSalesChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot);
+            $chartData = $serviceHelper->getSaleOrderSalesChartData($apiChannel, $region, $orderStatus, $startDate, $endDate, $deliverySlot, $zone);
 
             $xAxisData = [];
             $seriesData = [];

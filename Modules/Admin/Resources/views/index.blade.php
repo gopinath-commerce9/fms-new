@@ -136,6 +136,15 @@
                                                 </select>
                                             </div>
                                             <div class="col-lg-4">
+                                                <select class="form-control datatable-input-multiselect" id="zone_filter" name="zone_filter" multiple>
+                                                    @foreach($deliveryZones as $zoneKey => $zoneEl)
+                                                        <option value="{{ $zoneEl }}" >{{ ucfirst($zoneEl) }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-4 text-right">
                                                 <select class="form-control datatable-input" id="order_status_filter" name="order_status_filter" >
                                                     <option value="" >All Order Statuses</option>
                                                     @foreach($availableStatuses as $statusKey => $statusEl)
@@ -143,8 +152,6 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="form-group row">
                                             <div class="col-4">
                                                 <input type='text' class="form-control" name="delivery_date_range_filter" id="delivery_date_range_filter" readonly placeholder="Select Delivery Date Range" type="text"/>
                                                 <input  type="hidden" class="datatable-date-input" value="{{ date('Y-m-d') }}" id="delivery_date_start_filter" name="delivery_date_start_filter" />
@@ -158,9 +165,14 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-4"></div>
+                                            <div class="col-lg-4"></div>
                                             <div class="col-4 text-right">
                                                 <input type="hidden" name="action" id="action" value="datatable" />
                                                 <input type="hidden" name="emirates_region" id="emirates_region" value="" />
+                                                <input type="hidden" name="region_zone" id="region_zone" value="" />
                                                 <button type="button" id="filter_admin_order_filter_btn" class="btn btn-primary btn-lg mr-2">
                                                     <span><i class="la la-search"></i>Search</span>
                                                 </button>
@@ -265,6 +277,7 @@
                                             <th># Order Id</th>
                                             <th>Channel</th>
                                             <th>Emirates</th>
+                                            <th>Zone</th>
                                             <th>Customer Name</th>
                                             <th>Customer Address</th>
                                             <th>Delivery Date</th>
