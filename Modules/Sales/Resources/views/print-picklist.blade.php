@@ -273,9 +273,11 @@
                                         $productSku = (!empty($itemEl['productSku'])) ? $itemEl['productSku'] : "";
                                         $productName = (!empty($itemEl['productName'])) ? $itemEl['productName'] : "";
                                         $weightInfo = (!empty($itemEl['productInfo'])) ? $itemEl['productInfo'] : "";
+                                        $originCountry = (!empty($itemEl['originCountry'])) ? $itemEl['originCountry'] : "";
                                         $nameLabel = '';
                                         $nameLabel .= ($productName != '') ? $productName : '';
                                         $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
+                                        $nameLabel .= (trim($originCountry) != '') ? ' / ' . $originCountry : '';
                                         $qtyOrdered = (!empty($itemEl['quantity'])) ? $itemEl['quantity'] : "";
                                         $sellingFormat = (!empty($itemEl['sellingUnit'])) ? $itemEl['sellingUnit'] : "";
                                         $qtyLabel = '';

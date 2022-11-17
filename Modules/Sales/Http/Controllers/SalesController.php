@@ -1319,6 +1319,7 @@ class SalesController extends Controller
                                                 'productSku' => $orderItemEl->item_sku,
                                                 'productName' => $orderItemEl->item_name,
                                                 'productInfo' => $orderItemEl->item_info,
+                                                'originCountry' => $orderItemEl->country_label,
                                                 'quantity' => $qtyNeeded,
                                                 'sellingUnit' => $orderItemEl->selling_unit
                                             ];
