@@ -246,9 +246,11 @@
                         $productSku = (!empty($item['item_sku'])) ? $item['item_sku'] : "";
                         $productName = (!empty($item['item_name'])) ? $item['item_name'] : "";
                         $weightInfo = (!empty($item['item_info'])) ? $item['item_info'] : "";
+                        $originCountry = (!empty($item['country_label'])) ? $item['country_label'] : "";
                         $nameLabel = '';
                         $nameLabel .= ($productName != '') ? $productName : '';
                         $nameLabel .= (($nameLabel != '') && ($weightInfo != '')) ? ' ( Pack & Weight Info : ' . $weightInfo . ')' : '';
+                        $nameLabel .= (trim($originCountry) != '') ? ' / ' . $originCountry : '';
                         $qtyOrdered = (!empty($item['qty_ordered'])) ? $item['qty_ordered'] : "";
                         $sellingFormat = (!empty($item['selling_unit'])) ? $item['selling_unit'] : "";
                         $qtyLabel = '';
