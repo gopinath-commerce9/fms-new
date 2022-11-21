@@ -554,7 +554,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
         try {
 
-            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id']);
+            $customerId = (array_key_exists('customer_id', $saleOrderEl) && (trim($saleOrderEl['customer_id']) != '')) ? $saleOrderEl['customer_id'] : null;
+            $customerData = $this->getCustomerDetailsById($customerId);
             $latitude = null;
             $longitude = null;
             $addressId = array_key_exists('customer_address_id', $saleOrderEl['billing_address']) ?  $saleOrderEl['billing_address']['customer_address_id'] : null;
@@ -632,7 +633,8 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
-            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id']);
+            $customerId = (array_key_exists('customer_id', $saleOrderEl) && (trim($saleOrderEl['customer_id']) != '')) ? $saleOrderEl['customer_id'] : null;
+            $customerData = $this->getCustomerDetailsById($customerId);
             $latitude = null;
             $longitude = null;
             $addressId = array_key_exists('customer_address_id', $orderShippingAddress) ?  $orderShippingAddress['customer_address_id'] : null;

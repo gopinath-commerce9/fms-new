@@ -722,9 +722,10 @@ class SalesApiServiceHelper
 
         try {
 
+            $customerId = (array_key_exists('customer_id', $saleOrderEl) && (trim($saleOrderEl['customer_id']) != '')) ? $saleOrderEl['customer_id'] : null;
             $orderEnv = $saleOrderObj->env;
             $orderChannel = $saleOrderObj->channel;
-            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
+            $customerData = $this->getCustomerDetailsById($customerId, $orderEnv, $orderChannel);
             $latitude = null;
             $longitude = null;
             $addressId = array_key_exists('customer_address_id', $saleOrderEl['billing_address']) ?  $saleOrderEl['billing_address']['customer_address_id'] : null;
@@ -794,9 +795,10 @@ class SalesApiServiceHelper
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $customerId = (array_key_exists('customer_id', $saleOrderEl) && (trim($saleOrderEl['customer_id']) != '')) ? $saleOrderEl['customer_id'] : null;
             $orderEnv = $saleOrderObj->env;
             $orderChannel = $saleOrderObj->channel;
-            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
+            $customerData = $this->getCustomerDetailsById($customerId, $orderEnv, $orderChannel);
             $latitude = null;
             $longitude = null;
             $addressId = array_key_exists('customer_address_id', $orderShippingAddress) ?  $orderShippingAddress['customer_address_id'] : null;

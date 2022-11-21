@@ -1530,9 +1530,10 @@ class SupervisorServiceHelper
 
             $orderShippingAddress = $saleOrderEl['extension_attributes']['shipping_assignments'][0]['shipping']['address'];
 
+            $customerId = (array_key_exists('customer_id', $saleOrderEl) && (trim($saleOrderEl['customer_id']) != '')) ? $saleOrderEl['customer_id'] : null;
             $orderEnv = $currentOrderData['env'];
             $orderChannel = $currentOrderData['channel'];
-            $customerData = $this->getCustomerDetailsById($saleOrderEl['customer_id'], $orderEnv, $orderChannel);
+            $customerData = $this->getCustomerDetailsById($customerId, $orderEnv, $orderChannel);
             $latitude = null;
             $longitude = null;
             $addressId = array_key_exists('customer_address_id', $orderShippingAddress) ?  $orderShippingAddress['customer_address_id'] : null;
