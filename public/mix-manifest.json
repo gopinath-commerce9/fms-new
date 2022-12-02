@@ -21,5 +21,7 @@
     "/css/sales.css": "/css/sales.css",
     "/js/sales.js": "/js/sales.js",
     "/js/role-pickers.js": "/js/role-pickers.js",
-    "/js/role-drivers.js": "/js/role-drivers.js"
+    "/js/role-drivers.js": "/js/role-drivers.js",
+    "/css/cashier.css": "/css/cashier.css",
+    "/js/cashier.js": "/js/cashier.js"
 }

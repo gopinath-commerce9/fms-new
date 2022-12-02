@@ -22,4 +22,12 @@ Route::prefix('cashier')->middleware([
         ->name('cashier.index');
     Route::get('/dashboard', 'CashierController@dashboard')
         ->name('cashier.dashboard');
+    Route::post('/find-order', 'CashierController@searchOrderByIncrementId')
+        ->name('cashier.searchOrderByIncrementId');
+    Route::post('/find-order-item', 'CashierController@searchOrderItemByBarcode')
+        ->name('cashier.searchOrderItemByBarcode');
+    Route::post('/prepare-order-status-change/{orderId}', 'CashierController@prepareOrderStatusChange')
+        ->name('cashier.prepareOrderStatusChange');
+    Route::post('/order-status-change/{orderId}', 'CashierController@orderStatusChange')
+        ->name('cashier.orderStatusChange');
 });

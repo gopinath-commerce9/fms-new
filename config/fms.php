@@ -22,7 +22,7 @@ return [
                     'url' => 'https://dev.aanacart.com/',
                     'version' => 1,
                     'apiUri' => 'rest/V1/',
-                    'accessToken' => 'okhuely2fy5trw9srqengpn8nd3yo2u0',
+                    'accessToken' => '6cxvsesia7flvsdmu9gn3z0uoaqfz2i2',
                     'authUri' => 'integration/admin/token',
                     'authRole' => 'admin',
                     'authKey' => 'gopicommerce',
@@ -205,6 +205,11 @@ return [
             'out_for_delivery',
             'delivered',
             'canceled',
+        ],
+        'cashier' => [
+            'being_prepared',
+            'holded',
+            'ready_to_dispatch',
         ],
     ],
 
