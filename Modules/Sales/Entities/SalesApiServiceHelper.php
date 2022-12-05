@@ -909,7 +909,7 @@ class SalesApiServiceHelper
                 'sale_order_id' => $saleOrderObj->order_id,
             ], [
                 'name' => $historyEl['entity_name'],
-                'status' => $historyEl['status'],
+                'status' => array_key_exists('status', $historyEl) ? $historyEl['status'] : null,
                 'comments' => $historyEl['comment'],
                 'status_created_at' => $historyEl['created_at'],
                 'customer_notified' => $historyEl['is_customer_notified'],
