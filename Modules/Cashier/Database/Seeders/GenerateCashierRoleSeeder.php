@@ -48,13 +48,13 @@ class GenerateCashierRoleSeeder extends Seeder
 
         if (count($insertData) > 0) {
             foreach ($insertData as $roleEl) {
-                /*$insertedUserRole = UserRole::firstOrCreate([
+                $insertedUserRole = UserRole::firstOrCreate([
                     'code' => $roleEl['code']
                 ], [
                     'display_name' => $roleEl['display_name'],
                     'description' => $roleEl['description'],
                     'is_active' => $roleEl['is_active']
-                ]);*/
+                ]);
             }
             $this->command->info('Seeded the User Roles set in the Cashier Module!');
         }
@@ -67,7 +67,7 @@ class GenerateCashierRoleSeeder extends Seeder
             'cashier' => [
                 'code' => 'cashier',
                 'display_name' => 'Cashier',
-                'description' => 'The User who processes the POS system.',
+                'description' => 'The User who processes the POS System and Sale Order Item Scanning process.',
                 'is_active' => 1,
             ],
         ];
