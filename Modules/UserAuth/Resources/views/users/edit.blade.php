@@ -113,6 +113,15 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group row" >
+                                <label class="col-3 col-form-label text-right">Active</label>
+                                <div class="col-6">
+                                    <select class="form-control" id="user_active" name="user_active" >
+                                        <option value="1" {{ (is_null($mappedUserRole) || ((int)$mappedUserRole->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)) ? "selected" : "" }}>Yes</option>
+                                        <option value="0" {{ (!is_null($mappedUserRole) && ((int)$mappedUserRole->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_NO)) ? "selected" : "" }}>No</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-group row" id="edit_user_feeder_driver_check_row" style="display:none;">
                                 <label  class="col-3 col-form-label text-right">Feeder Driver</label>
                                 <div class="col-6">

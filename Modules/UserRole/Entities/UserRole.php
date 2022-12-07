@@ -16,6 +16,9 @@ class UserRole extends Model
     const USER_ROLE_DRIVER = 'driver';
     const USER_ROLE_UNASSIGNED = null;
 
+    const ROLE_USER_ACTIVE_YES = 1;
+    const ROLE_USER_ACTIVE_NO = 0;
+
     /**
      * The attributes that are mass assignable.
      *

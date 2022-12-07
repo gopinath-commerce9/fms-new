@@ -32,16 +32,16 @@
                                     <table class="table table-bordered" id="role_driver_list_table">
 
                                         <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Avatar</th>
-                                            <th>Name</th>
-                                            <th>EMail</th>
-                                            <th>Contact</th>
-                                            <th>Feeder</th>
-                                            <?php /* ?><th>Assigned Order Count</th><?php */ ?>
-                                            <th>Action</th>
-                                        </tr>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Avatar</th>
+                                                <th>Name</th>
+                                                <th>EMail</th>
+                                                <th>Contact</th>
+                                                <th>Active</th>
+                                                <th>Feeder</th>
+                                                <th>Action</th>
+                                            </tr>
                                         </thead>
 
                                         <tbody>
@@ -82,6 +82,15 @@
                                                     <td>{{ $userEl->email }}</td>
                                                     <td>{{ $userEl->contact_number }}</td>
                                                     <td>
+                                                        @if($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_NO)
+                                                            <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">No</span>
+                                                        @elseif($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)
+                                                            <span class="label label-lg font-weight-bold label-light-success label-inline mt-2">Yes</span>
+                                                        @else
+                                                            {{ $userEl->pivot->is_active }}
+                                                        @endif
+                                                    </td>
+                                                    <td>
                                                         @if($userEl->pivot->is_feeder_driver == 0)
                                                             <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">No</span>
                                                         @elseif($userEl->pivot->is_feeder_driver == 1)
@@ -90,45 +99,6 @@
                                                             {{ $userEl->pivot->is_feeder_driver }}
                                                         @endif
                                                     </td>
-                                                    <?php /* ?>
-                                                    <td>
-                                                        @if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0))
-                                                            <?php $driverOrderCount = 0; ?>
-                                                            @foreach ($userEl->saleOrderProcessHistory as $processHistory)
-                                                                @if ($processHistory->action == \Modules\Sales\Entities\SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_DELIVERY)
-                                                                    @if($processHistory->saleOrder)
-                                                                        <?php
-                                                                            $currentSaleOrder = $processHistory->saleOrder;
-                                                                            $deliveryDriverData = $currentSaleOrder->currentDriver;
-                                                                            $isCurrentDriver = false;
-                                                                            $historyObj = null;
-                                                                            if ($deliveryDriverData && (count($deliveryDriverData) > 0)) {
-                                                                                foreach ($deliveryDriverData as $dDeliver) {
-                                                                                    if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
-                                                                                        $isCurrentDriver = true;
-                                                                                        $historyObj = $dDeliver;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            if (($isCurrentDriver) && ($historyObj->id == $processHistory->id)) {
-                                                                                if ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH) {
-                                                                                    $driverOrderCount++;
-                                                                                } elseif ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY) {
-                                                                                    $driverOrderCount++;
-                                                                                }
-                                                                            }
-                                                                        ?>
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">
-                                                                {{ ($driverOrderCount > 0) ? $driverOrderCount . ' Order(s)' : 'No Orders' }}
-                                                            </span>
-                                                        @else
-                                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">No Orders</span>
-                                                        @endif
-                                                    </td>
-                                                    <?php */ ?>
                                                     <td nowrap="nowrap">
                                                         <a href="{{ url('/userrole/drivers/view/' . $userEl->id) }}" class="btn btn-primary btn-clean mr-2" title="View Driver">
                                                             <span>View</span>
@@ -138,7 +108,7 @@
 
                                             @endforeach
                                         @else
-                                            <tr><td colspan="6">No Drivers found!</td></tr>
+                                            <tr><td colspan="7">No Drivers found!</td></tr>
                                         @endif
 
                                         </tbody>

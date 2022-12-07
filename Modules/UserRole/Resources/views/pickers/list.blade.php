@@ -31,15 +31,15 @@
                                     <table class="table table-bordered" id="role_picker_list_table">
 
                                         <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Avatar</th>
-                                            <th>Name</th>
-                                            <th>EMail</th>
-                                            <th>Contact</th>
-                                            <?php /* ?><th>Assigned Order Count</th><?php */ ?>
-                                            <th>Action</th>
-                                        </tr>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Avatar</th>
+                                                <th>Name</th>
+                                                <th>EMail</th>
+                                                <th>Contact</th>
+                                                <th>Active</th>
+                                                <th>Action</th>
+                                            </tr>
                                         </thead>
 
                                         <tbody>
@@ -50,74 +50,44 @@
                                                 <tr>
                                                     <td>{{ $userEl->id }}</td>
                                                     <td>
-                                                            <span style="width: 50px;">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="symbol symbol-50 symbol-sm symbol-light-info flex-shrink-0" style="padding-left: 5%; padding-right: 5%;">
-                                                                        <?php
-                                                                        $userDisplayName = $userEl->name;
-                                                                        $userInitials = '';
-                                                                        $profilePicUrl = '';
-                                                                        if (!is_null($userEl->profile_picture) && ($userEl->profile_picture != '')) {
-                                                                            $dpData = json_decode($userEl->profile_picture, true);
-                                                                            $profilePicUrlPath = $dpData['path'];
-                                                                            $profilePicUrl = $serviceHelper->getUserImageUrl($profilePicUrlPath);
-                                                                        }
-                                                                        $userDisplayNameSplitter = explode(' ', $userDisplayName);
-                                                                        foreach ($userDisplayNameSplitter as $userNameWord) {
-                                                                            $userInitials .= substr($userNameWord, 0, 1);
-                                                                        }
-                                                                        ?>
-                                                                        @if ($profilePicUrl != '')
-                                                                            <img class="" src="{{ $profilePicUrl }}" alt="{{ $userDisplayName }}">
-                                                                        @else
-                                                                            <span class="symbol-label font-size-h4 font-weight-bold">{{ strtoupper($userInitials) }}</span>
-                                                                        @endif
-                                                                    </div>
+                                                        <span style="width: 50px;">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="symbol symbol-50 symbol-sm symbol-light-info flex-shrink-0" style="padding-left: 5%; padding-right: 5%;">
+                                                                    <?php
+                                                                    $userDisplayName = $userEl->name;
+                                                                    $userInitials = '';
+                                                                    $profilePicUrl = '';
+                                                                    if (!is_null($userEl->profile_picture) && ($userEl->profile_picture != '')) {
+                                                                        $dpData = json_decode($userEl->profile_picture, true);
+                                                                        $profilePicUrlPath = $dpData['path'];
+                                                                        $profilePicUrl = $serviceHelper->getUserImageUrl($profilePicUrlPath);
+                                                                    }
+                                                                    $userDisplayNameSplitter = explode(' ', $userDisplayName);
+                                                                    foreach ($userDisplayNameSplitter as $userNameWord) {
+                                                                        $userInitials .= substr($userNameWord, 0, 1);
+                                                                    }
+                                                                    ?>
+                                                                    @if ($profilePicUrl != '')
+                                                                        <img class="" src="{{ $profilePicUrl }}" alt="{{ $userDisplayName }}">
+                                                                    @else
+                                                                        <span class="symbol-label font-size-h4 font-weight-bold">{{ strtoupper($userInitials) }}</span>
+                                                                    @endif
                                                                 </div>
-                                                            </span>
+                                                            </div>
+                                                        </span>
                                                     </td>
                                                     <td>{{ $userDisplayName }}</td>
                                                     <td>{{ $userEl->email }}</td>
                                                     <td>{{ $userEl->contact_number }}</td>
-                                                    <?php /* ?>
                                                     <td>
-                                                        @if($userEl->saleOrderProcessHistory && (count($userEl->saleOrderProcessHistory) > 0))
-                                                            <?php $pickerOrderCount = 0; ?>
-                                                            @foreach ($userEl->saleOrderProcessHistory as $processHistory)
-                                                                @if ($processHistory->action == \Modules\Sales\Entities\SaleOrderProcessHistory::SALE_ORDER_PROCESS_ACTION_PICKUP)
-                                                                    @if($processHistory->saleOrder)
-                                                                        <?php
-                                                                            $currentSaleOrder = $processHistory->saleOrder;
-                                                                            $deliveryPickerData = $currentSaleOrder->currentPicker;
-                                                                            $isCurrentPicker = false;
-                                                                            $historyObj = null;
-                                                                            if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
-                                                                                foreach ($deliveryPickerData as $dDeliver) {
-                                                                                    if (!is_null($dDeliver->done_by) && ((int)$dDeliver->done_by == $userEl->id)) {
-                                                                                        $isCurrentPicker = true;
-                                                                                        $historyObj = $dDeliver;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            if (($isCurrentPicker) && ($historyObj->id == $processHistory->id)) {
-                                                                                if ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_BEING_PREPARED) {
-                                                                                    $pickerOrderCount++;
-                                                                                } elseif ($currentSaleOrder->order_status == \Modules\Sales\Entities\SaleOrder::SALE_ORDER_STATUS_ON_HOLD) {
-                                                                                    $pickerOrderCount++;
-                                                                                }
-                                                                            }
-                                                                        ?>
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">
-                                                                {{ ($pickerOrderCount > 0) ? $pickerOrderCount . ' Order(s)' : 'No Orders' }}
-                                                            </span>
+                                                        @if($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_NO)
+                                                            <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">No</span>
+                                                        @elseif($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)
+                                                            <span class="label label-lg font-weight-bold label-light-success label-inline mt-2">Yes</span>
                                                         @else
-                                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">No Orders</span>
+                                                            {{ $userEl->pivot->is_active }}
                                                         @endif
                                                     </td>
-                                                    <?php */ ?>
                                                     <td nowrap="nowrap">
                                                         <a href="{{ url('/userrole/pickers/view/' . $userEl->id) }}" class="btn btn-primary btn-clean mr-2" title="View Picker">
                                                             <span>View</span>

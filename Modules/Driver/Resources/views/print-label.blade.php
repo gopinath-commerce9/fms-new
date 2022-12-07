@@ -109,7 +109,7 @@
                                     <label id="order-due-amount-value-label" class="highlight-info-label" style="font-size: larger; font-style: normal; font-weight: bold;">
                                         <?php
                                         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                                        $fixTotalPaidArray = ['adminpaymentmethod'];
+                                        $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                                         $totalDueValue = $orderData['order_due'];
                                         if (in_array($orderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                                             $totalDueValue = $orderData['order_total'];

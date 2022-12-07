@@ -329,7 +329,9 @@ class SupervisorController extends Controller
                         $pickerValues .= '<option value="" '. (($pickerSelectedId == '') ? 'selected' : '') . ' >Unassigned</option>';
                         if(count($pickerListArray) > 0) {
                             foreach($pickerListArray as $userEl) {
-                                $pickerValues .= '<option value="' . $userEl['id'] . '" '. (($pickerSelectedId == $userEl['id']) ? 'selected' : '') . ' >' . $userEl['name'] . '</option>';
+                                if ($userEl['pivot']['is_active'] === UserRole::ROLE_USER_ACTIVE_YES) {
+                                    $pickerValues .= '<option value="' . $userEl['id'] . '" '. (($pickerSelectedId == $userEl['id']) ? 'selected' : '') . ' >' . $userEl['name'] . '</option>';
+                                }
                             }
                         }
                         $pickerValues .= '</select>';

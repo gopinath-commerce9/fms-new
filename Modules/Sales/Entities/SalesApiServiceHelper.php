@@ -198,7 +198,7 @@ class SalesApiServiceHelper
                     $totalDueValue = (float)$saleOrderData['order_due'];
 
                     $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                    $fixTotalPaidArray = ['adminpaymentmethod'];
+                    $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                     if (in_array($saleOrderData['payment_data'][0]['method'], $fixTotalDueArray)) {
                         $paymentMethodString = '';
                         $totalDueValue = $totalOrderValue;

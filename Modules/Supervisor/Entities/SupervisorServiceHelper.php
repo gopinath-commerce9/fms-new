@@ -1117,7 +1117,7 @@ class SupervisorServiceHelper
         }
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-        $fixTotalPaidArray = ['adminpaymentmethod'];
+        $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;

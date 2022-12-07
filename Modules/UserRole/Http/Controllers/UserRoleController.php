@@ -635,6 +635,7 @@ class UserRoleController extends Controller
             'availableApiChannels',
             'allAvailableStatuses',
             'availableStatuses',
+            'mappedRole',
             'currentRole'
         ));
 
@@ -1355,6 +1356,7 @@ class UserRoleController extends Controller
             'availableApiChannels',
             'allAvailableStatuses',
             'availableStatuses',
+            'mappedRole',
             'currentRole'
         ));
 

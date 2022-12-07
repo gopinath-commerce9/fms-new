@@ -102,6 +102,13 @@ class UserAuthController extends Controller
             ];
             $roleMapData = UserRoleMap::firstWhere('user_id', $authUserData['id']);
             if ($roleMapData) {
+
+                if ($roleMapData->is_active === UserRole::ROLE_USER_ACTIVE_NO) {
+                    return back()
+                        ->with('error', 'The user is in-active!')
+                        ->withInput($request->only('email', 'remember'));
+                }
+
                 $mappedRoleId = $roleMapData->role_id;
                 $roleData = UserRole::find($mappedRoleId);
                 if ($roleData) {

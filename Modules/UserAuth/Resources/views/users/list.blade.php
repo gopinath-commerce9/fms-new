@@ -54,6 +54,7 @@
                                 <th>EMail</th>
                                 <th>Contact</th>
                                 <th>Role</th>
+                                <th>Active</th>
                                 <th>Created At</th>
                                 <th>Updated At</th>
                                 <th>Action</th>
@@ -105,6 +106,17 @@
                                             </span>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if($userEl->mappedRole && (count($userEl->mappedRole) > 0))
+                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">
+                                                {{ ((int)$userEl->mappedRole[0]->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES) ? "Active" : "In-Active" }}
+                                            </span>
+                                        @else
+                                            <span class="label label-lg font-weight-bold label-light-primary label-inline">
+                                                Un-Assigned
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td>{{ date('Y-m-d H:i:s', strtotime($userEl->created_at)) }}</td>
                                     <td>{{ date('Y-m-d H:i:s', strtotime($userEl->updated_at)) }}</td>
                                     <td nowrap="nowrap">
@@ -116,13 +128,15 @@
                                         @endif
 
                                         @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.update'))
-                                            <a href="{{ url('/userauth/users/edit/' . $userEl->id) }}" class="btn btn-sm btn-clean btn-icon mr-2" title="Edit">
-                                                <i class="flaticon2-pen text-warning"></i>
-                                            </a>
+                                            @if($userEl->id != $processUserId)
+                                                <a href="{{ url('/userauth/users/edit/' . $userEl->id) }}" class="btn btn-sm btn-clean btn-icon mr-2" title="Edit">
+                                                    <i class="flaticon2-pen text-warning"></i>
+                                                </a>
+                                            @endif
                                         @endif
 
                                         @if(\Modules\UserRole\Http\Middleware\AuthUserPermissionResolver::permitted('users.delete'))
-                                            @if(!$userEl->isDefaultUser())
+                                            @if(!$userEl->isDefaultUser() && ($userEl->id != $processUserId))
                                                 <a href="{{ url('/userauth/users/delete/' . $userEl->id) }}" class="btn btn-sm btn-clean btn-icon" title="Delete">
                                                     <i class="flaticon-delete-1 text-danger"></i>
                                                 </a>

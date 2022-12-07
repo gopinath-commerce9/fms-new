@@ -51,6 +51,11 @@ class ApiController extends BaseController
             return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
         }
 
+        if ($roleMapData->is_active === UserRole::ROLE_USER_ACTIVE_NO) {
+            $errMessage = 'The user is in-active!';
+            return $this->sendError($errMessage, ['error' => $errMessage], ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED);
+        }
+
         $mappedRoleId = $roleMapData->role_id;
         $roleData = UserRole::find($mappedRoleId);
         if (!$roleData) {
@@ -157,7 +162,7 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                $fixTotalPaidArray = ['adminpaymentmethod'];
+                $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -340,7 +345,7 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                $fixTotalPaidArray = ['adminpaymentmethod'];
+                $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -523,7 +528,7 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                $fixTotalPaidArray = ['adminpaymentmethod'];
+                $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -711,7 +716,7 @@ class ApiController extends BaseController
                 $saleOrderData = $record->toArray();
 
                 $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-                $fixTotalPaidArray = ['adminpaymentmethod'];
+                $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
                 $totalOrderValueOrig = (float)$saleOrderData['order_total'];
                 $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                 $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -941,7 +946,7 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-        $fixTotalPaidArray = ['adminpaymentmethod'];
+        $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -1346,7 +1351,7 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-        $fixTotalPaidArray = ['adminpaymentmethod'];
+        $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;
@@ -1434,7 +1439,7 @@ class ApiController extends BaseController
         $saleOrderData = $saleOrderObj->toArray();
 
         $fixTotalDueArray = ['cashondelivery', 'banktransfer'];
-        $fixTotalPaidArray = ['adminpaymentmethod'];
+        $fixTotalPaidArray = ['adminpaymentmethod', 'ngeniusonline'];
         $totalOrderValueOrig = (float)$saleOrderData['order_total'];
         $totalCanceledValue = (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
         $totalOrderValue = $totalOrderValueOrig - $totalCanceledValue;

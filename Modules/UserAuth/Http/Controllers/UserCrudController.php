@@ -32,11 +32,18 @@ class UserCrudController extends Controller
 
         $serviceHelper = new UserServiceHelper();
 
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+        }
+
         return view('userauth::users.list', compact(
             'pageTitle',
             'pageSubTitle',
             'userList',
             'usersTotal',
+            'processUserId',
             'serviceHelper'
         ));
 
@@ -202,6 +209,16 @@ class UserCrudController extends Controller
                 ->with('error', 'The User Id input is invalid!');
         }
 
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+            if ($processUserId == $userId) {
+                return redirect()->route('users.profileView');
+            }
+        }
+
+
         $givenUserData = User::find($userId);
         if(!$givenUserData) {
             return back()
@@ -232,6 +249,15 @@ class UserCrudController extends Controller
         if (is_null($userId) || !is_numeric($userId) || ((int)$userId <= 0)) {
             return back()
                 ->with('error', 'The User Id input is invalid!');
+        }
+
+        $processUserId = 0;
+        if (session()->has('authUserData')) {
+            $sessionUser = session('authUserData');
+            $processUserId = $sessionUser['id'];
+            if ($processUserId == $userId) {
+                return redirect()->route('users.profileEdit');
+            }
         }
 
         $givenUserData = User::find($userId);
@@ -295,6 +321,7 @@ class UserCrudController extends Controller
             'profile_avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:200'],
             'profile_avatar_remove' => ['nullable', 'boolean'],
             'user_role' => ['nullable', 'numeric', 'integer', 'exists:user_roles,id'],
+            'user_active' => ['nullable', 'numeric', 'integer'],
             'user_feeder_driver' => ['nullable', 'numeric', 'integer'],
             'user_password' => [
                 'nullable',
@@ -400,9 +427,17 @@ class UserCrudController extends Controller
                     $driverRoleObj = UserRole::where('code', UserRole::USER_ROLE_DRIVER)->get();
                     $driverRole = ($driverRoleObj && (count($driverRoleObj) > 0)) ? $driverRoleObj->first() : null;
                     $feederDriverClean = (!is_null($driverRole) && ($givenUserRole->id === $driverRole->id)) ? $feederDriverSet : 0;
+                    $userActiveClean = UserRole::ROLE_USER_ACTIVE_YES;
+                    $userActiveArray = [
+                        UserRole::ROLE_USER_ACTIVE_YES,
+                        UserRole::ROLE_USER_ACTIVE_NO
+                    ];
+                    if (array_key_exists('user_active', $postData) && in_array($postData['user_active'], $userActiveArray)) {
+                        $userActiveClean = Hash::make($postData['user_active']);
+                    }
                     $newRoleMap = UserRoleMap::updateOrCreate(
                         ['user_id' => $givenUserData->id],
-                        ['role_id' => $givenUserRole->id, 'is_feeder_driver' => $feederDriverClean, 'is_active' => 1]
+                        ['role_id' => $givenUserRole->id, 'is_feeder_driver' => $feederDriverClean, 'is_active' => $userActiveClean]
                     );
                     $sessionUser['roleId'] = $givenUserRole->id;
                     $sessionUser['roleCode'] = $givenUserRole->code;

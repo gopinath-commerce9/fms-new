@@ -151,6 +151,14 @@ class DriverApiServiceHelper
             ];
         }
 
+        if ($roleMapData->is_active === UserRole::ROLE_USER_ACTIVE_NO) {
+            return [
+                'success' => false,
+                'message' => 'The user is in-active!',
+                'httpStatus' => ApiServiceHelper::HTTP_STATUS_CODE_UNAUTHORIZED,
+            ];
+        }
+
         $mappedRoleId = $roleMapData->role_id;
         $roleData = UserRole::find($mappedRoleId);
         if (!$roleData) {

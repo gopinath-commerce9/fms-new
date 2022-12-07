@@ -140,6 +140,18 @@
                                                 </div>
                                             </div>
 
+                                            <div class="d-flex align-items-center flex-wrap justify-content-between">
+                                                <div class="flex-grow-1 font-weight-bold text-dark-50 py-2 py-lg-2 mr-5">
+                                                    @if($mappedRole->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_NO)
+                                                        <span class="label label-lg font-weight-bold label-light-danger label-inline mt-2">In-Active</span>
+                                                    @elseif($mappedRole->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)
+                                                        <span class="label label-lg font-weight-bold label-light-success label-inline mt-2">Active</span>
+                                                    @else
+                                                        {{ $mappedRole->pivot->is_active }}
+                                                    @endif
+                                                </div>
+                                            </div>
+
                                         </div>
 
                                     </div>

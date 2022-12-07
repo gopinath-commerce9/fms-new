@@ -200,7 +200,9 @@
                                                                 <option value="">Select a Picker</option>
                                                                 @if(count($pickers->mappedUsers) > 0)
                                                                     @foreach($pickers->mappedUsers as $userEl)
-                                                                        <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
+                                                                        @if($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)
+                                                                            <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
+                                                                        @endif
                                                                     @endforeach
                                                                 @endif
                                                             </select>
@@ -233,7 +235,9 @@
                                                                 <option value="">Select a Driver</option>
                                                                 @if(count($drivers->mappedUsers) > 0)
                                                                     @foreach($drivers->mappedUsers as $userEl)
-                                                                        <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
+                                                                        @if($userEl->pivot->is_active === \Modules\UserRole\Entities\UserRole::ROLE_USER_ACTIVE_YES)
+                                                                            <option value="{{ $userEl->id }}">{{ $userEl->name }}</option>
+                                                                        @endif
                                                                     @endforeach
                                                                 @endif
                                                             </select>
