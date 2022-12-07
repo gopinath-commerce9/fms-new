@@ -433,7 +433,7 @@ class UserCrudController extends Controller
                         UserRole::ROLE_USER_ACTIVE_NO
                     ];
                     if (array_key_exists('user_active', $postData) && in_array($postData['user_active'], $userActiveArray)) {
-                        $userActiveClean = Hash::make($postData['user_active']);
+                        $userActiveClean = $postData['user_active'];
                     }
                     $newRoleMap = UserRoleMap::updateOrCreate(
                         ['user_id' => $givenUserData->id],
