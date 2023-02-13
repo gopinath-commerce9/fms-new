@@ -247,23 +247,23 @@
     }
 
     th.invoice-items-subtable-products-head, td.invoice-items-subtable-products-data {
-        width: 30%;
+        width: 35%;
     }
 
     th.invoice-items-subtable-sku-head, td.invoice-items-subtable-sku-data {
-        width: 10%;
+        width: 12%;
     }
 
     th.invoice-items-subtable-price-head, td.invoice-items-subtable-price-data {
-        width: 15%;
+        width: 17%;
     }
 
     th.invoice-items-subtable-qty-head, td.invoice-items-subtable-qty-data {
-        width: 8%;
+        width: 9%;
     }
 
     th.invoice-items-subtable-unit-head, td.invoice-items-subtable-unit-data {
-        width: 10%;
+        width: 11%;
     }
 
     th.invoice-items-subtable-tax-head, td.invoice-items-subtable-tax-data {
@@ -271,7 +271,11 @@
     }
 
     th.invoice-items-subtable-subtotal-head, td.invoice-items-subtable-subtotal-data {
-        width: 15%;
+        width: 16%;
+    }
+
+    td.invoice-items-subtable-products-data {
+        text-align: left;
     }
 
     .text-bold-highlighter {
@@ -563,7 +567,6 @@
                                         <th class="invoice-items-subtable-price-head">Price</th>
                                         <th class="invoice-items-subtable-qty-head">Qty</th>
                                         <th class="invoice-items-subtable-unit-head">Unit</th>
-                                        <th class="invoice-items-subtable-tax-head">Tax</th>
                                         <th class="invoice-items-subtable-subtotal-head">Subtotal</th>
                                     </tr>
                                 </thead>
@@ -589,7 +592,6 @@
                                             <td class="invoice-items-subtable-price-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemPriceAmount, 2, '.', ',') }}</td>
                                             <td class="invoice-items-subtable-qty-data">{{ $itemEl['qty'] }}</td>
                                             <td class="invoice-items-subtable-unit-data">{{ (array_key_exists($itemEl['order_item_id'], $orderItemArray)) ? $orderItemArray[$itemEl['order_item_id']]['selling_unit'] : '' }}</td>
-                                            <td class="invoice-items-subtable-tax-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemTaxAmount, 2, '.', ',') }}</td>
                                             <td class="invoice-items-subtable-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($itemRowTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
@@ -601,44 +603,44 @@
 
                                     ?>
                                         <tr>
-                                            <td class="order-total-divider-row" colspan="7"></td>
+                                            <td class="order-total-divider-row" colspan="6"></td>
                                         </tr>
                                         <tr>
-                                           <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="6">Subtotal (Inc. Tax): </td>
+                                           <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="5">Subtotal (Inc. Tax): </td>
                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                         <?php if(!is_null($orderData['order_tax']) && (abs((float)$orderData['order_tax']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">VAT:</td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">VAT:</td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['order_tax'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
                                         <?php if(!is_null($orderData['shipping_total']) && (abs((float)$orderData['shipping_total']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">{{ $orderData['shipping_method'] . ': ' }} </td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">{{ $orderData['shipping_method'] . ': ' }} </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['shipping_total'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
                                         <?php if(!is_null($orderData['discount_amount']) && (abs((float)$orderData['discount_amount']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Discount: </td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Discount: </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['discount_amount'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
                                         <?php if(!is_null($orderData['eco_friendly_packing_fee']) && (abs((float)$orderData['eco_friendly_packing_fee']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Eco-Friendly Packing: </td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Eco-Friendly Packing: </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['eco_friendly_packing_fee'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
                                         <tr>
-                                           <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="6">Grand Total: </td>
+                                           <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Grand Total: </td>
                                            <td class="invoice-items-subtable-order-grandtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderGrandTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                     <?php
 
                                         } else {
-                                            echo '<tr><td colspan="7">No Items Found !</td></tr>';
+                                            echo '<tr><td colspan="6">No Items Found !</td></tr>';
                                         }
                                     ?>
                                 </tbody>
