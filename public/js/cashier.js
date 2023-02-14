@@ -18,6 +18,7 @@ var CashierCustomJsBlocks = function() {
                     });
                 },
                 success: function(data){
+                    KTApp.unblockPage();
                     showAlertMessage(data.message);
                     $('#sale-order-details-main-area').html(data.data.orderDetailsHtml);
                     $('#sale-order-items-main-area').html(data.data.orderItemsHtml);
@@ -25,7 +26,6 @@ var CashierCustomJsBlocks = function() {
                     $('#order_item_rescan').val(0);
                     $('#order_item_barcode').val('');
                     /*$('#order_number').val('');*/
-                    KTApp.unblockPage();
                     $('#order_item_barcode').focus('');
                 },
                 error: function (jqXhr, textStatus, errorMessage) {
@@ -53,13 +53,13 @@ var CashierCustomJsBlocks = function() {
                 },
                 success: function(data){
                     if (data.success === true) {
+                        KTApp.unblockPage();
                         showAlertMessage(data.message);
                         $('#sale-order-items-main-area').html(data.data.orderItemsHtml);
                         $('#item_order_id').val(data.data.recordId);
                         $('#order_item_rescan').val(0);
                         $('#order_item_barcode').val('');
                         /*$('#order_number').val('');*/
-                        KTApp.unblockPage();
                         $('#order_item_barcode').focus('');
                     } else {
                         if (data.data.hasOwnProperty('rescanBarcode') && (data.data.rescanBarcode === 1)) {
@@ -86,7 +86,7 @@ var CashierCustomJsBlocks = function() {
     };
 
     var orderFormActions = function() {
-        
+
         jQuery(document).on('click', 'input#cashier_order_scan_submit_btn', function (e) {
             e.preventDefault();
             var boxCount = jQuery('input#box_qty_1').val();

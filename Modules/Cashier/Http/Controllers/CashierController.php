@@ -236,7 +236,7 @@ class CashierController extends Controller
         }
 
         if (trim($orderItemSku) == "") {
-            $barcodeSearcher = $serviceHelper->fetchProductDetailsByBarcode($orderItemBarcode);
+            $barcodeSearcher = $serviceHelper->fetchProductDetailsByBarcode($orderItemBarcode, $saleOrderDataTemp['env'], $saleOrderDataTemp['channel']);
             if (is_array($barcodeSearcher) && (count($barcodeSearcher) > 0)) {
                 $orderItemSku = $barcodeSearcher['sku'];
                 $orderItemQtyScanned = (float) $barcodeSearcher['extension_attributes']['min_qty'];
