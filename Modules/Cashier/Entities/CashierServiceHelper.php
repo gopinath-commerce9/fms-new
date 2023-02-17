@@ -500,6 +500,72 @@ class CashierServiceHelper
 
     }
 
+    public function fetchProductDetailsById($productId = '', $env = '', $apiChannel = '') {
+
+        if (is_null($productId) || (trim($productId) == '')) {
+            return [];
+        }
+
+        if (is_null($env) || (trim($env) == '')) {
+            return [];
+        }
+
+        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
+            return [];
+        }
+
+        $apiService = new RestApiService();
+        $apiService->setApiEnvironment($env);
+        $apiService->setApiChannel($apiChannel);
+
+        $uri = $apiService->getRestApiUrl() . 'products';
+        $qParams = [
+            'searchCriteria[filter_groups][0][filters][0][field]' => 'entity_id',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
+            'searchCriteria[filter_groups][0][filters][0][value]' => trim($productId)
+        ];
+        $apiResult = $apiService->processGetApi($uri, $qParams);
+        if (!$apiResult['status']) {
+            return [];
+        }
+
+        if (!is_array($apiResult['response']) || (count($apiResult['response']) == 0)) {
+            return [];
+        }
+
+        return (
+            array_key_exists('items', $apiResult['response'])
+            && is_array($apiResult['response']['items'])
+            && (count($apiResult['response']['items']) > 0)
+        ) ? $apiResult['response']['items'][0] : [];
+
+    }
+
+    public function fetchProductDetailsBySku($sku = '', $env = '', $apiChannel = '') {
+
+        if (is_null($sku) || (trim($sku) == '')) {
+            return [];
+        }
+
+        if (is_null($env) || (trim($env) == '')) {
+            return [];
+        }
+
+        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
+            return [];
+        }
+
+        $apiService = new RestApiService();
+        $apiService->setApiEnvironment($env);
+        $apiService->setApiChannel($apiChannel);
+
+        $uri = $apiService->getRestApiUrl() . 'products/' . trim($sku);
+        $apiResult = $apiService->processGetApi($uri);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+    }
+
     public function fetchProductDetailsByBarcode($barcode = '', $env = '', $apiChannel = '') {
 
         if (is_null($barcode) || (trim($barcode) == '')) {
@@ -522,7 +588,7 @@ class CashierServiceHelper
         $qParams = [
             'searchCriteria[filter_groups][0][filters][0][field]' => 'bar_code',
             'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
-            'searchCriteria[filter_groups][0][filters][0][value]' => $barcode
+            'searchCriteria[filter_groups][0][filters][0][value]' => trim($barcode)
         ];
         $apiResult = $apiService->processGetApi($uri, $qParams);
         if (!$apiResult['status']) {

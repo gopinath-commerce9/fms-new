@@ -224,27 +224,44 @@ class CashierController extends Controller
         $orderItemQtyScanned = 0;
         $orderItemAmountScanned = 0;
         $orderItemQtyScannedEarlier = 0;
+        $qtyToleranceThreshold = 0;
         $orderItemAmountScannedEarlier = 0;
+        $freshItem = false;
+        $productExists = false;
         $productInOrder = false;
         $productScannedEarlier = false;
 
         $barcodeExploder = $serviceHelper->explodeSaleOrderItemBarcode($orderItemBarcode);
         if (!is_null($barcodeExploder)) {
+            $freshItem = true;
             $orderItemSku = $barcodeExploder['itemSku'];
             $orderItemQtyScanned = (float) $barcodeExploder['itemQty'];
             $orderItemAmountScanned = (float) $barcodeExploder['itemPrice'];
+            $skuSearcher = $serviceHelper->fetchProductDetailsBySku($orderItemSku, $saleOrderDataTemp['env'], $saleOrderDataTemp['channel']);
+            if (is_array($skuSearcher) && (count($skuSearcher) > 0)) {
+                $productExists = true;
+                $productCustAttrBase = (array_key_exists('custom_attributes', $skuSearcher) && (count($skuSearcher['custom_attributes']) > 0)) ? $skuSearcher['custom_attributes'] : [];
+                $productCustAttr = [];
+                foreach ($productCustAttrBase as $attrObj) {
+                    $productCustAttr[$attrObj['attribute_code']] = $attrObj['value'];
+                }
+                if (array_key_exists('weight_tolerance', $productCustAttr)) {
+                    $qtyToleranceThreshold = (float)$productCustAttr['weight_tolerance'];
+                }
+            }
         }
 
         if (trim($orderItemSku) == "") {
             $barcodeSearcher = $serviceHelper->fetchProductDetailsByBarcode($orderItemBarcode, $saleOrderDataTemp['env'], $saleOrderDataTemp['channel']);
             if (is_array($barcodeSearcher) && (count($barcodeSearcher) > 0)) {
+                $productExists = true;
                 $orderItemSku = $barcodeSearcher['sku'];
                 $orderItemQtyScanned = (float) $barcodeSearcher['extension_attributes']['min_qty'];
                 $orderItemAmountScanned = (float) $barcodeSearcher['price'];
             }
         }
 
-        if (trim($orderItemSku) == "") {
+        if ($productExists === false) {
             return response()->json([
                 'success' => false,
                 'data' => [
@@ -299,12 +316,27 @@ class CashierController extends Controller
         $orderItemQtyScannedEarlier += $orderItemQtyScanned;
         $orderItemAmountScannedEarlier += $orderItemAmountScanned;
 
+        $maxQtyAllowed = $orderItemQty + $qtyToleranceThreshold;
+        $itemQtyDifference = $orderItemQtyScannedEarlier - $maxQtyAllowed;
+        if ($itemQtyDifference > 0) {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'rescanBarcode' => 0
+                ],
+                'message' => 'The Scanned Product "' . $orderItemBarcode . '" exceeded the maximum Quantity level of the item ordered in the Sale Order "#' . $saleOrderDataTemp['increment_id'] . '" !',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $finalScannedQty = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemQty : $orderItemQtyScannedEarlier;
+        $finalScannedAmount = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemAmount : $orderItemAmountScannedEarlier;
+
         $saleOrderUpdatedItem = SaleOrderItem::find($orderItemId);
         if (!is_null($saleOrderUpdatedItem)) {
             $saleOrderUpdatedItem->scan_barcode = $barcodeList;
             $saleOrderUpdatedItem->scan_count = $orderItemBarcodeScanCount;
-            $saleOrderUpdatedItem->qty_delivered = $orderItemQtyScannedEarlier;
-            $saleOrderUpdatedItem->row_total_delivered = $orderItemAmountScannedEarlier;
+            $saleOrderUpdatedItem->qty_delivered = $finalScannedQty;
+            $saleOrderUpdatedItem->row_total_delivered = $finalScannedAmount;
             $saleOrderUpdatedItem->store_availability = 1;
             $saleOrderUpdatedItem->availability_checked_at = date('Y-m-d H:i:s');
             $saleOrderUpdatedItem->save();
