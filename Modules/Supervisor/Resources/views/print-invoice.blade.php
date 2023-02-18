@@ -606,7 +606,7 @@
                                             <td class="order-total-divider-row" colspan="6"></td>
                                         </tr>
                                         <tr>
-                                           <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="5">Subtotal (Inc. Tax): </td>
+                                           <td class="invoice-items-subtable-order-subtotal-label text-bold-highlighter text-align-right" colspan="5">Subtotal (Inc. VAT): </td>
                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $invoiceData['order_currency_code'] . ' ' . number_format($orderSubTotalAmount, 2, '.', ',') }}</td>
                                         </tr>
                                         <?php if(!is_null($orderData['order_tax']) && (abs((float)$orderData['order_tax']) > 0)) { ?>
