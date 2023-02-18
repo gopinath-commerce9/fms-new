@@ -635,7 +635,7 @@
                                         <?php } ?>
                                         <?php if(!is_null($orderData['storeCredits']) && (abs((float)$orderData['storeCredits']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Store Credits: </td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Store Credit Used: </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['storeCredits'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
