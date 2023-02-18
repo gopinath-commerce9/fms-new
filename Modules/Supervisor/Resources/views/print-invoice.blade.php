@@ -621,16 +621,22 @@
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['shipping_total'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
+                                        <?php if(!is_null($orderData['eco_friendly_packing_fee']) && (abs((float)$orderData['eco_friendly_packing_fee']) > 0)) { ?>
+                                        <tr>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Eco-Friendly Packing: </td>
+                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['eco_friendly_packing_fee'], 2, '.', ',') }}</td>
+                                        </tr>
+                                        <?php } ?>
                                         <?php if(!is_null($orderData['discount_amount']) && (abs((float)$orderData['discount_amount']) > 0)) { ?>
                                         <tr>
                                             <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Discount: </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['discount_amount'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
-                                        <?php if(!is_null($orderData['eco_friendly_packing_fee']) && (abs((float)$orderData['eco_friendly_packing_fee']) > 0)) { ?>
+                                        <?php if(!is_null($orderData['storeCredits']) && (abs((float)$orderData['storeCredits']) > 0)) { ?>
                                         <tr>
-                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Eco-Friendly Packing: </td>
-                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['eco_friendly_packing_fee'], 2, '.', ',') }}</td>
+                                            <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Store Credits: </td>
+                                            <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['storeCredits'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
                                         <tr>

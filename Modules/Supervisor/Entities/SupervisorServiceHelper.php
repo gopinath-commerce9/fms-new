@@ -1048,6 +1048,31 @@ class SupervisorServiceHelper
 
     }
 
+    public function getServerOrderDetails(SaleOrder $order = null) {
+
+        if (is_null($order)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order is empty!'
+            ];
+        }
+
+        $saleOrderEl = $this->getOrderDetailsById($order->order_id, $order->env, $order->channel);
+        if (!is_array($saleOrderEl) || (count($saleOrderEl) == 0)) {
+            return [
+                'status' => false,
+                'message' => 'Could not fetch the data for Sale Order!'
+            ];
+        }
+
+        return [
+            'status' => true,
+            'message' => 'The Sale Order data is fetched successfully',
+            'orderData' => $saleOrderEl
+        ];
+
+    }
+
     public function getInvoiceDetails(SaleOrder $order = null) {
 
         if (is_null($order)) {

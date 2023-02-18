@@ -946,6 +946,7 @@ class SupervisorController extends Controller
 
         $serviceHelper = new SupervisorServiceHelper();
         $invoiceResult = $serviceHelper->getInvoiceDetails($saleOrderObj);
+        $fetchedOrderResult = $serviceHelper->getServerOrderDetails($saleOrderObj);
         if ($invoiceResult['status'] === false) {
             return back()
                 ->with('error', 'Cannot print the Invoice of the Sale Order. ' . $invoiceResult['message']);
@@ -974,6 +975,30 @@ class SupervisorController extends Controller
                 }
             }
             $orderData = $saleOrderObj->toArray();
+
+            $storeCredits = 0;
+            $storeCreditCheckArray = [
+                [
+                    'amstorecredit_invoiced_amount',
+                    'amstorecredit_amount',
+                ]
+            ];
+            if ($fetchedOrderResult['status'] === true) {
+                $fetchedOrderData = $fetchedOrderResult['orderData'];
+                $orderExtData = array_key_exists('extension_attributes', $fetchedOrderData) ? $fetchedOrderData['extension_attributes'] : [];
+                foreach ($storeCreditCheckArray as $mainLoopKey => $mainLoopEl) {
+                    $tempStoreCredit = null;
+                    foreach ($mainLoopEl as $secondaryLoopKey => $secondaryLoopEl) {
+                        if (is_null($tempStoreCredit) && array_key_exists($secondaryLoopEl, $orderExtData) && ((float)trim($orderExtData[$secondaryLoopEl]) > 0)) {
+                            $tempStoreCredit = (float)trim($orderExtData[$secondaryLoopEl]);
+                        }
+                    }
+                    if (!is_null($tempStoreCredit)) {
+                        $storeCredits += $tempStoreCredit;
+                    }
+                }
+            }
+            $orderData['storeCredits'] = $storeCredits;
 
             /*$logoPath = public_path('ktmt/media/logos/aanacart-favicon-final.png');*/
             $logoPath = public_path('ktmt/media/logos/aanacart-logo.png');
