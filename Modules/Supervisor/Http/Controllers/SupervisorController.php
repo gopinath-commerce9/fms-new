@@ -202,6 +202,12 @@ class SupervisorController extends Controller
                     SaleOrder::SALE_ORDER_STATUS_ON_HOLD,
                 ];
 
+                $driverStatues = [
+                    SaleOrder::SALE_ORDER_STATUS_READY_TO_DISPATCH,
+                    SaleOrder::SALE_ORDER_STATUS_OUT_FOR_DELIVERY,
+                    SaleOrder::SALE_ORDER_STATUS_DELIVERED,
+                ];
+
                 $pickerListArray = [];
                 $userRoleObj = new UserRole();
                 $pickers = $userRoleObj->allPickers();
@@ -306,7 +312,8 @@ class SupervisorController extends Controller
                     $tempRecord['orderStatus'] = $availableStatuses[$orderStatusId];
                     $pickerSelectedId = '';
                     $pickerSelectedName = '';
-                    $tempRecord['actions'] = url('/supervisor/order-view/' . $record['id']);
+                    $actionSection = '';
+                    $actionSection .= '<a href="' . url('/supervisor/order-view/' . $record['id']) . '" class="btn btn-hover-bg-secondary btn-text-secondary btn-hover-text-white border-0" target="_blank">View Order</a>';
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData;
                         $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail['done_at'], 'F d, Y, h:i:s A');
@@ -336,7 +343,11 @@ class SupervisorController extends Controller
                         }
                         $pickerValues .= '</select>';
                     }
+                    if (in_array($record['order_status'], $driverStatues)) {
+                        $actionSection .= '<a href="' . url('/supervisor/print-order-invoice/' . $record['id']) . '" class="btn btn-hover-bg-primary btn-text-primary btn-hover-text-white border-0">Print Invoice</a>';
+                    }
                     $tempRecord['deliveryPicker'] = $pickerValues;
+                    $tempRecord['actions'] = $actionSection;
                     $filteredOrderData[] = $tempRecord;
                 }
 

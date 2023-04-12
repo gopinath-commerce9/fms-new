@@ -621,7 +621,7 @@
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['shipping_total'], 2, '.', ',') }}</td>
                                         </tr>
                                         <?php } ?>
-                                        <?php if(!is_null($orderData['eco_friendly_packing_fee']) && (abs((float)$orderData['eco_friendly_packing_fee']) > 0)) { ?>
+                                        <?php if((array_key_exists('eco_friendly_packing_fee', $orderData)) && !is_null($orderData['eco_friendly_packing_fee']) && (abs((float)$orderData['eco_friendly_packing_fee']) > 0)) { ?>
                                         <tr>
                                             <td class="invoice-items-subtable-order-grandtotal-label text-bold-highlighter text-align-right" colspan="5">Eco-Friendly Packing: </td>
                                             <td class="invoice-items-subtable-order-subtotal-data text-bold-highlighter">{{ $orderData['order_currency'] . ' ' . number_format($orderData['eco_friendly_packing_fee'], 2, '.', ',') }}</td>

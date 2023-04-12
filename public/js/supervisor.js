@@ -297,7 +297,7 @@ var SupervisorCustomJsBlocks = function() {
                 title: 'Actions',
                 orderable: false,
                 render: function(data, type, full, meta) {
-                    return '<a href="' + data + '" target="_blank">View Order</a>';
+                    return data;
                 },
             }, {
                 targets: 9,
