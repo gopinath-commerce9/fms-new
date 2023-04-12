@@ -313,7 +313,7 @@ class SupervisorController extends Controller
                     $pickerSelectedId = '';
                     $pickerSelectedName = '';
                     $actionSection = '';
-                    $actionSection .= '<a href="' . url('/supervisor/order-view/' . $record['id']) . '" class="btn btn-hover-bg-secondary btn-text-secondary btn-hover-text-white border-0" target="_blank">View Order</a>';
+                    $actionSection .= '<a href="' . url('/supervisor/order-view/' . $record['id']) . '" class="btn btn-hover-bg-secondary btn-text-secondary btn-hover-text-black border-0" target="_blank">View Order</a>';
                     if ($deliveryPickerData && (count($deliveryPickerData) > 0)) {
                         $pickerDetail = $deliveryPickerData;
                         $tempRecord['deliveryPickerTime'] = $serviceHelper->getFormattedTime($pickerDetail['done_at'], 'F d, Y, h:i:s A');
