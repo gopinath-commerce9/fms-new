@@ -152,7 +152,7 @@
                         </div>
                     </div>
 
-                    <div class="border-bottom w-100 my-13 opacity-15"></div>
+                    <div class="border-bottom w-100 my-4 opacity-15"></div>
 
                     <div class="table-responsive">
                         <table class="table text-md-right font-weight-boldest">

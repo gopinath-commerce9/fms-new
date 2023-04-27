@@ -15,8 +15,8 @@
                         <div class="card-body">
                             <div class="form-group mb-8">
                                 <div class="form-group row">
-                                    <label  class="col-2 col-form-label">Scan Order Number</label>
-                                    <div class="col-8">
+                                    <label class="col-3 col-form-label">Scan Order Number</label>
+                                    <div class="col-7">
                                         <input class="form-control" type="text" value="" placeholder="Order Number" id="order_number" name="order_number" />
                                     </div>
                                     <div class="col-2">
@@ -56,51 +56,47 @@
 
     </div>
 
-    <div class="card card-custom">
+    <div class="card card-custom" style="height: 450px; overflow-x:hidden; overflow-y: scroll;">
 
         <div class="row border-bottom mb-7">
-            <div class="col-md-12">
+            <div class="col col-12 col-md-12">
 
                 <div class="card card-custom">
 
-                    <div class="card-header flex-wrap border-0 pt-6 pb-0">
-                        <div class="card-title">
-                            <h3 class="card-label">Sale Order Details</h3>
-                        </div>
-                        <div class="card-toolbar">
+                    <div class="row border-bottom mb-7 mt-7 justify-content-center">
+                        <div class="col col-12 col-md-12">
+
+                            <div class="accordion accordion-solid accordion-toggle-arrow" id="barcode-scanner-sale-order-result-main-section">
+
+                                <div class="card" id="barcode-scanner-sale-order-details-sub-section">
+                                    <div class="card-header" id="barcode-scanner-sale-order-details-sub-section-heading">
+                                        <div class="card-title" data-toggle="collapse" data-target="#barcode-scanner-sale-order-details-sub-section-body">
+                                            Sale Order Details
+                                        </div>
+                                    </div>
+                                    <div id="barcode-scanner-sale-order-details-sub-section-body" class="collapse show" data-parent="#barcode-scanner-sale-order-result-main-section">
+                                        <div class="card-body p-0 mb-7"  id="sale-order-details-main-area">
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card" id="barcode-scanner-sale-order-items-sub-section">
+                                    <div class="card-header" id="barcode-scanner-sale-order-items-sub-section-heading">
+                                        <div class="card-title collapsed" data-toggle="collapse" data-target="#barcode-scanner-sale-order-items-sub-section-body">
+                                            Sale Order Items
+                                        </div>
+                                    </div>
+                                    <div id="barcode-scanner-sale-order-items-sub-section-body" class="collapse" data-parent="#barcode-scanner-sale-order-result-main-section">
+                                        <div class="card-body p-0 mb-7"  id="sale-order-items-main-area">
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
 
                         </div>
-                    </div>
-
-                    <div class="card-body p-0 mb-7" id="sale-order-details-main-area">
-
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-    <div class="card card-custom">
-
-        <div class="row border-bottom mb-7">
-            <div class="col-md-12">
-
-                <div class="card card-custom">
-
-                    <div class="card-header flex-wrap border-0 pt-6 pb-0">
-                        <div class="card-title">
-                            <h3 class="card-label">Sale Order Items</h3>
-                        </div>
-                        <div class="card-toolbar">
-
-                        </div>
-                    </div>
-
-                    <div class="card-body p-0 mb-7" id="sale-order-items-main-area">
-
                     </div>
 
                 </div>
