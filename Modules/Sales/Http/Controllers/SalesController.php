@@ -1132,7 +1132,7 @@ class SalesController extends Controller
                                 if (is_null($productCat)) {
                                     $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
                                     if (!is_null($catApiResult)) {
-                                        $productCat = ProductCategory::firstOrCreate([
+                                        $productCat = ProductCategory::updateOrCreate([
                                             'env' => $record->env,
                                             'channel' => $record->channel,
                                             'product_id' => $productId
