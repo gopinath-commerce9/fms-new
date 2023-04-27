@@ -13,6 +13,7 @@ use \Exception;
 use Illuminate\Support\Facades\Log;
 use Modules\Base\Entities\RestApiService;
 use App\Models\User;
+use Modules\Sales\Entities\ProductCategory;
 use Modules\Sales\Entities\SaleCustomer;
 use Modules\Sales\Entities\SaleOrder;
 use Modules\Sales\Entities\SaleOrderItem;
@@ -323,6 +324,44 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
 
     }
 
+
+
+    /**
+     * Fetch the Product Category Details using Product Id from the API Channel
+     *
+     * @param $productId
+     * @param $env
+     * @param $channel
+     *
+     * @return mixed|null
+     */
+    private function getCategoryByProductId($productId = '', $env = '', $channel = '') {
+
+        if (is_null($productId) || (trim($productId) == '') || !is_numeric(trim($productId))) {
+            return null;
+        }
+
+        $apiService = $this->restApiService;
+        if (!is_null($env) && !is_null($channel) && (trim($env) != '') && (trim($channel) != '')) {
+            $apiService = new RestApiService();
+            $apiService->setApiEnvironment($env);
+            $apiService->setApiChannel($channel);
+        }
+
+        $uri = $apiService->getRestApiUrl() . 'parentcatid/' . trim($productId);
+        $apiResult = $apiService->processGetApi($uri);
+        if (!$apiResult['status']) {
+            return null;
+        }
+
+        if (!is_array($apiResult['response']) || (count($apiResult['response']) == 0)) {
+            return null;
+        }
+
+        return $apiResult['response'][0];
+
+    }
+
     /**
      * Fetch the Sale Order Customer details from the API Channel.
      *
@@ -526,6 +565,20 @@ class SaleOrderChannelImport implements ShouldQueue, ShouldBeUniqueUntilProcessi
                 'vendor_availability' => ((array_key_exists('vendor_availability', $itemExtAttr)) ? $itemExtAttr['vendor_availability'] : 0),
                 'is_active' => 1
             ]);
+
+            $catApiResult = $this->getCategoryByProductId($orderItemEl['product_id'], $saleOrderObj->env, $saleOrderObj->channel);
+            if (!is_null($catApiResult)) {
+                $productCat = ProductCategory::updateOrCreate([
+                    'env' => $saleOrderObj->env,
+                    'channel' => $saleOrderObj->channel,
+                    'product_id' => $orderItemEl['product_id']
+                ], [
+                    'product_sku' => $catApiResult['product_sku'],
+                    'product_name' => $catApiResult['product_name'],
+                    'category_id' => $catApiResult['category_id'],
+                    'category_name' => $catApiResult['category_name']
+                ]);
+            }
 
             return [
                 'status' => true,
