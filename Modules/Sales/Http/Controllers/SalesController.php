@@ -1125,9 +1125,9 @@ class SalesController extends Controller
 
                                 $productId = $orderItemEl->product_id;
                                 $productCat = null;
-                                /*if ($orderItemEl->productCategory) {
+                                if ($orderItemEl->productCategory) {
                                     $productCat = $orderItemEl->productCategory;
-                                }*/
+                                }
 
                                 if (is_null($productCat)) {
                                     $catApiResult = $serviceHelper->getCategoryByProductId($productId, $record->env, $record->channel);
