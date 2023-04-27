@@ -191,8 +191,9 @@ class SalesServiceHelper
     }
 
     public function getProductCategories() {
-        $categories = ProductCategory::select('category_id', 'category_name', DB::raw('count(*) as total_categories'))
-            ->groupBy('category_id')
+        $categories = ProductCategory::select('category_id', 'category_name', 'updated_at',  DB::raw('count(*) as total_categories'))
+            ->groupBy('category_id', 'category_name')
+            ->orderBy('updated_at', 'asc')
             ->get();
         $categoryArray = [
             '0' => 'UnCat'
