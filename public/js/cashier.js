@@ -85,6 +85,54 @@ var CashierCustomJsBlocks = function() {
         });
     };
 
+    var orderItemBarcodesReset = function(hostUrl, token) {
+
+        jQuery(document).on('click', 'button.reset_barcodes_sale_item_btn', function (e) {
+            var orderId = $(this).data('order-id');
+            var orderItemId = $(this).data('order-item-id');
+            var orderItemSku = $(this).data('order-item-sku');
+            if (confirm('This will reset and clear the barcodes scanned for this Order Item "' + orderItemSku + '". Do you want to continue?')) {
+                $.ajax({
+                    url: hostUrl + '/cashier/clear-sale-item-barcodes',
+                    type: 'POST',
+                    data: {
+                        orderId: orderId,
+                        itemId: orderItemId,
+                        itemSku: orderItemSku,
+                        _token: token
+                    },
+                    beforeSend: function() {
+                        KTApp.blockPage({
+                            overlayColor: '#000000',
+                            state: 'danger',
+                            message: 'Please wait...'
+                        });
+                    },
+                    success: function(data){
+                        if (data.success === true) {
+                            KTApp.unblockPage();
+                            showAlertMessage(data.message);
+                            $('#sale-order-items-main-area').html(data.data.orderItemsHtml);
+                            $('#item_order_id').val(data.data.recordId);
+                            $('#order_item_rescan').val(0);
+                            $('#order_item_barcode').val('');
+                            /*$('#order_number').val('');*/
+                            $('#order_item_barcode').focus('');
+                        } else {
+                            KTApp.unblockPage();
+                            showAlertMessage(data.message);
+                        }
+                    },
+                    error: function (jqXhr, textStatus, errorMessage) {
+                        KTApp.unblockPage();
+                        showAlertMessage(errorMessage);
+                    }
+                });
+            }
+        });
+
+    };
+
     var orderFormActions = function() {
 
         jQuery(document).on('click', 'input#cashier_order_scan_submit_btn', function (e) {
@@ -139,6 +187,7 @@ var CashierCustomJsBlocks = function() {
             $('input#order_number').focus();
             scanOrderNumberBarcode();
             scanOrderItemBarcode();
+            orderItemBarcodesReset(hostUrl, token);
             orderFormActions();
         }
     };

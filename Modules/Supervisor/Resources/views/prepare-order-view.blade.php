@@ -385,22 +385,34 @@
                                                 <td class="align-middle title-color font-size-lg border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
                                                 <td class="align-middle font-size-h3 border-0 pt-0"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_subtotal'];?></td>
                                             </tr>
+                                            <?php if(!is_null($saleOrderData['order_tax']) && (abs((float)$saleOrderData['order_tax']) > 0)) { ?>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">VAT</td>
+                                                <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_tax'];?></td>
+                                            </tr>
+                                            <?php } ?>
+                                            <?php if(!is_null($saleOrderData['shipping_total'])) { ?>
                                             <tr>
                                                 <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
                                                 <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['shipping_total'];?></td>
                                             </tr>
-                                            <?php if( !empty($saleOrderData['discount_amount']) ) {?>
+                                            <?php } ?>
+                                            <?php if(!is_null($saleOrderData['discount_amount'])) {?>
                                             <tr>
-
                                                 <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
                                                 <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['discount_amount'];?></td>
-
                                             </tr>
                                             <?php } ?>
-                                            <?php if(!is_null($saleOrderData['eco_friendly_packing_fee']) ) {?>
+                                            <?php if(array_key_exists('eco_friendly_packing_fee', $saleOrderData) && !is_null($saleOrderData['eco_friendly_packing_fee']) && (abs((float)$saleOrderData['eco_friendly_packing_fee']) > 0)) {?>
                                             <tr>
                                                 <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Eco-Friendly Packing</td>
                                                 <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['eco_friendly_packing_fee'];?></td>
+                                            </tr>
+                                            <?php } ?>
+                                            <?php if(array_key_exists('storeCredits', $saleOrderData) && !is_null($saleOrderData['storeCredits']) && (abs((float)$saleOrderData['storeCredits']) > 0)) {?>
+                                            <tr>
+                                                <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Store Credit Used: </td>
+                                                <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['storeCredits'];?></td>
                                             </tr>
                                             <?php } ?>
                                             <tr>

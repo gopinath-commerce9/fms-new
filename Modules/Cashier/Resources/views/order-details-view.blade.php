@@ -41,6 +41,19 @@
                 </span>
             </div>
 
+            <div class="d-flex flex-column flex-root">
+                <span class="font-weight-bolder mb-2">Order Status</span>
+                <span class="opacity-70">
+                    <?php
+                    $status = $saleOrderData['order_status'];
+                    if(array_key_exists($status, $orderStatuses)) {
+                        $status = $orderStatuses[$status];
+                    }
+                    ?>
+                    <?php echo $status;?>
+                </span>
+            </div>
+
         </div>
 
         <div class="border-bottom w-100"></div>

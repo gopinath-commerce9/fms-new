@@ -208,8 +208,6 @@ return [
         ],
         'cashier' => [
             'being_prepared',
-            'holded',
-            'ready_to_dispatch',
         ],
     ],
 

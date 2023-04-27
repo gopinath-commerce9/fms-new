@@ -222,6 +222,8 @@ class SupervisorServiceHelper
 
         $orderRequest = SaleOrder::select('*');
 
+        $orderRequest->where('env', $this->getApiEnvironment());
+
         $emirates = $this->getAvailableRegionsList();
         $regionKeys = array_keys($emirates);
         if (
@@ -288,6 +290,8 @@ class SupervisorServiceHelper
         $returnData = [];
 
         $orderRequest = SaleOrder::select('delivery_date', 'order_currency', DB::raw('sum(order_total) as total_sum'));
+
+        $orderRequest->where('env', $this->getApiEnvironment());
 
         $availableApiChannels = $this->getAllAvailableChannels();
         if (!is_null($apiChannel) && (trim($apiChannel) != '')) {
@@ -360,6 +364,8 @@ class SupervisorServiceHelper
         $returnData = [];
 
         $orderRequest = SaleOrder::select('delivery_date', 'order_status', 'order_status_label', DB::raw('count(*) as total_orders'));
+
+        $orderRequest->where('env', $this->getApiEnvironment());
 
         $availableApiChannels = $this->getAllAvailableChannels();
         if (!is_null($apiChannel) && (trim($apiChannel) != '')) {

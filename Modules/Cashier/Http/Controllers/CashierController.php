@@ -61,7 +61,7 @@ class CashierController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Requested Order Number value is invalid!',
-            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
         }
 
         $serviceHelper = new CashierServiceHelper();
@@ -89,7 +89,7 @@ class CashierController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => "Sale Order #" . $incrementId . " not found!",
-                ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+                ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
             }
 
             $processUserId = 0;
@@ -116,6 +116,31 @@ class CashierController extends Controller
             $saleOrderObj->statusHistory;
             $saleOrderObj->processHistory;
             $saleOrderData = $saleOrderObj->toArray();
+
+            $storeCredits = 0;
+            $storeCreditCheckArray = [
+                [
+                    'amstorecredit_invoiced_amount',
+                    'amstorecredit_amount',
+                ]
+            ];
+            $fetchedOrderResult = $serviceHelper->getServerOrderDetails($saleOrderObj);
+            if ($fetchedOrderResult['status'] === true) {
+                $fetchedOrderData = $fetchedOrderResult['orderData'];
+                $orderExtData = array_key_exists('extension_attributes', $fetchedOrderData) ? $fetchedOrderData['extension_attributes'] : [];
+                foreach ($storeCreditCheckArray as $mainLoopKey => $mainLoopEl) {
+                    $tempStoreCredit = null;
+                    foreach ($mainLoopEl as $secondaryLoopKey => $secondaryLoopEl) {
+                        if (is_null($tempStoreCredit) && array_key_exists($secondaryLoopEl, $orderExtData) && ((float)trim($orderExtData[$secondaryLoopEl]) > 0)) {
+                            $tempStoreCredit = (float)trim($orderExtData[$secondaryLoopEl]);
+                        }
+                    }
+                    if (!is_null($tempStoreCredit)) {
+                        $storeCredits += $tempStoreCredit;
+                    }
+                }
+            }
+            $saleOrderData['storeCredits'] = $storeCredits;
 
             $saleRegionDetails = SalesRegion::firstWhere('region_id', $saleOrderData['region_id']);
 
@@ -186,7 +211,7 @@ class CashierController extends Controller
                     'rescanBarcode' => 0
                 ],
                 'message' => 'Requested Order Number value is invalid!',
-            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
         }
 
         if ($orderItemBarcode == '') {
@@ -196,7 +221,7 @@ class CashierController extends Controller
                     'rescanBarcode' => 0
                 ],
                 'message' => 'Requested Order Item Barcode value is invalid!',
-            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
         }
 
         $saleOrderObj = SaleOrder::find($orderId);
@@ -328,8 +353,11 @@ class CashierController extends Controller
             ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
         }
 
-        $finalScannedQty = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemQty : $orderItemQtyScannedEarlier;
-        $finalScannedAmount = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemAmount : $orderItemAmountScannedEarlier;
+        /*$finalScannedQty = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemQty : $orderItemQtyScannedEarlier;
+        $finalScannedAmount = (($orderItemQtyScannedEarlier - $orderItemQty) > 0) ? $orderItemAmount : $orderItemAmountScannedEarlier;*/
+
+        $finalScannedQty = $orderItemQtyScannedEarlier;
+        $finalScannedAmount = $orderItemAmountScannedEarlier;
 
         $saleOrderUpdatedItem = SaleOrderItem::find($orderItemId);
         if (!is_null($saleOrderUpdatedItem)) {
@@ -352,6 +380,31 @@ class CashierController extends Controller
         $saleOrderObj->statusHistory;
         $saleOrderObj->processHistory;
         $saleOrderData = $saleOrderObj->toArray();
+
+        $storeCredits = 0;
+        $storeCreditCheckArray = [
+            [
+                'amstorecredit_invoiced_amount',
+                'amstorecredit_amount',
+            ]
+        ];
+        $fetchedOrderResult = $serviceHelper->getServerOrderDetails($saleOrderObj);
+        if ($fetchedOrderResult['status'] === true) {
+            $fetchedOrderData = $fetchedOrderResult['orderData'];
+            $orderExtData = array_key_exists('extension_attributes', $fetchedOrderData) ? $fetchedOrderData['extension_attributes'] : [];
+            foreach ($storeCreditCheckArray as $mainLoopKey => $mainLoopEl) {
+                $tempStoreCredit = null;
+                foreach ($mainLoopEl as $secondaryLoopKey => $secondaryLoopEl) {
+                    if (is_null($tempStoreCredit) && array_key_exists($secondaryLoopEl, $orderExtData) && ((float)trim($orderExtData[$secondaryLoopEl]) > 0)) {
+                        $tempStoreCredit = (float)trim($orderExtData[$secondaryLoopEl]);
+                    }
+                }
+                if (!is_null($tempStoreCredit)) {
+                    $storeCredits += $tempStoreCredit;
+                }
+            }
+        }
+        $saleOrderData['storeCredits'] = $storeCredits;
 
         $orderStatuses = config('fms.order_statuses');
 
@@ -383,6 +436,175 @@ class CashierController extends Controller
                 'orderItemsHtml' => $orderItemsHtml,
             ],
             'message' => 'The Product scanned successfully!',
+        ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+
+    }
+
+    public function clearSaleItemBarcodes(Request $request) {
+
+        $orderId = (
+            $request->has('orderId')
+            && (trim($request->input('orderId')) != '')
+        ) ? trim($request->input('orderId')) : '';
+
+        $orderItemId = (
+            $request->has('itemId')
+            && (trim($request->input('itemId')) != '')
+        ) ? trim($request->input('itemId')) : '';
+
+        $orderItemSku = (
+            $request->has('itemSku')
+            && (trim($request->input('itemSku')) != '')
+        ) ? trim($request->input('itemSku')) : '';
+
+        if ($orderId == '') {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'rescanBarcode' => 0
+                ],
+                'message' => 'Requested Order Number value is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        if ($orderItemId == '') {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'rescanBarcode' => 0
+                ],
+                'message' => 'Requested Order Item value is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        if ($orderItemSku == '') {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'rescanBarcode' => 0
+                ],
+                'message' => 'Requested Order Item SKU value is invalid!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $serviceHelper = new CashierServiceHelper();
+        $availableStatuses = $serviceHelper->getCashiersAllowedStatuses();
+        $currentChannel = $serviceHelper->getApiChannel();
+        $currentEnv = $serviceHelper->getApiEnvironment();
+
+        $targetOrderItemObj = SaleOrderItem::find($orderItemId);
+        if(!$targetOrderItemObj || ($targetOrderItemObj->item_sku != $orderItemSku) || ($targetOrderItemObj->order_id != $orderId)) {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'rescanBarcode' => 0
+                ],
+                'message' => 'The Sale Order Item does not exist!',
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $targetOrderQ = SaleOrder::select('*');
+        $targetOrderQ->where('id', $orderId);
+        if (!is_null($currentEnv)) {
+            $targetOrderQ->where('env', $currentEnv);
+        }
+        if (!is_null($currentChannel)) {
+            $targetOrderQ->where('channel', $currentChannel);
+        }
+        if (count(array_keys($availableStatuses)) > 0) {
+            $targetOrderQ->whereIn('order_status', array_keys($availableStatuses));
+        }
+
+        $targetOrder = $targetOrderQ->get();
+        if (!$targetOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => "Sale Order not found!",
+            ], ApiServiceHelper::HTTP_STATUS_CODE_BAD_REQUEST);
+        }
+
+        $saleOrderObj = ($targetOrder instanceof SaleOrder) ? $targetOrder : $targetOrder->first();
+        if (is_null($saleOrderObj)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Sale Order not found!",
+            ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
+        }
+
+        $targetOrderItemObj->scan_barcode = null;
+        $targetOrderItemObj->scan_count = null;
+        $targetOrderItemObj->qty_delivered = null;
+        $targetOrderItemObj->row_total_delivered = null;
+        $targetOrderItemObj->store_availability = null;
+        $targetOrderItemObj->availability_checked_at = null;
+        $targetOrderItemObj->save();
+
+        $targetOrderItemObj->refresh();
+
+        $saleOrderObj->saleCustomer;
+        $saleOrderObj->orderItems;
+        $saleOrderObj->billingAddress;
+        $saleOrderObj->shippingAddress;
+        $saleOrderObj->paymentData;
+        $saleOrderObj->statusHistory;
+        $saleOrderObj->processHistory;
+        $saleOrderData = $saleOrderObj->toArray();
+
+        $storeCredits = 0;
+        $storeCreditCheckArray = [
+            [
+                'amstorecredit_invoiced_amount',
+                'amstorecredit_amount',
+            ]
+        ];
+        $fetchedOrderResult = $serviceHelper->getServerOrderDetails($saleOrderObj);
+        if ($fetchedOrderResult['status'] === true) {
+            $fetchedOrderData = $fetchedOrderResult['orderData'];
+            $orderExtData = array_key_exists('extension_attributes', $fetchedOrderData) ? $fetchedOrderData['extension_attributes'] : [];
+            foreach ($storeCreditCheckArray as $mainLoopKey => $mainLoopEl) {
+                $tempStoreCredit = null;
+                foreach ($mainLoopEl as $secondaryLoopKey => $secondaryLoopEl) {
+                    if (is_null($tempStoreCredit) && array_key_exists($secondaryLoopEl, $orderExtData) && ((float)trim($orderExtData[$secondaryLoopEl]) > 0)) {
+                        $tempStoreCredit = (float)trim($orderExtData[$secondaryLoopEl]);
+                    }
+                }
+                if (!is_null($tempStoreCredit)) {
+                    $storeCredits += $tempStoreCredit;
+                }
+            }
+        }
+        $saleOrderData['storeCredits'] = $storeCredits;
+
+        $orderStatuses = config('fms.order_statuses');
+
+        $customerGroups = [];
+        $customerGroupData = $serviceHelper->getCustomerGroups();
+        if (is_array($customerGroupData) && (count($customerGroupData) > 0) && array_key_exists('items', $customerGroupData)) {
+            foreach($customerGroupData['items'] as $group) {
+                $customerGroups[$group['id']] = $group['code'];
+            }
+        }
+        $saleRegionDetails = SalesRegion::firstWhere('region_id', $saleOrderData['region_id']);
+
+        $orderItemsHtml = view('cashier::order-items-view', compact(
+            'saleOrderData',
+            'saleOrderObj',
+            'serviceHelper',
+            'customerGroups',
+            'orderStatuses',
+            'saleRegionDetails',
+        ))->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'recordId' => $saleOrderData['id'],
+                'orderId' => $saleOrderData['order_id'],
+                'orderNumber' => $saleOrderData['increment_id'],
+                'rescanBarcode' => 0,
+                'orderItemsHtml' => $orderItemsHtml,
+            ],
+            'message' => 'The Product Barcode cleared successfully!',
         ], ApiServiceHelper::HTTP_STATUS_CODE_OK);
 
     }

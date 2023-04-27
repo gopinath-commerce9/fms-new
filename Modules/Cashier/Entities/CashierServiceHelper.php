@@ -441,6 +441,31 @@ class CashierServiceHelper
 
     }
 
+    public function getServerOrderDetails(SaleOrder $order = null) {
+
+        if (is_null($order)) {
+            return [
+                'status' => false,
+                'message' => 'Sale Order is empty!'
+            ];
+        }
+
+        $saleOrderEl = $this->getOrderDetailsById($order->order_id, $order->env, $order->channel);
+        if (!is_array($saleOrderEl) || (count($saleOrderEl) == 0)) {
+            return [
+                'status' => false,
+                'message' => 'Could not fetch the data for Sale Order!'
+            ];
+        }
+
+        return [
+            'status' => true,
+            'message' => 'The Sale Order data is fetched successfully',
+            'orderData' => $saleOrderEl
+        ];
+
+    }
+
     public function getInvoiceDetails(SaleOrder $order = null) {
 
         if (is_null($order)) {
@@ -613,6 +638,52 @@ class CashierServiceHelper
 
     public function getUserImageUrl($path = '') {
         return $this->baseService->getFileUrl('media/images/users/' . $path);
+    }
+
+    private function getOrderDetailsById($orderId = '', $env = '', $apiChannel = '') {
+
+        if (is_null($orderId) || (trim($orderId) == '') || !is_numeric(trim($orderId)) || ((int) trim($orderId) <= 0)) {
+            return [];
+        }
+
+        if (is_null($env) || (trim($env) == '')) {
+            return [];
+        }
+
+        if (is_null($apiChannel) || (trim($apiChannel) == '')) {
+            return [];
+        }
+
+        $apiService = new RestApiService();
+        $apiService->setApiEnvironment($env);
+        $apiService->setApiChannel($apiChannel);
+
+        $uri = $apiService->getRestApiUrl() . 'orders/' . $orderId;
+        $apiResult = $apiService->processGetApi($uri);
+
+        return ($apiResult['status']) ? $apiResult['response'] : [];
+
+        /*$uri = $apiService->getRestApiUrl() . 'orders';
+        $qParams = [
+            'searchCriteria[filter_groups][0][filters][0][field]' => 'entity_id',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]' => 'eq',
+            'searchCriteria[filter_groups][0][filters][0][value]' => $orderId
+        ];
+        $apiResult = $apiService->processGetApi($uri, $qParams);
+        if (!$apiResult['status']) {
+            return [];
+        }
+
+        if (!is_array($apiResult['response']) || (count($apiResult['response']) == 0)) {
+            return [];
+        }
+
+        return (
+            array_key_exists('items', $apiResult['response'])
+            && is_array($apiResult['response']['items'])
+            && (count($apiResult['response']['items']) > 0)
+        ) ? $apiResult['response']['items'][0] : [];*/
+
     }
 
     private function fetchInvoiceDetailsByOrderId($orderId = '', $env = '', $apiChannel = '') {

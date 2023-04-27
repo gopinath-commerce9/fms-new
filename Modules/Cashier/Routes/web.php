@@ -26,6 +26,8 @@ Route::prefix('cashier')->middleware([
         ->name('cashier.searchOrderByIncrementId');
     Route::post('/find-order-item', 'CashierController@searchOrderItemByBarcode')
         ->name('cashier.searchOrderItemByBarcode');
+    Route::post('/clear-sale-item-barcodes', 'CashierController@clearSaleItemBarcodes')
+        ->name('cashier.clearSaleItemBarcodes');
     Route::post('/prepare-order-status-change/{orderId}', 'CashierController@prepareOrderStatusChange')
         ->name('cashier.prepareOrderStatusChange');
     Route::post('/order-status-change/{orderId}', 'CashierController@orderStatusChange')
