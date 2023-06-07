@@ -50,6 +50,22 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr id="order-details-table-order-data-row" style="width: 100%">
+                            <td id="order-details-table-order-zone-data" style="width: 50%; border: 1px solid #000000;">
+                                <div id="order-details-table-order-zone-data-label-div" style="text-align: center;">
+                                    <label id="order-details-order-zone-data-label-label" class="highlight-info-label" style="font-style: normal; font-weight: normal;">
+                                        <span class="font-weight-bolder mb-2">Zone : <span style="font-weight: bold;"><?= $singleOrderData['zone'] ?></span></span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td id="order-details-table-order-number-data" style="width: 50%; border: 1px solid #000000;">
+                                <div id="order-details-table-order-number-data-label-div" style="text-align: center;">
+                                    <label id="order-details-order-number-data-label-label" class="highlight-info-label" style="font-style: normal; font-weight: normal;">
+                                        <span class="font-weight-bolder mb-2">Order # : <span style="font-weight: bold;"><?= $singleOrderData['orderNumber'] ?></span></span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
                         <tr id="order-details-table-delivery-datetime-row" style="width: 100%">
                             <td id="order-details-table-date-data" colspan="2" style="width: 100%; border: 1px solid #000000;">
                                 <div id="order-details-table-date-data-label-div" style="text-align: center;">
@@ -58,9 +74,12 @@
                                             Total Weight :
                                             <?php
                                                 $weightIndexer = 1;
-                                                foreach ($filteredOrderTotalWeight as $weightKey => $weightEl) {
-                                                    echo '<span style="font-weight: bold;">' . $weightEl['title']. " : " . $weightEl['weight'] . (($weightIndexer < count($filteredOrderTotalWeight)) ? "; " : " "). "</span>";
-                                                    $weightIndexer++;
+                                                if (array_key_exists($singleOrderData['orderId'], $filteredOrderIndividualWeight)) {
+                                                    $currentOrderWeightArray = $filteredOrderIndividualWeight[$singleOrderData['orderId']];
+                                                    foreach ($currentOrderWeightArray as $weightKey => $weightEl) {
+                                                        echo '<span style="font-weight: bold;">' . $weightEl['title']. " : " . $weightEl['weight'] . (($weightIndexer < count($currentOrderWeightArray)) ? "; " : " "). "</span>";
+                                                        $weightIndexer++;
+                                                    }
                                                 }
                                             ?>
                                         </span>

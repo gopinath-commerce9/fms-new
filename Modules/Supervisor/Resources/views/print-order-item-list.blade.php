@@ -23,7 +23,7 @@
 
                         <tr id="top-head-wrapper-table-row" style="width: 100%">
 
-                            <td id="package-count-td" style="width: 33%">
+                            <td id="package-count-td" style="width: 20%">
                                 <div id="package-count-div" style="text-align: center;">
                                     <label id="package-count-label" style="font-size: larger; font-style: normal; font-weight: normal;">
                                         Item Count: <?= count($orderData['order_items']) ?>
@@ -31,7 +31,7 @@
                                 </div>
                             </td>
 
-                            <td id="package-count-td" style="width: 33%">
+                            <td id="package-count-td" style="width: 28%">
                                 <div id="package-count-div" style="text-align: center;">
                                     <label id="package-count-label" style="font-size: larger; font-style: normal; font-weight: normal;">
                                         <?php
@@ -48,7 +48,15 @@
                                 </div>
                             </td>
 
-                            <td id="package-barcode-td" style="width: 33%">
+                            <td id="package-zone-id-td" style="width: 24%">
+                                <div id="package-zone-id-div" style="text-align: center;">
+                                    <label id="package-zone-id-label" style="font-size: larger; font-style: normal; font-weight: bold;">
+                                        Zone: <?= ($orderData['zone_id']) ? ucwords($orderData['zone_id']) : '' ?>
+                                    </label>
+                                </div>
+                            </td>
+
+                            <td id="package-barcode-td" style="width: 24%">
                                 <div id="package-barcode-div" style="text-align: center;">
                                     <label id="package-barcode-label" style="font-size: larger; font-style: normal; font-weight: normal;">
                                         <barcode dimension="1D" type="C93" value="<?= $orderData['increment_id'] ?>"

@@ -1215,6 +1215,7 @@ class SalesController extends Controller
 
                 $filteredOrderData = [];
                 $filteredOrderTotalWeight = [];
+                $filteredOrderIndividualWeight = [];
 
                 foreach ($filteredOrders as $record) {
 
@@ -1309,6 +1310,16 @@ class SalesController extends Controller
                                             $filteredOrderTotalWeight[$productCatIdFinal]['title'] = $productCatFinal;
                                             $filteredOrderTotalWeight[$productCatIdFinal]['weight'] = $productWeight + (float) $orderItemEl->qty_ordered;
 
+                                            $productIndividualWeight = 0;
+                                            if (array_key_exists($record->order_id, $filteredOrderIndividualWeight)) {
+                                                if (array_key_exists($productCatIdFinal, $filteredOrderIndividualWeight[$record->order_id])) {
+                                                    $productIndividualWeight = (float) $filteredOrderIndividualWeight[$record->order_id][$productCatIdFinal]['weight'];
+                                                }
+                                            }
+                                            $filteredOrderIndividualWeight[$record->order_id][$productCatIdFinal]['id'] = $productCatIdFinal;
+                                            $filteredOrderIndividualWeight[$record->order_id][$productCatIdFinal]['title'] = $productCatFinal;
+                                            $filteredOrderIndividualWeight[$record->order_id][$productCatIdFinal]['weight'] = $productIndividualWeight + (float) $orderItemEl->qty_ordered;
+
                                             $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['items'][$productCatIdFinal][] = [
                                                 'deliveryDate' => $record->delivery_date,
                                                 'deliveryTimeSlot' => $record->delivery_time_slot,
@@ -1324,6 +1335,10 @@ class SalesController extends Controller
                                                 'sellingUnit' => $orderItemEl->selling_unit
                                             ];
 
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['recordId'] = $record->id;
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['orderId'] = $record->order_id;
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['orderNumber'] = $record->increment_id;
+                                            $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['zone'] = ($record->zone_id) ? ucwords($record->zone_id) : '';
                                             $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['deliveryNotes'] = $record->delivery_notes;
                                             $filteredOrderData[$record->delivery_date][$record->delivery_time_slot][$record->order_id]['shippingAddress'] = [];
                                             if ($record->shippingAddress) {
@@ -1379,11 +1394,11 @@ class SalesController extends Controller
                     if (is_array($newOrderPrintData) && (count($newOrderPrintData) > 0)) {
                         foreach ($newOrderPrintData as $dateOrderKey => $dateOrderEl) {
                             foreach ($dateOrderEl as $slotOrderKey => $slotOrderEl) {
-                                foreach ($slotOrderEl as $idOrderKey => $idOrderEl) {
+                                foreach ($slotOrderEl as $idOrderKey => $singleOrderData) {
 
                                     $filteredOrderData = [];
-                                    $filteredOrderData[$dateOrderKey][$slotOrderKey][$idOrderKey] = $idOrderEl;
-                                    $pdfContent .= view('sales::print-picklist', compact('filteredOrderData', 'filteredOrderTotalWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();
+                                    $filteredOrderData[$dateOrderKey][$slotOrderKey][$idOrderKey] = $singleOrderData;
+                                    $pdfContent .= view('sales::print-picklist', compact('filteredOrderData', 'singleOrderData', 'filteredOrderTotalWeight', 'filteredOrderIndividualWeight', 'startDate', 'endDate', 'deliverySlot', 'logoEncoded', 'fulfilledBy'))->render();
 
                                 }
                             }
