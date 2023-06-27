@@ -112,7 +112,7 @@
                                         <td class="border-top-0 pl-0 py-4"><?php echo $item['item_sku']?></td>
                                         <td class="border-top-0 pl-0 py-4"><?php echo $countryLabel;?></td>
 
-                                        <td class="border-top-0 pl-0 py-4"><?php echo $item['qty_ordered'] . " " . $sellingFormat; ?></td>
+                                        <td class="border-top-0 pl-0 py-4"><?php echo $actualQty . " " . $sellingFormat; ?></td>
                                         <td class="border-top-0 py-4"><?php echo $saleOrderData['order_currency'] . " " . $item['price']; ?></td>
                                         <td class="text-danger border-top-0 pr-0 py-4"><?php echo $saleOrderData['order_currency'] . " " . $row_subtotal; ?></td>
 

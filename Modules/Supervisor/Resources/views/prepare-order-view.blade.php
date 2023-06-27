@@ -268,7 +268,7 @@
                                                 //print_r($item);
 
                                                 $qtyOrdered = (float)$item['qty_ordered'];
-                                                $qtyCanceled = (float)$item['qty_canceled'];
+                                                $qtyCanceled = ((float)$item['qty_canceled'] > 0) ? (float)$item['qty_canceled'] : 0;
                                                 $qtyNeeded = $qtyOrdered - $qtyCanceled;
                                                 $epsilon = 0.00001;
 
@@ -334,7 +334,7 @@
 
                                                     </td>--}}
 
-                                                    <td class="border-top-0 pl-0 py-4"><?php echo $item['qty_ordered']." ".$sellingFormat;?></td>
+                                                    <td class="border-top-0 pl-0 py-4"><?php echo $actualQty . " " . $sellingFormat;?></td>
                                                     <td class="border-top-0 pl-0 py-4"><?php echo $productName;?> <br> <b>Pack & Weight Info :</b> <?php echo $weightInfo;?>
 
                                                         <br>

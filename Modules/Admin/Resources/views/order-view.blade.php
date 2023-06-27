@@ -264,7 +264,7 @@
                                                     @endif
                                                 </td>
 
-                                                <td class="border-top-0 pl-0 py-4"><?php echo $item['qty_ordered']." ".$sellingFormat;?></td>
+                                                <td class="border-top-0 pl-0 py-4"><?php echo $actualQty . " " . $sellingFormat;?></td>
                                                 <td class="border-top-0 pl-0 py-4"><?php echo $productName;?> <br> <b>Pack & Weight Info :</b> <?php echo $weightInfo;?>
 
                                                     <br>
