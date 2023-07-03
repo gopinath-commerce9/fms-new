@@ -686,8 +686,13 @@ class SupervisorServiceHelper
             }
             $itemInputId = $orderItemEl->item_id;
             if (array_key_exists($orderItemEl->id, $storeAvailabilityArray)) {
+                $qtyOrdered = (float)$orderItemEl->qty_ordered;
+                $qtyCanceled = ((float)$orderItemEl->qty_canceled > 0) ? (float)$orderItemEl->qty_canceled : 0;
+                $qtyNeeded = $qtyOrdered - $qtyCanceled;
+                $epsilon = 0.00001;
+                $actualQty = (!empty($qtyNeeded) && ($qtyNeeded > $epsilon)) ? $qtyNeeded : 0;
                 $availability = $storeAvailabilityArray[$orderItemEl->id];
-                $actualItemQty = ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_YES) ? $orderItemEl->qty_ordered : 0;
+                $actualItemQty = ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_YES) ? $actualQty : 0;
                 if ((int)$storeAvailabilityArray[$orderItemEl->id] === SaleOrderItem::STORE_AVAILABLE_NO) {
                     $allItemsAvailable = false;
                     $orderItemPostNotAvData[] = [
