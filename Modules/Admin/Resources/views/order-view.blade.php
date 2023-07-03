@@ -309,39 +309,53 @@
 
 
                             <div class="table-responsive">
-                                <table class="table text-md-right font-weight-boldest">
+                                <table class="table text-md-right">
                                     <tbody>
                                         <tr>
-                                            <td class="align-middle title-color font-size-lg border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
-                                            <td class="align-middle font-size-h3 border-0 pt-0"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_subtotal'];?></td>
+                                            <td class="align-middle title-color border-0 pt-0 pl-0 w-50">SUBTOTAL</td>
+                                            <td class="align-middle border-0 pt-0"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_subtotal'];?></td>
                                         </tr>
                                         <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
-                                            <td class="align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['shipping_total'];?></td>
+                                            <td class="align-middle title-color border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
+                                            <td class="align-middle border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['shipping_total'];?></td>
                                         </tr>
                                         <?php if( !empty($saleOrderData['discount_amount']) ) {?>
                                         <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
-                                            <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['discount_amount'];?></td>
+                                            <td class="align-middle title-color border-0 py-7 pl-0 w-50">Discount (<?php if(isset($saleOrderData['coupon_code']) && !empty($saleOrderData['coupon_code'])) { echo $saleOrderData['coupon_code']; } ?>)</td>
+                                            <td class="no-line text-align-middle border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['discount_amount'];?></td>
                                         </tr>
                                         <?php } ?>
                                         <?php if(!is_null($saleOrderData['eco_friendly_packing_fee']) ) {?>
                                         <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 py-7 pl-0 w-50">Eco-Friendly Packing</td>
-                                            <td class="no-line text-align-middle font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['eco_friendly_packing_fee'];?></td>
+                                            <td class="align-middle title-color border-0 py-7 pl-0 w-50">Eco-Friendly Packing</td>
+                                            <td class="no-line text-align-middle border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['eco_friendly_packing_fee'];?></td>
                                         </tr>
                                         <?php } ?>
                                         <tr>
-                                            <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
+                                            <td class="align-middle title-color font-weight-boldest font-size-h4 border-0 pl-0 w-50">GRAND TOTAL</td>
                                             <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_total'];?></td>
                                         </tr>
+                                        <?php if(!is_null($saleOrderData['store_credits_used'])) {?>
+                                        <tr>
+                                            <td class="align-middle title-color border-0 py-7 pl-0 w-50">Store Credit Used </td>
+                                            <td class="no-line text-align-middle border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['store_credits_used'];?></td>
+                                        </tr>
+                                        <?php } ?>
                                         @if(!is_null($saleOrderData['canceled_total']))
                                             <tr>
-                                                <td></td>
-                                                <td class="align-middle title-color font-size-h4 border-0 pl-0 w-50">Canceled TOTAL</td>
-                                                <td class="text-danger font-size-h3 border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['canceled_total'];?></td>
+                                                <td class="align-middle title-color border-0 pl-0 w-50">Canceled TOTAL</td>
+                                                <td class="text-danger border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['canceled_total'];?></td>
                                             </tr>
                                         @endif
+                                        <tr>
+                                            <td class="align-middle title-color font-weight-boldest font-size-h4 border-0 pl-0 w-50">NET TOTAL</td>
+                                            <?php
+                                            $netTotal = (float)$saleOrderData['order_total'];
+                                            $netTotal -= (!is_null($saleOrderData['store_credits_used'])) ? (float)$saleOrderData['store_credits_used'] : 0;
+                                            $netTotal -= (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
+                                            ?>
+                                            <td class="text-danger font-size-h3 font-weight-boldest"><?php echo $saleOrderData['order_currency']." ".$netTotal;?></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>

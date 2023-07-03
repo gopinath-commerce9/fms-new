@@ -968,7 +968,11 @@ class SupervisorServiceHelper
         if (!is_array($saleOrderEl) || (count($saleOrderEl) == 0)) {
             return [
                 'status' => false,
-                'message' => 'Could not fetch the data for Sale Order!'
+                'message' => 'Could not fetch the data for Sale Order!',
+                'apiOrderId' => $apiOrderId,
+                'orderEnv' => $orderEnv,
+                'orderChannel' => $orderChannel,
+                'saleOrderEl' => $saleOrderEl,
             ];
         }
 
@@ -1444,6 +1448,8 @@ class SupervisorServiceHelper
                 'shipping_total' => $saleOrderEl['shipping_amount'],
                 'shipping_method' => $saleOrderEl['shipping_description'],
                 'eco_friendly_packing_fee' => (isset($saleOrderEl['extension_attributes']['eco_friendly_packing'])) ? $saleOrderEl['extension_attributes']['eco_friendly_packing'] : null,
+                'store_credits_used' => (isset($saleOrderEl['extension_attributes']['amstorecredit_amount'])) ? $saleOrderEl['extension_attributes']['amstorecredit_amount'] : null,
+                'store_credits_invoiced' => (isset($saleOrderEl['extension_attributes']['amstorecredit_invoiced_amount'])) ? $saleOrderEl['extension_attributes']['amstorecredit_invoiced_amount'] : null,
                 'order_total' => $saleOrderEl['grand_total'],
                 'canceled_total' => (isset($saleOrderEl['total_canceled'])) ? $saleOrderEl['total_canceled'] : null,
                 'invoiced_total' => (isset($saleOrderEl['total_invoiced'])) ? $saleOrderEl['total_invoiced'] : null,
