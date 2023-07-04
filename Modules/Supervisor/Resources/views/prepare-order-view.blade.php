@@ -429,6 +429,7 @@
                                                 <td class="align-middle title-color font-weight-boldest font-size-h4 border-0 pl-0 w-50">NET TOTAL</td>
                                                 <?php
                                                 $netTotal = (float)$saleOrderData['order_total'];
+                                                $netTotal += (!is_null($saleOrderData['order_tax'])) ? (float)$saleOrderData['order_tax'] : 0;
                                                 $netTotal -= (!is_null($saleOrderData['store_credits_used'])) ? (float)$saleOrderData['store_credits_used'] : 0;
                                                 $netTotal -= (!is_null($saleOrderData['canceled_total'])) ? (float)$saleOrderData['canceled_total'] : 0;
                                                 ?>
