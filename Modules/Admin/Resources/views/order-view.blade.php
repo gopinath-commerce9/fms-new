@@ -319,7 +319,7 @@
                                             <td class="align-middle title-color border-0 py-7 pl-0 w-50">Shipping (<?php echo $saleOrderData['shipping_method'];?>)</td>
                                             <td class="align-middle border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['shipping_total'];?></td>
                                         </tr>
-                                        @if(!is_null($orderData['order_tax']) && (abs((float)$orderData['order_tax']) > 0))
+                                        @if(!is_null($saleOrderData['order_tax']) && (abs((float)$saleOrderData['order_tax']) > 0))
                                             <tr>
                                                 <td class="align-middle title-color border-0 pl-0 w-50">VAT</td>
                                                 <td class="text-danger border-0 py-7"><?php echo $saleOrderData['order_currency'] . " " . $saleOrderData['order_tax'];?></td>
