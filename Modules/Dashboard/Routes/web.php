@@ -13,6 +13,9 @@
 
 use Modules\Base\Http\Middleware\BlockInvalidUserMiddleware;
 
-Route::prefix('dashboard')->middleware([BlockInvalidUserMiddleware::class . ':auth-user'])->group(function() {
-    Route::get('/', 'DashboardController@index')->name('dashboard.index');
+Route::prefix('dashboard')->group(function() {
+    Route::get('/start', 'DashboardController@landingPage')->name('dashboard.landingPage');
+    Route::middleware([BlockInvalidUserMiddleware::class . ':auth-user'])->group(function() {
+        Route::get('/', 'DashboardController@index')->name('dashboard.index');
+    });
 });

@@ -15,6 +15,7 @@ class BlockInvalidUserMiddleware
         'userauth',
         'userauth/index',
         'userauth/login',
+        'dashboard/start',
     ];
 
     /**

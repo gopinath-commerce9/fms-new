@@ -25,4 +25,15 @@ class DashboardController extends Controller
         ));
     }
 
+    public function landingPage(Request $request)
+    {
+        $pageTitle = 'Fulfillment Center';
+        $pageSubTitle = 'Start';
+
+        return view('dashboard::landing-page', compact(
+            'pageTitle',
+            'pageSubTitle'
+        ));
+    }
+
 }

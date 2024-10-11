@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    $newStartPointName = 'dashboard.index';
+    /*$newStartPointName = 'dashboard.index';*/
+    $newStartPointName = 'dashboard.landingPage';
     return (Route::has($newStartPointName))
         ? redirect()->route($newStartPointName)
         : view('welcome');
